@@ -1,0 +1,42 @@
+name: "Build Docs"
+description: "build jekyll docs"
+inputs:
+  version:
+    description: "Version number"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - name: Npm cli install
+      working-directory: ./docs
+      run: npm ci
+      shell: bash
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1.180.1
+      with:
+        ruby-version: "3.2" # Not needed with a .ruby-version file
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+        cache-version: 0 # Increment this number if you need to re-download cached gems
+        working-directory: "./docs"
+    - name: Setup Pages
+      id: pages
+      uses: actions/configure-pages@v5
+    - name: Build with Jekyll
+      working-directory: ./docs
+      # Outputs to the './_site' directory by default
+      shell: bash
+      run: make build BASE_URL="${{ steps.pages.outputs.base_path }}" VERSION="${{ inputs.version }}"
+      #run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+      env:
+        JEKYLL_ENV: production
+    - name: Upload artifact
+      # Automatically uploads an artifact from the './_site' directory by default
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: "docs/_site/"
+        name: jekyll-docs-${{ inputs.version }}

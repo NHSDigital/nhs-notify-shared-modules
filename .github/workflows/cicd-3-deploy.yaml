@@ -1,0 +1,116 @@
+name: "2. Deploy docs to GitHub Pages"
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_prereleases:
+        type: choice
+        description: "Include pre-releases"
+        default: "true"
+        options:
+          - "true"
+          - "false"
+      version:
+          type: string
+          default: latest
+          description: "Install specific version"
+
+run-name: "Include prerelease: ${{ inputs.include_prereleases }} Version: ${{ inputs.version }} by @${{ github.actor }}"
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  metadata:
+    name: "Set CI/CD metadata"
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      build_datetime: ${{ steps.variables.outputs.build_datetime }}
+      build_timestamp: ${{ steps.variables.outputs.build_timestamp }}
+      build_epoch: ${{ steps.variables.outputs.build_epoch }}
+      nodejs_version: ${{ steps.variables.outputs.nodejs_version }}
+      python_version: ${{ steps.variables.outputs.python_version }}
+      terraform_version: ${{ steps.variables.outputs.terraform_version }}
+      version: ${{ steps.variables.outputs.version }}
+      # tag: ${{ steps.variables.outputs.tag }}
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      - name: "Set CI/CD variables"
+        id: variables
+        run: |
+          datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
+          echo "build_datetime=$datetime" >> $GITHUB_OUTPUT
+          echo "build_timestamp=$(date --date=$datetime -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+          echo "build_epoch=$(date --date=$datetime -u +'%s')" >> $GITHUB_OUTPUT
+          echo "nodejs_version=$(grep "^nodejs" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
+          echo "python_version=$(grep "^nodejs" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
+          echo "terraform_version=$(grep "^terraform" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
+          # TODO: Get the version, but it may not be the .version file as this should come from the CI/CD Pull Request Workflow
+          echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
+          # echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+      - name: "List variables"
+        run: |
+          export BUILD_DATETIME="${{ steps.variables.outputs.build_datetime }}"
+          export BUILD_TIMESTAMP="${{ steps.variables.outputs.build_timestamp }}"
+          export BUILD_EPOCH="${{ steps.variables.outputs.build_epoch }}"
+          export NODEJS_VERSION="${{ steps.variables.outputs.nodejs_version }}"
+          export PYTHON_VERSION="${{ steps.variables.outputs.python_version }}"
+          export TERRAFORM_VERSION="${{ steps.variables.outputs.terraform_version }}"
+          export VERSION="${{ steps.variables.outputs.version }}"
+          # export TAG="${{ steps.variables.outputs.tag }}"
+          make list-variables
+
+  deploy-jekyll:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: metadata
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "Get version"
+        id: get-asset-version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ ${{inputs.include_prereleases}} == true ]]; then
+            json=$(gh release list --json tagName --limit 1 --exclude-drafts)
+          else
+            json=$(gh release list --json tagName --limit 1 --exclude-drafts --exclude-pre-releases)
+          fi
+
+          echo $json
+
+          release_version=$(echo $json | (jq -r '.[0].tagName'))
+          if [[ $release_version == null ]]; then exit 1; else echo $release_version; fi
+
+          if [[ ${{inputs.version}} == latest ]]; then
+            echo release_version=$(echo $release_version) >> $GITHUB_OUTPUT
+          else
+            echo release_version=$(echo ${{inputs.version}}) >> $GITHUB_OUTPUT
+          fi
+
+      - name: "Get release version"
+        id: download-asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download ${{steps.get-asset-version.outputs.release_version}} -p jekyll-docs-*.tar --output artifact.tar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jekyll-docs-${{steps.get-asset-version.outputs.release_version}}
+          path: artifact.tar
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: jekyll-docs-${{steps.get-asset-version.outputs.release_version}}

@@ -1,0 +1,132 @@
+{
+  "folders": [
+    {
+      "name": "NHS Notify Repository Template",
+      "path": "."
+    },
+    {
+      "name": "Application Source Code",
+      "path": "./src"
+    },
+    {
+      "name": "Docs",
+      "path": "./docs"
+    },
+    {
+      "name": "Tests",
+      "path": "./tests"
+    },
+    {
+      "name": "Infrastructure",
+      "path": "./infrastructure"
+    },
+    {
+      "name": "Scripts",
+      "path": "./scripts"
+    },
+    {
+      "name": "GitHub",
+      "path": ".github"
+    },
+    {
+      "name": "Git Hooks",
+      "path": "./.git/hooks"
+    },
+    {
+      "name": "Dev Container",
+      "path": ".devcontainer"
+    }
+  ],
+  "settings": {
+    "autoOpenWorkspace.enableAutoOpenIfSingleWorkspace": true,
+    "githubCodeOwners.format.enabled": true,
+    "workspace-terminals.switchTerminal": "always",
+    "workspace-terminals.auto": "always",
+    "markdownlint.config": {
+      "MD013": false,
+      "MD024": { "siblings_only": true },
+      "MD033": false
+    },
+    "cSpell.words": [
+      "ADRS",
+      "Amaan",
+      "Codespaces",
+      "endfor",
+      "Nasar",
+      "preinstalled",
+      "pythonist",
+      "rossbugginsnhs",
+      "ruleset",
+      "Stefaniuk"
+    ],
+    "cSpell.language": "en-GB",
+    "editor.wordWrap": "off",
+    "editor.formatOnSave": false,
+    "[plaintext]": {
+      "editor.wordWrap": "off",
+      "editor.formatOnSave": false,
+      "editor.unicodeHighlight.ambiguousCharacters": false,
+      "editor.unicodeHighlight.invisibleCharacters": false
+    },
+    "[markdown]": {
+      "editor.wordWrap": "off",
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+      "editor.wordWrap": "off",
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[html]": {
+      "editor.wordWrap": "off",
+      "editor.defaultFormatter": "vscode.html-language-features"
+    },
+    "[json]": {
+      "editor.wordWrap": "off",
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "window.title": "${separator}${activeRepositoryName}${separator}${activeRepositoryBranchName}${separator}[${remoteName}]",
+    "window.titleSeparator": " : "
+  },
+  "extensions": {
+    "recommendations": [
+  "alefragnani.bookmarks",
+  "AmazonWebServices.aws-toolkit-vscode",
+  "chdsbd.github-code-owners",
+  "davidanson.vscode-markdownlint",
+  "dbaeumer.vscode-eslint",
+  "donjayamanne.githistory",
+  "editorconfig.editorconfig",
+  "esbenp.prettier-vscode",
+  "fvclaus.sort-json-array",
+  "github.codespaces",
+  "github.github-vscode-theme",
+  "github.remotehub",
+  "github.vscode-github-actions",
+  "github.vscode-pull-request-github",
+  "hediet.vscode-drawio",
+  "johnpapa.vscode-peacock",
+  "joshx.workspace-terminals",
+  "maattdd.gitless",
+  "mhutchie.git-graph",
+  "ms-azuretools.vscode-docker",
+  "ms-vscode-remote.remote-containers",
+  "ms-vscode-remote.remote-wsl",
+  "ms-vscode.hexeditor",
+  "ms-vscode.live-server",
+  "ms-vsliveshare.vsliveshare",
+  "redhat.vscode-xml",
+  "streetsidesoftware.code-spell-checker-british-english",
+  "takumii.markdowntable",
+  "tamasfe.even-better-toml",
+  "tomoki1207.pdf",
+  "vscode-icons-team.vscode-icons",
+  "vstirbu.vscode-mermaid-preview",
+  "wayou.vscode-todo-highlight",
+  "yzane.markdown-pdf",
+  "yzhang.dictionary-completion",
+  "yzhang.markdown-all-in-one",
+  "zoma.vscode-auto-open-workspace"
+],
+    "unwantedRecommendations": []
+  }
+}

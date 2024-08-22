@@ -1,0 +1,52 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0 # Use the ref you want to point at
+    hooks:
+      - id: trailing-whitespace
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+      - id: check-added-large-files
+      - id: check-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: .+\.cs
+      - id: forbid-new-submodules
+      - id: mixed-line-ending
+      - id: pretty-format-json
+        args: ['--autofix']
+    # -   id: ...
+  - repo: local
+    hooks:
+      - id: scan-secrets
+        name: Scan secrets
+        entry: /usr/bin/env check=whole-history ./scripts/githooks/scan-secrets.sh
+        language: script
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: check-file-format
+        name: Check file format
+        entry: /usr/bin/env check=branch ./scripts/githooks/check-file-format.sh
+        language: script
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: check-markdown-format
+        name: Check Markdown format
+        entry: /usr/bin/env check=branch ./scripts/githooks/check-markdown-format.sh
+        language: script
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: check-english-usage
+        name: Check English usage
+        entry: /usr/bin/env check=branch ./scripts/githooks/check-english-usage.sh
+        language: script
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: lint-terraform
+        name: Lint Terraform
+        entry: ./scripts/githooks/check-terraform-format.sh
+        language: script
+        pass_filenames: false
