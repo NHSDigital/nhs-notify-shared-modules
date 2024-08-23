@@ -1,5 +1,5 @@
 resource "aws_s3_bucket_acl" "main" {
-  count  = var.object_ownership == "BucketOwnerEnforced" ? 0 : 1
+  count = var.object_ownership == "BucketOwnerEnforced" ? 0 : 1
 
   bucket = aws_s3_bucket.main.id
   acl    = var.acl
