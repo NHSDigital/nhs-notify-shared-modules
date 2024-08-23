@@ -22,7 +22,7 @@ resource "aws_lambda_function" "main" {
   layers = compact(concat(
     var.layers,
     [
-      var.enable_lambda_insights ? "arn:aws:lambda:${var.region}:580247275435:layer:LambdaInsightsExtension:53" : null
+      var.enable_lambda_insights && var.lambda_at_edge == false ? "arn:aws:lambda:${var.region}:580247275435:layer:LambdaInsightsExtension:53" : null
     ]
   ))
 

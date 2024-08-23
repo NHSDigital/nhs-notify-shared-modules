@@ -212,3 +212,9 @@ variable "enable_lambda_insights" {
   description = "Enable the lambda insights layer, this must be disabled for lambda@edge usage"
   default     = true
 }
+
+variable "lambda_at_edge" {
+  type        = bool
+  description = "Enable the lambda insights layer, this must be disabled for lambda@edge usage"
+  default     = false
+}
