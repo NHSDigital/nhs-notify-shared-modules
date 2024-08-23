@@ -75,6 +75,12 @@ variable "branch" {
   type        = string
 }
 
+variable "display_name" {
+  description = "The display name of the branch app being deployed"
+  type        = string
+  default = null
+}
+
 variable "enable_auto_build" {
   type        = bool
   description = "Enable the auto build of the branch code as well as just the resources for it"
