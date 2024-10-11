@@ -31,7 +31,17 @@ data "aws_iam_policy_document" "put_logs" {
 
       resources = [
         format(
+          "arn:aws:logs:us-east-1:%s:log-group:/aws/lambda/%s",
+          var.aws_account_id,
+          var.function_name,
+        ),
+        format(
           "arn:aws:logs:us-east-1:%s:log-group:/aws/lambda/%s:*",
+          var.aws_account_id,
+          var.function_name,
+        ),
+        format(
+          "arn:aws:logs:*:%s:log-group:/aws/lambda/us-east-1.%s",
           var.aws_account_id,
           var.function_name,
         ),
