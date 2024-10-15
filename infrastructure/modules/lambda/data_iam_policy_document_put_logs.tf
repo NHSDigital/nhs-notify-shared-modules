@@ -27,28 +27,30 @@ data "aws_iam_policy_document" "put_logs" {
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
+        "kms:GenerateDataKey",
+        "kms:Decrypt",
       ]
 
       resources = [
         format(
           "arn:aws:logs:us-east-1:%s:log-group:/aws/lambda/%s",
           var.aws_account_id,
-          var.function_name,
+          local.csi,
         ),
         format(
           "arn:aws:logs:us-east-1:%s:log-group:/aws/lambda/%s:*",
           var.aws_account_id,
-          var.function_name,
+          local.csi,
         ),
         format(
           "arn:aws:logs:*:%s:log-group:/aws/lambda/us-east-1.%s",
           var.aws_account_id,
-          var.function_name,
+          local.csi,
         ),
         format(
           "arn:aws:logs:*:%s:log-group:/aws/lambda/us-east-1.%s:*",
           var.aws_account_id,
-          var.function_name,
+          local.csi,
         )
       ]
     }
