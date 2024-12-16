@@ -7,6 +7,7 @@ gitleaks 8.18.4
 tfsec 1.28.10
 terraform-docs 0.19.0
 
+
 # ==============================================================================
 # The section below is reserved for Docker image versions.
 
