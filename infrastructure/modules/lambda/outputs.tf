@@ -15,7 +15,7 @@ output "function_qualified_arn" {
 }
 
 output "function_env_vars" {
-  value = length(var.lambda_env_vars) == 0 ? [] : aws_lambda_function.main.environment[0].variables
+  value = length(var.lambda_env_vars) == 0 ? {} : aws_lambda_function.main.environment[0].variables
 }
 
 output "iam_role_name" {
