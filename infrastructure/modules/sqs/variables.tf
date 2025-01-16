@@ -57,10 +57,14 @@ variable "sqs_kms_key_arn" {
   description = "ARN of the KMS key to encrypt SQS queue messages"
 }
 
-variable "sns_source_arn" {
+variable "sqs_policy_overload" {
   type        = string
-  description = "ARN of an sns resource allowed to send to this resource"
+  description = "Optional additional policy to extend the SQS Resource Policy"
   default     = null
+  validation {
+    condition     = can(jsondecode(var.sqs_policy_overload))
+    error_message = "sqs_policy_overload must be a valid JSON."
+  }
 }
 
 variable "allowed_arns" {
