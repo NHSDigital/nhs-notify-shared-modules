@@ -20,35 +20,5 @@ data "aws_iam_policy_document" "sqs_queue" {
     }
   }
 
-  dynamic "statement" {
-    for_each = var.sns_source_arn != null ? [1] : []
-
-    content {
-      effect = "Allow"
-
-      principals {
-        type = "Service"
-        identifiers = [
-          "sns.amazonaws.com"
-        ]
-      }
-
-      actions = [
-        "sqs:SendMessage",
-        "sqs:SendMessageBatch",
-      ]
-
-      condition {
-        test     = "ArnEquals"
-        variable = "aws:SourceArn"
-        values = [
-          var.sns_source_arn
-        ]
-      }
-
-      resources = [
-        aws_sqs_queue.sqs_queue.arn,
-      ]
-    }
-  }
+  override_policy_documents = [var.sqs_policy_overload]
 }
