@@ -19,4 +19,6 @@ data "aws_iam_policy_document" "sqs_queue" {
       identifiers = [var.aws_account_id]
     }
   }
+
+  override_policy_documents = [var.sqs_policy_overload]
 }

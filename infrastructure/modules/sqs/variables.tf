@@ -60,11 +60,7 @@ variable "sqs_kms_key_arn" {
 variable "sqs_policy_overload" {
   type        = string
   description = "Optional additional policy to extend the SQS Resource Policy"
-  default     = null
-  validation {
-    condition     = can(jsondecode(var.sqs_policy_overload))
-    error_message = "sqs_policy_overload must be a valid JSON."
-  }
+  default     = ""
 }
 
 variable "allowed_arns" {
