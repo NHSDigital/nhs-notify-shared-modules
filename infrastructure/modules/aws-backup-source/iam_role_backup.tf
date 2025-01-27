@@ -1,3 +1,8 @@
+resource "aws_iam_role" "backup" {
+  name               = "${var.project_name}BackupRole"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     effect = "Allow"
@@ -9,11 +14,6 @@ data "aws_iam_policy_document" "assume_role" {
 
     actions = ["sts:AssumeRole"]
   }
-}
-
-resource "aws_iam_role" "backup" {
-  name               = "${var.project_name}BackupRole"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "backup" {
