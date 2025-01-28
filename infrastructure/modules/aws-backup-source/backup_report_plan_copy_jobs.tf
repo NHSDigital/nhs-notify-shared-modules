@@ -1,7 +1,7 @@
 resource "aws_backup_report_plan" "copy_jobs" {
   count       = var.backup_copy_vault_arn != "" && var.backup_copy_vault_account_id != "" ? 1 : 0
 
-  name        = "copy_jobs"
+  name        = "${local.csi_underscore}_copy_jobs"
   description = "Report for showing whether copies ran successfully in the last 24 hours"
 
   report_delivery_channel {

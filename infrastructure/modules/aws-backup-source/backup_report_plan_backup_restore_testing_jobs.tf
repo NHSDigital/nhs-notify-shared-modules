@@ -1,6 +1,6 @@
 # Create the restore testing completion reports
 resource "aws_backup_report_plan" "backup_restore_testing_jobs" {
-  name        = "backup_restore_testing_jobs"
+  name        = "${local.csi_underscore}_backup_restore_testing_jobs"
   description = "Report for showing whether backup restore test ran successfully in the last 24 hours"
 
   report_delivery_channel {

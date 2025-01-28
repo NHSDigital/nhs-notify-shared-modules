@@ -2,7 +2,7 @@
 resource "aws_backup_plan" "dynamodb" {
   count = var.backup_plan_config_dynamodb.enable ? 1 : 0
 
-  name  = "${local.resource_name_prefix}-dynamodb-plan"
+  name  = "${local.csi}-dynamodb"
 
   dynamic "rule" {
     for_each = var.backup_plan_config_dynamodb.rules

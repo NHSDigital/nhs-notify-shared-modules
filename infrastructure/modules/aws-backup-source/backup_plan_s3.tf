@@ -1,7 +1,7 @@
 resource "aws_backup_plan" "s3" {
   count = var.backup_plan_config_s3.enable ? 1 : 0
 
-  name = "${local.resource_name_prefix}-plan"
+  name = "${local.csi}-s3"
 
   dynamic "rule" {
     for_each = var.backup_plan_config_s3.rules

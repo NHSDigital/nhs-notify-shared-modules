@@ -2,8 +2,8 @@ resource "aws_backup_framework" "dynamodb" {
   count = var.backup_plan_config_dynamodb.enable ? 1 : 0
 
   # must be underscores instead of dashes
-  name        = replace("${local.resource_name_prefix}-dynamodb-framework", "-", "_")
-  description = "${var.project_name} DynamoDB Backup Framework"
+  name        = replace("${local.csi}-dynamodb-framework", "-", "_")
+  description = "${var.project} DynamoDB Backup Framework"
 
   # Evaluates if recovery points are encrypted.
   control {
@@ -11,7 +11,7 @@ resource "aws_backup_framework" "dynamodb" {
 
     scope {
       tags = {
-        Environment = var.environment_name
+        Environment = var.environment
       }
     }
   }
@@ -22,7 +22,7 @@ resource "aws_backup_framework" "dynamodb" {
 
     scope {
       tags = {
-        Environment = var.environment_name
+        Environment = var.environment
       }
     }
 
@@ -38,7 +38,7 @@ resource "aws_backup_framework" "dynamodb" {
 
     scope {
       tags = {
-        Environment = var.environment_name
+        Environment = var.environment
       }
     }
 
@@ -54,7 +54,7 @@ resource "aws_backup_framework" "dynamodb" {
 
     scope {
       tags = {
-        Environment = var.environment_name
+        Environment = var.environment
       }
     }
 
