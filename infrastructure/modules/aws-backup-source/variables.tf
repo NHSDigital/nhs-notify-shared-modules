@@ -14,7 +14,7 @@ variable "notifications_target_email_address" {
   default     = ""
 }
 
-variable "bootstrap_kms_key_arn" {
+variable "notification_kms_key" {
   description = "The ARN of the bootstrap KMS key used for encryption at rest of the SNS topic."
   type        = string
 }
@@ -24,7 +24,7 @@ variable "reports_bucket" {
   type        = string
 }
 
-variable "terraform_role_arn" {
+variable "management_ci_role_arn" {
   description = "ARN of Terraform role used to deploy to account"
   type        = string
 }
@@ -71,9 +71,10 @@ variable "backup_copy_vault_account_id" {
   default     = ""
 }
 
-variable "backup_plan_config" {
+variable "backup_plan_config_s3" {
   description = "Configuration for backup plans"
   type = object({
+    enable                    = bool
     selection_tag             = string
     compliance_resource_types = list(string)
     rules = list(object({
@@ -90,6 +91,7 @@ variable "backup_plan_config" {
     }))
   })
   default = {
+    enable                    = false
     selection_tag             = "BackupLocal"
     compliance_resource_types = ["S3"]
     rules = [
@@ -159,7 +161,7 @@ variable "backup_plan_config_dynamodb" {
     })))
   })
   default = {
-    enable                    = true
+    enable                    = false
     selection_tag             = "BackupDynamoDB"
     compliance_resource_types = ["DynamoDB"]
     rules = [

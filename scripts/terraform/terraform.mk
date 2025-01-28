@@ -25,10 +25,10 @@ terraform-shellscript-lint: # Lint all Terraform module shell scripts @Quality
 	done
 
 terraform-sec: # TFSEC check against Terraform files - optional: terraform_dir|dir=[path to a directory where the command will be executed, relative to the project's top-level directory, default is one of the module variables or the example directory, if not set], terraform_opts|opts=[options to pass to the Terraform fmt command, default is '-recursive'] @Quality
-	tfsec infrastructure/terraform \
+	tfsec infrastructure/modules \
 		--force-all-dirs \
 		--exclude-downloaded-modules \
-		--config-file scripts/config/tfsec.yml
+		--config-file scripts/config/tfsec.yaml
 
 # ==============================================================================
 # Configuration - please DO NOT edit this section!
