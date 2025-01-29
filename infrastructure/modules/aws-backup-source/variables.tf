@@ -1,11 +1,22 @@
-variable "project_name" {
+variable "project" {
   description = "The name of the project this relates to."
   type        = string
 }
 
-variable "environment_name" {
+variable "environment" {
   description = "The name of the environment where AWS Backup is configured."
   type        = string
+}
+
+variable "component" {
+  type        = string
+  description = "The name of the tfscaffold component"
+}
+
+variable "default_tags" {
+  type        = map(string)
+  description = "Default tag map for application to all taggable resources in the module"
+  default     = {}
 }
 
 variable "notifications_target_email_address" {
@@ -22,6 +33,11 @@ variable "notification_kms_key" {
 variable "reports_bucket" {
   description = "Bucket to drop backup reports into"
   type        = string
+}
+
+variable "principal_org_id" {
+  type        = string
+  description = "The AWS Org ID (numeric)"
 }
 
 variable "management_ci_role_arn" {

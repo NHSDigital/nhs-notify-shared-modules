@@ -28,6 +28,30 @@ data "aws_iam_policy_document" "vault_policy" {
     resources = ["*"]
   }
 
+
+  # Allow Org to copy to vault as cross-account sharing directly is now restricted by SCP
+  statement {
+    sid    = "BackupVaultAccess"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "backup:CopyIntoBackupVault"
+    ]
+
+    resources = [aws_backup_vault.main.arn]
+    condition {
+      test     = "StringEquals"
+      values   = [var.principal_org_id]
+      variable = "aws:PrincipalOrgID"
+    }
+  }
+
+
   dynamic "statement" {
     for_each = var.backup_copy_vault_arn != "" && var.backup_copy_vault_account_id != "" ? [1] : []
     content {

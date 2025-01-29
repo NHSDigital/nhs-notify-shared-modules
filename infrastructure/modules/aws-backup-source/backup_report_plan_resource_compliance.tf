@@ -1,5 +1,5 @@
 resource "aws_backup_report_plan" "resource_compliance" {
-  name        = "resource_compliance"
+  name        = "${local.csi_underscore}_resource_compliance"
   description = "Report for showing whether resources are compliant with the framework"
 
   report_delivery_channel {
