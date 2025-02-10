@@ -11,7 +11,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "main" {
       status = rule.value.enabled ? "Enabled" : "Disabled"
 
       filter {
-        prefix = rule.value.prefix
+        prefix = rule.value.prefix != "" ? rule.value.prefix : null
       }
 
       dynamic "expiration" {
