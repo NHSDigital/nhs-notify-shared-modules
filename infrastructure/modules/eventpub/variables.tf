@@ -83,16 +83,7 @@ variable "enable_sns_delivery_logging" {
   default     = false
 }
 
-variable "sns_delivery_logging_bucket" {
-  type        = string
-  description = "An S3 bucket name if event caching is enabled"
-  default     = ""
 
-  validation {
-    condition     = var.enable_sns_delivery_logging == false || length(var.sns_delivery_logging_bucket) > 1
-    error_message = "If delivery logs are required, an S3 bucket name must be provided"
-  }
-}
 
 variable "sns_success_logging_sample_percent" {
   type        = number
@@ -103,7 +94,7 @@ variable "sns_success_logging_sample_percent" {
 variable "log_level" {
   type        = string
   description = "The log level to be used in lambda functions within the component. Any log with a lower severity than the configured value will not be logged: https://docs.python.org/3/library/logging.html#levels"
-  default     = "INFO"
+  default     = "WARN"
 }
 
 variable "event_cache_expiry_days" {

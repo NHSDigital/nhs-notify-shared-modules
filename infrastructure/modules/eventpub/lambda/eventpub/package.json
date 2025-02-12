@@ -16,5 +16,10 @@
     ]
   },
   "author": "NHS Notify",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.744.0",
+    "@aws-sdk/client-sqs": "^3.744.0",
+    "aws-sdk-client-mock": "^4.1.0"
+  }
 }
