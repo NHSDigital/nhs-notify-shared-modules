@@ -1,4 +1,4 @@
-const { handler } = require('../index.js');
+const { handler } = require('../index.ts');
 const { mockClient } = require('aws-sdk-client-mock');
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const { EventBridgeClient, PutEventsCommand } = require('@aws-sdk/client-eventbridge');

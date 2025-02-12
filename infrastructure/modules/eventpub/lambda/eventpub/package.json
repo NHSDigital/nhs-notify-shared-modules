@@ -1,25 +1,31 @@
 {
-  "name": "eventpub",
-  "version": "1.0.0",
-  "description": "AWS Lambda function responsibile for validating and publishing events.",
-  "main": "src/index.js",
-  "scripts": {
-    "test": "jest"
-  },
-  "devDependencies": {
-    "jest": "^29.7.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/src"
-    ]
-  },
   "author": "NHS Notify",
-  "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-eventbridge": "^3.744.0",
     "@aws-sdk/client-sqs": "^3.744.0",
-    "aws-sdk-client-mock": "^4.1.0"
-  }
+    "aws-sdk-client-mock": "^4.1.0",
+    "zod": "^3.24.2"
+  },
+  "description": "AWS Lambda function responsible for validating and publishing events.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "esbuild": "^0.25.0",
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "testEnvironment": "node"
+  },
+  "license": "ISC",
+  "main": "dist/index.js",
+  "name": "eventpub",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "postbuild": "cd dist && zip -r index.zip index.js*",
+    "prebuild": "rm -rf dist",
+    "test": "jest"
+  },
+  "version": "1.0.0"
 }
