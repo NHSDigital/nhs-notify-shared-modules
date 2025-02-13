@@ -9,8 +9,8 @@ resource "aws_lambda_function" "main" {
   memory_size = 128
   timeout     = 20
 
-  filename         = data.archive_file.lambda.output_path
-  source_code_hash = data.archive_file.lambda.output_base64sha256
+  filename         = archive_file.lambda.output_path
+  source_code_hash = archive_file.lambda.output_base64sha256
 
   logging_config {
     application_log_level = var.log_level
