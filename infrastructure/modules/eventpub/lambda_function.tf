@@ -27,5 +27,6 @@ resource "aws_lambda_function" "main" {
       THROTTLE_DELAY_MS           = "0"
     }
   }
-  depends_on = [ data.archive_file ]
+
+  depends_on = [ data.archive_file.lambda ] # This should not be needed but it is
 }
