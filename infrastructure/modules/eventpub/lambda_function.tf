@@ -27,4 +27,5 @@ resource "aws_lambda_function" "main" {
       THROTTLE_DELAY_MS           = "0"
     }
   }
+  depends_on = [ data.archive_file ]
 }
