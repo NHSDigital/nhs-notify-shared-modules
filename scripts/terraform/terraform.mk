@@ -30,6 +30,13 @@ terraform-sec: # TFSEC check against Terraform files - optional: terraform_dir|d
 		--exclude-downloaded-modules \
 		--config-file scripts/config/tfsec.yaml
 
+terraform-docs: # Terraform-docs check against Terraform files - optional: terraform_dir|dir=[path to a directory where the command will be executed, relative to the project's top-level directory, default is one of the module variables or the example directory, if not set], terraform_opts|opts=[options to pass to the Terraform fmt command, default is '-recursive'] @Quality
+	for dir in ./infrastructure/modules/*; do \
+		if [ -d "$$dir" ]; then \
+			./scripts/terraform/terraform-docs.sh $$dir; \
+		fi \
+	done
+
 # ==============================================================================
 # Configuration - please DO NOT edit this section!
 
@@ -47,6 +54,7 @@ ${VERBOSE}.SILENT: \
 	terraform-example-destroy-aws-infrastructure \
 	terraform-example-provision-aws-infrastructure \
 	terraform-fmt \
+	terraform-docs \
 	terraform-init \
 	terraform-install \
 	terraform-plan \
