@@ -83,7 +83,7 @@ jobs:
           make terraform-docs
       - name: "Stage changes"
         run: |
-          git add infrastructure/terraform/**/*.md
+          git add infrastructure/modules/**/*.md
       - name: "Check for changes in Terraform Docs"
         run: |
           if git diff --cached --name-only | grep -qE '\.md$'; then

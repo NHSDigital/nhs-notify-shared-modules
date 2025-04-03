@@ -4,7 +4,9 @@
 
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 ## Inputs
 
 | Name | Description | Type | Default | Required |
