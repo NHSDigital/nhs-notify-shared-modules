@@ -21,4 +21,24 @@ data "aws_iam_policy_document" "deadletter_queue" {
       identifiers = [var.aws_account_id]
     }
   }
+
+  statement {
+    sid    = "AllowSendMessage"
+    effect = "Allow"
+
+    actions = [
+      "sqs:SendMessage",
+    ]
+
+    resources = [
+      aws_sqs_queue.dlq.arn,
+    ]
+
+    principals {
+      type = "Service"
+      identifiers = [
+        "sqs.amazonaws.com"
+      ]
+    }
+  }
 }
