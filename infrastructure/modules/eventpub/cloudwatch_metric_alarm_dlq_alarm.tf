@@ -9,7 +9,7 @@ resource "aws_cloudwatch_metric_alarm" "dlq_alarm" {
   statistic           = "Sum"
   threshold           = 0
   actions_enabled     = true
-  treat_missing_data = "notBreaching"
+  treat_missing_data  = "notBreaching"
 
   dimensions = {
     QueueName = aws_sqs_queue.dlq.name
