@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "deadletter_queue" {
     ]
 
     resources = [
-      aws_sqs_queue.dlq.arn,
+      aws_sqs_queue.deadletter_queue[0].arn,
     ]
 
     principals {
