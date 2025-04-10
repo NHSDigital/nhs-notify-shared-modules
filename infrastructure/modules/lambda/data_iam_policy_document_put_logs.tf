@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "put_logs" {
       "logs:PutLogEvents",
     ]
 
-    #tfsec:ignore:aws-iam-no-policy-wildcards
+    #trivy:ignore:aws-iam-no-policy-wildcards
     resources = [
       "${aws_cloudwatch_log_group.main.arn}:*",
     ]
