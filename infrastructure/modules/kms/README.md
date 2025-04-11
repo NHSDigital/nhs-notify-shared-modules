@@ -19,7 +19,6 @@
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the terraformscaffold environment the module is called for | `string` | n/a | yes |
 | <a name="input_iam_delegation"></a> [iam\_delegation](#input\_iam\_delegation) | Whether to delegate administration of the key to the local account. Defaults to true | `bool` | `true` | no |
 | <a name="input_key_policy_documents"></a> [key\_policy\_documents](#input\_key\_policy\_documents) | List of KMS key policy JSON documents | `list(string)` | `[]` | no |
-| <a name="input_module"></a> [module](#input\_module) | The name of this module. This is a special variable, it should be set only here and never overridden. | `string` | `"kms"` | no |
 | <a name="input_name"></a> [name](#input\_name) | A unique name to distinguish this module invocation from others within the same CSI scope | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |

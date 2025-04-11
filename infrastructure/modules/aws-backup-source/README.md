@@ -62,6 +62,7 @@ No requirements.
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | Default tag map for application to all taggable resources in the module | `map(string)` | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the environment where AWS Backup is configured. | `string` | n/a | yes |
 | <a name="input_management_ci_role_arn"></a> [management\_ci\_role\_arn](#input\_management\_ci\_role\_arn) | ARN of Terraform role used to deploy to account | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | The variable encapsulating the name of this bucket | `string` | n/a | yes |
 | <a name="input_notification_kms_key"></a> [notification\_kms\_key](#input\_notification\_kms\_key) | The ARN of the bootstrap KMS key used for encryption at rest of the SNS topic. | `string` | n/a | yes |
 | <a name="input_notifications_target_email_address"></a> [notifications\_target\_email\_address](#input\_notifications\_target\_email\_address) | The email address to which backup notifications will be sent via SNS. | `string` | `""` | no |
 | <a name="input_principal_org_id"></a> [principal\_org\_id](#input\_principal\_org\_id) | The AWS Org ID (numeric) | `string` | n/a | yes |

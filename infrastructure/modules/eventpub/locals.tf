@@ -1,4 +1,6 @@
 locals {
+  module = "eventpub"
+
   csi = replace(
     format(
       "%s-%s-%s-%s",
@@ -13,7 +15,7 @@ locals {
   default_tags = merge(
     var.default_tags,
     {
-      Module = var.module
+      Module = local.module
       Name   = local.csi
     },
   )

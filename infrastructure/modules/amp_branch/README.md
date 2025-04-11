@@ -24,7 +24,6 @@
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables to be used for amplify branch | `map(string)` | `{}` | no |
 | <a name="input_framework"></a> [framework](#input\_framework) | Set what framework to use | `string` | `null` | no |
 | <a name="input_group"></a> [group](#input\_group) | The group variables are being inherited from (often synonmous with account short-name) | `string` | n/a | yes |
-| <a name="input_module"></a> [module](#input\_module) | The name of this module. This is a special variable, it should be set only here and never overridden. | `string` | `"kms"` | no |
 | <a name="input_name"></a> [name](#input\_name) | A unique name to distinguish this module invocation from others within the same CSI scope | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
