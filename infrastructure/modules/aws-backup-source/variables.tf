@@ -13,6 +13,11 @@ variable "component" {
   description = "The name of the tfscaffold component"
 }
 
+variable "name" {
+  type        = string
+  description = "The variable encapsulating the name of this bucket"
+}
+
 variable "default_tags" {
   type        = map(string)
   description = "Default tag map for application to all taggable resources in the module"

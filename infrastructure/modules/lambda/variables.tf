@@ -42,12 +42,6 @@ variable "kms_key_arn" {
 # tfscaffold variables specific to this module
 ##
 
-variable "module" {
-  type        = string
-  description = "The variable encapsulating the name of this module"
-  default     = "lambda"
-}
-
 variable "default_tags" {
   type        = map(string)
   description = "A map of default tags to apply to all taggable resources within the component"

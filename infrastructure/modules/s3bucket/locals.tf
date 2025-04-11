@@ -1,16 +1,5 @@
 locals {
-  # Compound Scope Identifier
-  csi = replace(
-    format(
-      "%s-%s-%s-%s",
-      var.project,
-      var.environment,
-      var.component,
-      var.name,
-    ),
-    "_",
-    "",
-  )
+  module = "s3bucket"
 
   # CSI for use in resources with a global namespace, i.e. S3 Buckets
   csi_global = replace(
@@ -24,14 +13,14 @@ locals {
       var.name,
     ),
     "_",
-    "",
+    "",s
   )
 
   default_tags = merge(
     var.default_tags,
     {
-      Module = var.module
-      Name   = var.name
+      Module = local.module
+      Name   = local.csi_global
     },
   )
 

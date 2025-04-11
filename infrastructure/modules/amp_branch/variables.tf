@@ -33,16 +33,6 @@ variable "description" {
 }
 
 ##
-# Module self-identification
-##
-
-variable "module" {
-  type        = string
-  description = "The name of this module. This is a special variable, it should be set only here and never overridden."
-  default     = "kms"
-}
-
-##
 # Variable specific to the module
 ##
 
