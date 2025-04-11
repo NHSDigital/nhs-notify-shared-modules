@@ -13,7 +13,7 @@ locals {
       var.name,
     ),
     "_",
-    "",s
+    "",
   )
 
   default_tags = merge(
