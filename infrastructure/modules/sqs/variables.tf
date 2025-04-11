@@ -75,6 +75,12 @@ variable "visibility_timeout_seconds" {
   default     = 300
 }
 
+variable "delay_seconds" {
+  description = "Time in seconds that the delivery of all messages in the queue will be delayed. An integer from 0 to 900 (15 minutes)."
+  type        = number
+  default     = 0
+}
+
 variable "fifo_queue" {
   description = "Boolean designating a FIFO queue"
   type        = bool
