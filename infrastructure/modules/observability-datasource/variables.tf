@@ -71,3 +71,12 @@ variable "metric_configuration" {
   })
   default = null
 }
+
+variable "resource_types" {
+  type = list(string)
+  description = "The resource types to include in the OAM link."
+  default = [
+    "AWS::CloudWatch::Metric",
+    "AWS::Logs::LogGroup"
+  ]
+}

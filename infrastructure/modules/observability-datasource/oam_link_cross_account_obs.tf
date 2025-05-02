@@ -1,9 +1,6 @@
 resource "aws_oam_link" "cross_account_obs" {
   label_template  = "$AccountName"
-  resource_types  = [
-    "AWS::CloudWatch::Metric",
-    "AWS::Logs::LogGroup"
-  ]
+  resource_types  = var.resource_types
   sink_identifier = "arn:aws:oam:${var.region}:${var.observability_account_id}:sink/${var.oam_sink_id}"
   tags            = var.default_tags
 

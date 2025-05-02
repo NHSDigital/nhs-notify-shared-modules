@@ -22,6 +22,7 @@
 | <a name="input_observability_account_id"></a> [observability\_account\_id](#input\_observability\_account\_id) | The Observability Account ID that needs access | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
+| <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types) | The resource types to include in the OAM link. | `list(string)` | <pre>[<br/>  "AWS::CloudWatch::Metric",<br/>  "AWS::Logs::LogGroup"<br/>]</pre> | no |
 ## Modules
 
 No modules.
