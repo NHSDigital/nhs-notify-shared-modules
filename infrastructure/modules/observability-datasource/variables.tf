@@ -57,7 +57,7 @@ variable "observability_account_id" {
 }
 
 variable "log_group_configuration" {
-  description = "Configuration for filtering log groups in the link configuration."
+  description = "Configuration for filtering log groups in the link configuration." # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/oam_link#link_configuration-block
   type = object({
     filter = string
   })
