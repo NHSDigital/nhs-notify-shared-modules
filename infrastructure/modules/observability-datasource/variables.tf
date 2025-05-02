@@ -55,3 +55,19 @@ variable "observability_account_id" {
   type        = string
   description = "The Observability Account ID that needs access"
 }
+
+variable "log_group_configuration" {
+  description = "Configuration for filtering log groups in the link configuration."
+  type = object({
+    filter = string
+  })
+  default = null
+}
+
+variable "metric_configuration" {
+  description = "Configuration for filtering metrics in the link configuration." # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/oam_link#link_configuration-block
+  type = object({
+    filter = string
+  })
+  default = null
+}
