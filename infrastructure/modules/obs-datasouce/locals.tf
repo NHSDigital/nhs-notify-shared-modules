@@ -1,5 +1,5 @@
 locals {
-  module = "obersvability-datasource"
+  module = "obs-datasource"
 
   csi = replace(
     format(
