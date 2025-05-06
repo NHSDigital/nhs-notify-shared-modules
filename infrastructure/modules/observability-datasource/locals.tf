@@ -1,5 +1,5 @@
 locals {
-  module = "eventpub"
+  module = "obersvability-datasource"
 
   csi = replace(
     format(
