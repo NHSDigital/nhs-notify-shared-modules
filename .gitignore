@@ -10,4 +10,4 @@ version.json
 *.code-workspace
 !project.code-workspace
 
-# Please, add your custom content below!
+infrastructure/modules/eventpub/lambda/*.zip

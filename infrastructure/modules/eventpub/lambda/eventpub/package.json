@@ -1,0 +1,25 @@
+{
+  "name": "eventpub",
+  "version": "1.0.0",
+  "description": "AWS Lambda function responsibile for validating and publishing events.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/src"
+    ]
+  },
+  "author": "NHS Notify",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.744.0",
+    "@aws-sdk/client-sqs": "^3.744.0",
+    "aws-sdk-client-mock": "^4.1.0"
+  }
+}
