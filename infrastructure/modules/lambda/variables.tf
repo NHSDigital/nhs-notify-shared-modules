@@ -212,3 +212,27 @@ variable "lambda_at_edge" {
   description = "Enable the lambda insights layer, this must be disabled for lambda@edge usage"
   default     = false
 }
+
+variable "send_to_firehose" {
+  type        = bool
+  description = "Enable sending logs to firehose"
+  default     = false
+}
+
+variable "filter_pattern" {
+  type        = string
+  description = "Filter pattern to use for the log subscription filter"
+  default     = ""
+}
+
+variable "log_destination_arn" {
+  type        = string
+  description = "Destination ARN to use for the log subscription filter"
+  default     = ""
+}
+
+variable "log_subscription_role_arn" {
+  type        = string
+  description = "The ARN of the IAM role to use for the log subscription filter"
+  default     = ""
+}
