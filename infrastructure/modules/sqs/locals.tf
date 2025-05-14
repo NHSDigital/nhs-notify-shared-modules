@@ -1,4 +1,6 @@
 locals {
+  module = "sqs"
+
   # Compound Scope Identifier
   csi = replace(
     format(
@@ -12,24 +14,10 @@ locals {
     "",
   )
 
-  # CSI for use in resources with a global namespace, i.e. S3 Buckets
-  csi_global = replace(
-    format(
-      "%s-%s-%s-%s-%s",
-      var.project,
-      var.aws_account_id,
-      var.region,
-      var.environment,
-      var.component,
-    ),
-    "_",
-    "",
-  )
-
   default_tags = merge(
     var.default_tags,
     {
-      Module = var.module
+      Module = local.module
       Name   = local.csi
     },
   )

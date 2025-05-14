@@ -22,7 +22,6 @@
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Boolean to toggle force destroy of bucket. Defaults to true; should be changed in exceptional circumstances | `bool` | `true` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of default encryption KMS key for this bucket. If omitted, will use AES256 | `string` | `null` | no |
 | <a name="input_lifecycle_rules"></a> [lifecycle\_rules](#input\_lifecycle\_rules) | Object representing the lifecycle rules of the bucket | `any` | `[]` | no |
-| <a name="input_module"></a> [module](#input\_module) | The variable encapsulating the name of this module | `string` | `"s3bucket"` | no |
 | <a name="input_name"></a> [name](#input\_name) | The variable encapsulating the name of this bucket | `string` | n/a | yes |
 | <a name="input_notification_events"></a> [notification\_events](#input\_notification\_events) | Object representing the notification events for the bucket | `any` | `{}` | no |
 | <a name="input_object_ownership"></a> [object\_ownership](#input\_object\_ownership) | Ownership of objects written to the bucket | `string` | `"BucketOwnerEnforced"` | no |

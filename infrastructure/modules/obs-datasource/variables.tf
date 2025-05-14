@@ -45,24 +45,38 @@ variable "name" {
   description = "A unique name to distinguish this module invocation from others within the same CSI scope"
 }
 
-variable "deletion_window" {
+variable "oam_sink_id" {
+  description = "The ID of the Cloudwatch OAM sink in the appropriate observability account."
   type        = string
-  description = "KMS key deletion window"
+  default     = ""
 }
 
-variable "alias" {
+variable "observability_account_id" {
   type        = string
-  description = "Alias name for the hieradata KMS key"
+  description = "The Observability Account ID that needs access"
 }
 
-variable "key_policy_documents" {
-  type        = list(string)
-  description = "List of KMS key policy JSON documents"
-  default     = []
+variable "log_group_configuration" {
+  description = "Configuration for filtering log groups in the link configuration." # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/oam_link#link_configuration-block
+  type = object({
+    filter = string
+  })
+  default = null
 }
 
-variable "iam_delegation" {
-  type        = bool
-  description = "Whether to delegate administration of the key to the local account. Defaults to true"
-  default     = true
+variable "metric_configuration" {
+  description = "Configuration for filtering metrics in the link configuration." # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/oam_link#link_configuration-block
+  type = object({
+    filter = string
+  })
+  default = null
+}
+
+variable "resource_types" {
+  type = list(string)
+  description = "The resource types to include in the OAM link."
+  default = [
+    "AWS::CloudWatch::Metric",
+    "AWS::Logs::LogGroup"
+  ]
 }

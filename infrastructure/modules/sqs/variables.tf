@@ -31,12 +31,6 @@ variable "region" {
 # tfscaffold variables specific to this module
 ##
 
-variable "module" {
-  type        = string
-  description = "The variable encapsulating the name of this module"
-  default     = "sqs"
-}
-
 variable "default_tags" {
   type        = map(string)
   description = "A map of default tags to apply to all taggable resources within the component"
@@ -79,6 +73,12 @@ variable "visibility_timeout_seconds" {
   description = "The visibility timeout for the queue. An integer from 0 to 43200 (12 hours)"
   type        = number
   default     = 300
+}
+
+variable "delay_seconds" {
+  description = "Time in seconds that the delivery of all messages in the queue will be delayed. An integer from 0 to 900 (15 minutes)."
+  type        = number
+  default     = 0
 }
 
 variable "fifo_queue" {
