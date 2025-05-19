@@ -4,7 +4,7 @@ resource "aws_lambda_function" "main" {
 
   role        = aws_iam_role.lambda.arn
   handler     = "index.handler"
-  runtime     = "nodejs20.x"
+  runtime     = "nodejs22.x"
   publish     = true
   memory_size = 128
   timeout     = 20
