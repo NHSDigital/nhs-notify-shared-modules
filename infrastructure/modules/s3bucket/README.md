@@ -37,15 +37,15 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_acl"></a> [acl](#output\_acl) | n/a |
-| <a name="output_arn"></a> [arn](#output\_arn) | n/a |
-| <a name="output_bucket"></a> [bucket](#output\_bucket) | n/a |
-| <a name="output_bucket_domain_name"></a> [bucket\_domain\_name](#output\_bucket\_domain\_name) | n/a |
-| <a name="output_bucket_regional_domain_name"></a> [bucket\_regional\_domain\_name](#output\_bucket\_regional\_domain\_name) | n/a |
-| <a name="output_hosted_zone_id"></a> [hosted\_zone\_id](#output\_hosted\_zone\_id) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
-| <a name="output_policy"></a> [policy](#output\_policy) | n/a |
-| <a name="output_region"></a> [region](#output\_region) | n/a |
+| <a name="output_acl"></a> [acl](#output\_acl) | The ACL of the S3 bucket. If the object ownership is set to 'BucketOwnerEnforced', the ACL will be 'private'. Otherwise, it will reflect the ACL set in the aws\_s3\_bucket\_acl resource. |
+| <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the S3 bucket |
+| <a name="output_bucket"></a> [bucket](#output\_bucket) | The name of the S3 bucket |
+| <a name="output_bucket_domain_name"></a> [bucket\_domain\_name](#output\_bucket\_domain\_name) | The domain name of the S3 bucket |
+| <a name="output_bucket_regional_domain_name"></a> [bucket\_regional\_domain\_name](#output\_bucket\_regional\_domain\_name) | The regional domain name of the S3 bucket |
+| <a name="output_hosted_zone_id"></a> [hosted\_zone\_id](#output\_hosted\_zone\_id) | The hosted zone ID of the S3 bucket |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the S3 bucket |
+| <a name="output_policy"></a> [policy](#output\_policy) | The policy of the S3 bucket |
+| <a name="output_region"></a> [region](#output\_region) | The AWS region where the S3 bucket is located |
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

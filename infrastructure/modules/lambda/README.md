@@ -21,8 +21,8 @@
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
 | <a name="input_filter_pattern"></a> [filter\_pattern](#input\_filter\_pattern) | Filter pattern to use for the log subscription filter | `string` | `""` | no |
 | <a name="input_force_lambda_code_deploy"></a> [force\_lambda\_code\_deploy](#input\_force\_lambda\_code\_deploy) | If the lambda package in s3 has the same commit id tag as the terraform build branch, the lambda will not update automatically. Set to True if making changes to Lambda code from on the same commit for example during development | `bool` | `false` | no |
-| <a name="input_function_code_base_path"></a> [function\_code\_base\_path](#input\_function\_code\_base\_path) | The path to the sourcecode directories needed for this lambda | `string` | `"./"` | no |
-| <a name="input_function_code_dir"></a> [function\_code\_dir](#input\_function\_code\_dir) | The path to the sourcecode directories needed for this lambda | `string` | n/a | yes |
+| <a name="input_function_code_base_path"></a> [function\_code\_base\_path](#input\_function\_code\_base\_path) | The base path to the sourcecode directories needed for this lambda | `string` | `"./"` | no |
+| <a name="input_function_code_dir"></a> [function\_code\_dir](#input\_function\_code\_dir) | The directory for this lambda | `string` | n/a | yes |
 | <a name="input_function_include_common"></a> [function\_include\_common](#input\_function\_include\_common) | Include the 'common' lambda module with this lambda | `bool` | `true` | no |
 | <a name="input_function_module_name"></a> [function\_module\_name](#input\_function\_module\_name) | The name of the function module as used by the lambda handler, e.g. index or exports | `string` | `"index"` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Base name of this lambda | `string` | n/a | yes |
@@ -31,8 +31,8 @@
 | <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | The name of the lambda handler function (passed directly to the Lambda's handler option) | `string` | `"handler"` | no |
 | <a name="input_iam_policy_document"></a> [iam\_policy\_document](#input\_iam\_policy\_document) | n/a | <pre>object({<br/>    body = string<br/>  })</pre> | `null` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key arn to use for this function | `string` | n/a | yes |
-| <a name="input_lambda_at_edge"></a> [lambda\_at\_edge](#input\_lambda\_at\_edge) | Enable the lambda insights layer, this must be disabled for lambda@edge usage | `bool` | `false` | no |
-| <a name="input_lambda_dlq_message_retention_seconds"></a> [lambda\_dlq\_message\_retention\_seconds](#input\_lambda\_dlq\_message\_retention\_seconds) | KMS Key ARN to be used for SNS Topic for on-failure Lambda invocation records | `number` | `86400` | no |
+| <a name="input_lambda_at_edge"></a> [lambda\_at\_edge](#input\_lambda\_at\_edge) | Whether this Lambda is a Lambda@Edge function | `bool` | `false` | no |
+| <a name="input_lambda_dlq_message_retention_seconds"></a> [lambda\_dlq\_message\_retention\_seconds](#input\_lambda\_dlq\_message\_retention\_seconds) | The number of seconds to retain messages in the Lambda DLQ SQS queue | `number` | `86400` | no |
 | <a name="input_lambda_env_vars"></a> [lambda\_env\_vars](#input\_lambda\_env\_vars) | Lambda environment parameters map | `map(string)` | `{}` | no |
 | <a name="input_layers"></a> [layers](#input\_layers) | Lambda layer arns to include | `list(any)` | `[]` | no |
 | <a name="input_log_destination_arn"></a> [log\_destination\_arn](#input\_log\_destination\_arn) | Destination ARN to use for the log subscription filter | `string` | `""` | no |
@@ -58,14 +58,14 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | n/a |
-| <a name="output_function_arn"></a> [function\_arn](#output\_function\_arn) | n/a |
-| <a name="output_function_env_vars"></a> [function\_env\_vars](#output\_function\_env\_vars) | n/a |
-| <a name="output_function_invoke_arn"></a> [function\_invoke\_arn](#output\_function\_invoke\_arn) | n/a |
-| <a name="output_function_name"></a> [function\_name](#output\_function\_name) | n/a |
-| <a name="output_function_qualified_arn"></a> [function\_qualified\_arn](#output\_function\_qualified\_arn) | n/a |
-| <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | n/a |
-| <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | n/a |
+| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | Name of the CloudWatch Log Group for the Lambda function |
+| <a name="output_function_arn"></a> [function\_arn](#output\_function\_arn) | ARN of the Lambda function |
+| <a name="output_function_env_vars"></a> [function\_env\_vars](#output\_function\_env\_vars) | Environment variables for the Lambda function |
+| <a name="output_function_invoke_arn"></a> [function\_invoke\_arn](#output\_function\_invoke\_arn) | Invoke ARN of the Lambda function |
+| <a name="output_function_name"></a> [function\_name](#output\_function\_name) | Name of the Lambda function |
+| <a name="output_function_qualified_arn"></a> [function\_qualified\_arn](#output\_function\_qualified\_arn) | Qualified ARN of the Lambda function, including version or alias |
+| <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | ARN of the IAM role associated with the Lambda function |
+| <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | Name of the IAM role associated with the Lambda function |
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->
