@@ -93,7 +93,7 @@ variable "backup_copy_vault_account_id" {
 }
 
 variable "backup_plan_config_s3" {
-  description = "Configuration for backup plans"
+  description = "Configuration for backup plans for s3"
   type = object({
     enable                    = bool
     selection_tag             = string

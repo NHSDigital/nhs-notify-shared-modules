@@ -115,13 +115,13 @@ variable "lambda_env_vars" {
 
 variable "function_code_base_path" {
   type        = string
-  description = "The path to the sourcecode directories needed for this lambda"
+  description = "The base path to the sourcecode directories needed for this lambda"
   default     = "./"
 }
 
 variable "function_code_dir" {
   type        = string
-  description = "The path to the sourcecode directories needed for this lambda"
+  description = "The directory for this lambda"
 }
 
 variable "function_s3_bucket" {
@@ -185,7 +185,7 @@ variable "sns_destination_kms_key" {
 
 variable "lambda_dlq_message_retention_seconds" {
   type        = number
-  description = "KMS Key ARN to be used for SNS Topic for on-failure Lambda invocation records"
+  description = "The number of seconds to retain messages in the Lambda DLQ SQS queue"
   default     = 86400
 }
 
@@ -209,7 +209,7 @@ variable "enable_lambda_insights" {
 
 variable "lambda_at_edge" {
   type        = bool
-  description = "Enable the lambda insights layer, this must be disabled for lambda@edge usage"
+  description = "Whether this Lambda is a Lambda@Edge function"
   default     = false
 }
 
