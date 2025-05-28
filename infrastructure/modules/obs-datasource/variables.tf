@@ -73,7 +73,7 @@ variable "metric_configuration" {
 }
 
 variable "resource_types" {
-  type = list(string)
+  type        = list(string)
   description = "The resource types to include in the OAM link."
   default = [
     "AWS::CloudWatch::Metric",
