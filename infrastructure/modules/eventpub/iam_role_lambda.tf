@@ -67,7 +67,7 @@ data "aws_iam_policy_document" "lambda" {
     ]
   }
 
-    statement {
+  statement {
     sid    = "DLQPutMessage"
     effect = "Allow"
 

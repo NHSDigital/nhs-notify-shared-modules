@@ -29,10 +29,10 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_admin_policy_arn"></a> [admin\_policy\_arn](#output\_admin\_policy\_arn) | n/a |
-| <a name="output_key_arn"></a> [key\_arn](#output\_key\_arn) | n/a |
-| <a name="output_key_id"></a> [key\_id](#output\_key\_id) | n/a |
-| <a name="output_user_policy_arn"></a> [user\_policy\_arn](#output\_user\_policy\_arn) | n/a |
+| <a name="output_admin_policy_arn"></a> [admin\_policy\_arn](#output\_admin\_policy\_arn) | ARN of the admin IAM policy |
+| <a name="output_key_arn"></a> [key\_arn](#output\_key\_arn) | ARN of the KMS key |
+| <a name="output_key_id"></a> [key\_id](#output\_key\_id) | ID of the KMS key |
+| <a name="output_user_policy_arn"></a> [user\_policy\_arn](#output\_user\_policy\_arn) | ARN of the user IAM policy |
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

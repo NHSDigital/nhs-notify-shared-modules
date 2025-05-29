@@ -9,12 +9,12 @@ locals {
     var.name
   )
 
-  csi_underscore = replace(local.csi,"-","_")
+  csi_underscore = replace(local.csi, "-", "_")
 
   default_tags = merge(
     var.default_tags,
     {
-      Name = local.csi
+      Name   = local.csi
       Module = local.module
     },
   )
