@@ -1,6 +1,7 @@
 resource "aws_iam_role" "lambda" {
-  name               = local.csi
-  assume_role_policy = data.aws_iam_policy_document.lambda_assumerole.json
+  name                 = local.csi
+  assume_role_policy   = data.aws_iam_policy_document.lambda_assumerole.json
+  permissions_boundary = var.iam_permissions_boundary_arn != null ? var.iam_permissions_boundary_arn : null
 }
 
 resource "aws_iam_policy" "lambda" {
