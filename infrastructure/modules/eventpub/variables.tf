@@ -108,3 +108,9 @@ variable "control_plane_bus_arn" {
   type        = string
   description = "Data plane event bus arn"
 }
+
+variable "iam_permissions_boundary_arn" {
+  type        = string
+  description = "The ARN of the permissions boundary to use for the IAM role"
+  default     = null
+}
