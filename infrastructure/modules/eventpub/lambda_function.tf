@@ -27,4 +27,6 @@ resource "aws_lambda_function" "main" {
       THROTTLE_DELAY_MS           = "0"
     }
   }
+
+  depends_on = [ null_resource.lambda_zip ]
 }
