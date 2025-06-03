@@ -11,7 +11,4 @@ resource "archive_file" "lambda" {
     "**/package.json",
     "**/package-lock.json",
   ]
-  lifecycle {
-    create_before_destroy = true
-  }
 }
