@@ -9,8 +9,8 @@ resource "aws_lambda_function" "main" {
   memory_size = 128
   timeout     = 20
 
-  filename         = "${path.module}/lambda/eventpub/eventpub.zip"
-  source_code_hash = base64encode(filesha256("${path.module}/lambda/eventpub/eventpub.zip"))
+  filename         = archive_file.lambda.output_path
+  source_code_hash = archive_file.lambda.output_base64sha256
 
   logging_config {
     application_log_level = var.log_level
@@ -27,6 +27,4 @@ resource "aws_lambda_function" "main" {
       THROTTLE_DELAY_MS           = "0"
     }
   }
-
-  depends_on = [ "null_resource.lambda_zip" ]
 }
