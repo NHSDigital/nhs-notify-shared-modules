@@ -114,3 +114,15 @@ variable "iam_permissions_boundary_arn" {
   description = "The ARN of the permissions boundary to use for the IAM role"
   default     = null
 }
+
+variable "dlq_alarm_prefix" {
+  type        = string
+  description = "Prefix for dlq alarm"
+  default     = "RELIABILITY: "
+}
+
+variable "sns_delivery_alarm_prefix" {
+  type        = string
+  description = "Prefix for SNS Delivery alarm"
+  default     = "RELIABILITY: "
+}
