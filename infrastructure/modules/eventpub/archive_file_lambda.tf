@@ -10,4 +10,7 @@ resource "archive_file" "lambda" {
     "**/package.json",
     "**/package-lock.json",
   ]
+  triggers = {
+    always_run = timestamp()
+  }
 }
