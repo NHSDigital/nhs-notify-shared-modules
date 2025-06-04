@@ -115,14 +115,16 @@ variable "iam_permissions_boundary_arn" {
   default     = null
 }
 
-variable "dlq_alarm_prefix" {
-  type        = string
-  description = "Prefix for dlq alarm description - used in Core to trigger Teams Alarms, e.g 'RELIABILITY: ' or 'SECURITY: '"
-  default     = null
-}
-
-variable "sns_delivery_alarm_prefix" {
-  type        = string
-  description = "Prefix for SNS Delivery alarm description - used in Core to trigger Teams Alarms, e.g 'RELIABILITY: ' or 'SECURITY: '"
-  default     = null
+variable "alarm_prefixes" {
+  type = object({
+    dlq          = string
+    sns_delivery = string
+    lambda       = string
+  })
+  description = "Object containing prefixes for alarm descriptions, e.g. 'RELIABILITY:', 'SECURITY:', 'PERFORMANCE:'"
+  default = {
+    dlq          = null
+    sns_delivery = null
+    lambda       = null
+  }
 }
