@@ -25,5 +25,5 @@ output "replica_key_arn" {
 
 output "replica_key_id" {
   description = "ID of the Replica KMS key"
-  value       = length(aws_kms_replica_key.replica) > 0 ? aws_kms_replica_key.replica[0].key_id : null
+  value       = try(aws_kms_replica_key.replica[0].key_id, null)
 }
