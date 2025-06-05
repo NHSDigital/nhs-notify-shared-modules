@@ -7,8 +7,8 @@ resource "aws_sqs_queue" "sqs_queue" {
   fifo_queue                  = var.fifo_queue
   content_based_deduplication = var.content_based_deduplication
   max_message_size            = var.max_message_size
-  deduplication_scope         = var.fifo_queue ? var.deduplication_scope : null
-  fifo_throughput_limit       = var.fifo_queue ? var.fifo_throughput_limit : null
+  deduplication_scope         = (var.fifo_queue && var.high_throughput_fifo) ? "messageGroup" : null
+  fifo_throughput_limit       = (var.fifo_queue && var.high_throughput_fifo) ? "perMessageGroupId" : null
 
   kms_master_key_id                 = var.sqs_kms_key_arn
   kms_data_key_reuse_period_seconds = var.kms_data_key_reuse_period_seconds

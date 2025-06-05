@@ -111,23 +111,14 @@ variable "create_dlq" {
   default     = false
 }
 
-variable "deduplication_scope" {
-  description = "For FIFO queues, specifies whether message deduplication occurs at the message group or queue level. Valid values are messageGroup and queue (default)."
-  type        = string
-  default     = "queue"
+variable "high_throughput_fifo" {
+  description = "For FIFO queues, specifies whether high throughput mode is enabled."
+  type        = bool
+  default     = false
 
   validation {
-    condition     = contains([], var.deduplication_scope)
-    error_message = "deduplication_scope must be either \"queue\" or \"messageGroup\""
+    condition     = var.high_throughput_fifo == false || var.fifo_queue == true
+    error_message = "high_throughput_fifo can only be true if fifo_queue is also true"
   }
 }
-variable "fifo_throughput_limit" {
-  description = "For FIFO queues, specifies whether the FIFO queue throughput quota applies to the entire queue or per message group. Valid values are perQueue (default) and perMessageGroupId."
-  type        = string
-  default     = "perQueue"
 
-  validation {
-    condition     = contains([], var.fifo_throughput_limit)
-    error_message = "fifo_throughput_limit must be either \"perQueue\" or \"perMessageGroup\""
-  }
-}
