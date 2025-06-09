@@ -18,6 +18,7 @@
 | <a name="input_deletion_window"></a> [deletion\_window](#input\_deletion\_window) | KMS key deletion window | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the terraformscaffold environment the module is called for | `string` | n/a | yes |
 | <a name="input_iam_delegation"></a> [iam\_delegation](#input\_iam\_delegation) | Whether to delegate administration of the key to the local account. Defaults to true | `bool` | `true` | no |
+| <a name="input_is_multi_region"></a> [is\_multi\_region](#input\_is\_multi\_region) | Whether the KMS key is a multi-region key, where secondary region would mostly be us-east-1. Defaults to false | `bool` | `false` | no |
 | <a name="input_key_policy_documents"></a> [key\_policy\_documents](#input\_key\_policy\_documents) | List of KMS key policy JSON documents | `list(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | A unique name to distinguish this module invocation from others within the same CSI scope | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
@@ -32,6 +33,8 @@ No modules.
 | <a name="output_admin_policy_arn"></a> [admin\_policy\_arn](#output\_admin\_policy\_arn) | ARN of the admin IAM policy |
 | <a name="output_key_arn"></a> [key\_arn](#output\_key\_arn) | ARN of the KMS key |
 | <a name="output_key_id"></a> [key\_id](#output\_key\_id) | ID of the KMS key |
+| <a name="output_replica_key_arn"></a> [replica\_key\_arn](#output\_replica\_key\_arn) | ARN of the Replica KMS key |
+| <a name="output_replica_key_id"></a> [replica\_key\_id](#output\_replica\_key\_id) | ID of the Replica KMS key |
 | <a name="output_user_policy_arn"></a> [user\_policy\_arn](#output\_user\_policy\_arn) | ARN of the user IAM policy |
 <!-- vale on -->
 <!-- markdownlint-enable -->

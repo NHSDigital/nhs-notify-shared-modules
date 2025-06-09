@@ -66,3 +66,9 @@ variable "iam_delegation" {
   description = "Whether to delegate administration of the key to the local account. Defaults to true"
   default     = true
 }
+
+variable "is_multi_region" {
+  type        = bool
+  description = "Whether the KMS key is a multi-region key, where secondary region would mostly be us-east-1. Defaults to false"
+  default     = false
+}
