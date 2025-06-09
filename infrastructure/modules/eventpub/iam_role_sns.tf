@@ -1,6 +1,7 @@
 resource "aws_iam_role" "sns_role" {
-  name               = "${local.csi}-sns-role"
-  assume_role_policy = data.aws_iam_policy_document.sns_assume_role.json
+  name                 = "${local.csi}-sns-role"
+  assume_role_policy   = data.aws_iam_policy_document.sns_assume_role.json
+  permissions_boundary = var.iam_permissions_boundary_arn != null ? var.iam_permissions_boundary_arn : null
 }
 
 resource "aws_iam_policy" "firehose_delivery" {
