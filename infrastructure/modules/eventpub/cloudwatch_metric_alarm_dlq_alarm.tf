@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_metric_alarm" "dlq_alarm" {
   alarm_name          = "${local.csi}-dlq-messages-alarm"
-  alarm_description   = "${var.alarm_prefixes.dlq} Alarm for messages in the DLQ"
+  alarm_description   = "RELIABILITY: Alarm for messages in the DLQ"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
   metric_name         = "ApproximateNumberOfMessagesVisible"

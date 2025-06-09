@@ -114,17 +114,3 @@ variable "iam_permissions_boundary_arn" {
   description = "The ARN of the permissions boundary to use for the IAM role"
   default     = null
 }
-
-variable "alarm_prefixes" {
-  type = object({
-    dlq          = string
-    sns_delivery = string
-    lambda       = string
-  })
-  description = "Object containing prefixes for alarm descriptions, e.g. 'RELIABILITY:', 'SECURITY:', 'PERFORMANCE:'"
-  default = {
-    dlq          = null
-    sns_delivery = null
-    lambda       = null
-  }
-}

@@ -11,7 +11,6 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_alarm_prefixes"></a> [alarm\_prefixes](#input\_alarm\_prefixes) | Object containing prefixes for alarm descriptions, e.g. 'RELIABILITY:', 'SECURITY:', 'PERFORMANCE:' | <pre>object({<br/>    dlq          = string<br/>    sns_delivery = string<br/>    lambda       = string<br/>  })</pre> | <pre>{<br/>  "dlq": null,<br/>  "lambda": null,<br/>  "sns_delivery": null<br/>}</pre> | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
 | <a name="input_component"></a> [component](#input\_component) | The name of the terraformscaffold component calling this module | `string` | n/a | yes |
 | <a name="input_control_plane_bus_arn"></a> [control\_plane\_bus\_arn](#input\_control\_plane\_bus\_arn) | Data plane event bus arn | `string` | n/a | yes |
