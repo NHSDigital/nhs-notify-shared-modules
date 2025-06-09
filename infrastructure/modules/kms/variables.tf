@@ -69,6 +69,6 @@ variable "iam_delegation" {
 
 variable "is_multi_region" {
   type        = bool
-  description = "Whether the KMS key is a multi-region key. Defaults to false"
+  description = "Whether the KMS key is a multi-region key, where secondary region would mostly be us-east-1. Defaults to false"
   default     = false
 }
