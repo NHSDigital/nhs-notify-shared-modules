@@ -89,7 +89,6 @@ describe('SNS to EventBridge Lambda', () => {
       jest.advanceTimersByTime(500);
       await handlerPromise;
 
-      // No need to check Date.now, just ensure the handler completes after advancing timers
       jest.useRealTimers();
     });
 });
