@@ -49,7 +49,6 @@ describe('SNS to EventBridge Lambda', () => {
     beforeEach(() => {
         eventBridgeMock.reset();
         sqsMock.reset();
-        process.env.THROTTLE_DELAY_MS = undefined;
     });
 
     test('Valid event is sent to the correct EventBridge bus', async () => {
