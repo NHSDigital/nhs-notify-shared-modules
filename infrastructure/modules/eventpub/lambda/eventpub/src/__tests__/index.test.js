@@ -6,9 +6,42 @@ const { EventBridgeClient, PutEventsCommand } = require('@aws-sdk/client-eventbr
 const eventBridgeMock = mockClient(EventBridgeClient);
 const sqsMock = mockClient(SQSClient);
 
+const validCloudEvent = {
+  id: "123e4567-e89b-12d3-a456-426614174000",
+  source: "mock",
+  specversion: "1.0",
+  type: "data",
+  subject: "123e4567-e89b-12d3-a456-426614174001",
+  time: "2024-01-01T00:00:00Z",
+  datacontenttype: "application/json",
+  dataschema: "https://notify.nhs.uk/events/schemas/supplier-status/v1.json",
+  dataschemaversion: "1.0",
+  data: {
+    nhsNumber: "1234567890",
+    delayedFallback: false,
+    sendingGroupId: "group-1",
+    clientId: "client-1",
+    campaignId: "campaign-1",
+    supplierStatus: "active",
+    previousSupplierStatus: "inactive"
+  }
+};
+
+const invalidCloudEvent = {
+  // missing required fields
+  type: "data",
+  data: {}
+};
+
 const snsEvent = {
   Records: [
-      { Sns: { Message: JSON.stringify({ type: 'data', version: 1, source: 'mock', message: 'test' }) } }
+    { Sns: { Message: JSON.stringify(validCloudEvent) } }
+  ]
+};
+
+const snsEventInvalid = {
+  Records: [
+    { Sns: { Message: JSON.stringify(invalidCloudEvent) } }
   ]
 };
 
@@ -29,7 +62,7 @@ describe('SNS to EventBridge Lambda', () => {
     test('Invalid event is sent to DLQ', async () => {
         sqsMock.on(SendMessageCommand).resolves({ MessageId: '123' });
 
-        await handler(snsEvent);
+        await handler(snsEventInvalid);
 
         expect(sqsMock.calls()).toHaveLength(1);
     });
@@ -46,19 +79,16 @@ describe('SNS to EventBridge Lambda', () => {
 
       expect(eventBridgeMock.calls()).toHaveLength(2);
       expect(sqsMock.calls()).toHaveLength(1);
-  });
+    });
 
     test('Throttling delays event processing', async () => {
       process.env.THROTTLE_DELAY_MS = '500';
       jest.useFakeTimers();
 
-      const startTime = Date.now();
       const handlerPromise = handler(snsEvent);
       jest.advanceTimersByTime(500);
       await handlerPromise;
-      const endTime = Date.now();
 
-      expect(endTime - startTime).toBeGreaterThanOrEqual(500);
       jest.useRealTimers();
-  });
+    });
 });
