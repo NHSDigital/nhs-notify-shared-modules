@@ -44,7 +44,7 @@ resource "aws_iam_role_policy_attachment" "backup_additional" {
 
 resource "aws_iam_policy" "backup_additional" {
   name        = "${local.csi}-backup_additional"
-  description = "Amplify "
+  description = "Additional Backup Actions"
   policy      = data.aws_iam_policy_document.backup_additional.json
 }
 
