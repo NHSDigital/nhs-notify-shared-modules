@@ -35,3 +35,30 @@ resource "aws_iam_role_policy_attachment" "s3_backup" {
   policy_arn = "arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
   role       = aws_iam_role.backup.name
 }
+
+
+resource "aws_iam_role_policy_attachment" "backup_additional" {
+  role       = aws_iam_role.backup.name
+  policy_arn = aws_iam_policy.backup_additional.arn
+}
+
+resource "aws_iam_policy" "backup_additional" {
+  name        = "${local.csi}-backup_additional"
+  description = "Amplify "
+  policy      = data.aws_iam_policy_document.backup_additional.json
+}
+
+data "aws_iam_policy_document" "backup_additional" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "backup:TagResource",
+    ]
+
+    #trivy:ignore:aws-iam-no-policy-wildcards
+    resources = [
+      "*",
+    ]
+  }
+}
