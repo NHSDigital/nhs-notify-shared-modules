@@ -41,6 +41,7 @@
 | <a name="input_log_subscription_lambda_create_permission"></a> [log\_subscription\_lambda\_create\_permission](#input\_log\_subscription\_lambda\_create\_permission) | Whether to create a permission for the log forwarder. Set to false if using a generic one. | `bool` | `true` | no |
 | <a name="input_log_subscription_role_arn"></a> [log\_subscription\_role\_arn](#input\_log\_subscription\_role\_arn) | The ARN of the IAM role to use for the log subscription filter | `string` | `""` | no |
 | <a name="input_memory"></a> [memory](#input\_memory) | The amount of memory to apply to the created Lambda | `number` | n/a | yes |
+| <a name="input_permission_statements"></a> [permission\_statements](#input\_permission\_statements) | Statements giving an external source permission to invoke the Lambda function | <pre>list(object({<br/>    action         = optional(string)<br/>    principal      = string<br/>    source_arn     = optional(string)<br/>    source_account = optional(string)<br/>    statement_id   = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_project"></a> [project](#input\_project) | The name of the tfscaffold project | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | The runtime to use for the lambda function | `string` | n/a | yes |

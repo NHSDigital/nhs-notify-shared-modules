@@ -236,3 +236,15 @@ variable "log_subscription_role_arn" {
   description = "The ARN of the IAM role to use for the log subscription filter"
   default     = ""
 }
+
+variable "permission_statements" {
+  type = list(object({
+    action         = optional(string)
+    principal      = string
+    source_arn     = optional(string)
+    source_account = optional(string)
+    statement_id   = string
+  }))
+  description = "Statements giving an external source permission to invoke the Lambda function"
+  default     = []
+}
