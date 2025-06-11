@@ -12,7 +12,7 @@ resource "aws_cloudwatch_log_group" "main" {
 }
 
 resource "aws_cloudwatch_log_group" "main_edge" {
-  count = var.lambda_at_edge ? 1 : 0
+  count             = var.lambda_at_edge ? 1 : 0
   name              = "/aws/lambda/us-east-1.${local.csi}"
   retention_in_days = var.log_retention_in_days
   kms_key_id        = var.kms_key_arn

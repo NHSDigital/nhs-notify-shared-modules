@@ -11,8 +11,8 @@ data "aws_iam_policy_document" "put_logs" {
     #trivy:ignore:aws-iam-no-policy-wildcards
     resources = flatten([[
       "${aws_cloudwatch_log_group.main.arn}:*",
-    ], var.lambda_at_edge ? [
-       "${aws_cloudwatch_log_group.main_edge[0].arn}:*",
+      ], var.lambda_at_edge ? [
+      "${aws_cloudwatch_log_group.main_edge[0].arn}:*",
     ] : []])
   }
 
