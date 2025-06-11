@@ -16,6 +16,7 @@ variable "component" {
 variable "name" {
   type        = string
   description = "The variable encapsulating the name of this bucket"
+  default     = "backup"
 }
 
 variable "default_tags" {
