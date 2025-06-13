@@ -5,5 +5,5 @@ resource "aws_lambda_permission" "sns_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.main.function_name
   principal     = "sns.amazonaws.com"
-  source_arn    = aws_sns_topic[each.key].arn
+  source_arn    = aws_sns_topic.main[each.key].arn
 }
