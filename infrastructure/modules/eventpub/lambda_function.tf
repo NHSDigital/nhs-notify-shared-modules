@@ -21,6 +21,8 @@ resource "aws_lambda_function" "main" {
 
   environment {
     variables = {
+      DATA_TOPIC_ARN              = aws_sns_topic.data.arn
+      CONTROL_TOPIC_ARN           = aws_sns_topic.control.arn
       DATA_PLANE_EVENT_BUS_ARN    = var.data_plane_bus_arn
       CONTROL_PLANE_EVENT_BUS_ARN = var.control_plane_bus_arn
       DLQ_URL                     = aws_sqs_queue.dlq.url
