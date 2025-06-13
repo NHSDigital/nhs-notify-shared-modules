@@ -19,5 +19,8 @@ locals {
       Name   = local.csi
     },
   )
-
+  sns_topics = {
+    data    = "${local.csi}-data"
+    control = "${local.csi}-control"
+  }
 }

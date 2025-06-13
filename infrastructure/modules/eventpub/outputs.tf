@@ -1,8 +1,11 @@
 output "sns_topic" {
-  description = "SNS Topic ARN and Name"
+  description = "SNS Topic ARNs and Names"
   value = {
-    arn  = aws_sns_topic.main.arn
-    name = aws_sns_topic.main.name
+    for key, value in aws_sns_topic.main :
+    key => {
+      arn  = value.arn
+      name = value.name
+    }
   }
 }
 

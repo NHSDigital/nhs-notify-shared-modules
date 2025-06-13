@@ -11,6 +11,9 @@ const THROTTLE_DELAY_MS = parseInt(process.env.THROTTLE_DELAY_MS || '0', 10);
 const MAX_RETRIES = 3;
 const EVENTBRIDGE_MAX_BATCH_SIZE = 10;
 
+const DATA_TOPIC_ARN = process.env.DATA_TOPIC_ARN;
+const CONTROL_TOPIC_ARN = process.env.CONTROL_TOPIC_ARN;
+
 function validateEvent(event) {
     // CloudEvents v1.0 schema validation (supplier-status)
     const requiredFields = [
@@ -107,16 +110,26 @@ exports.handler = async (snsEvent) => {
         await new Promise(res => setTimeout(res, THROTTLE_DELAY_MS));
     }
 
-    const records = snsEvent.Records.map(record => JSON.parse(record.Sns.Message));
-    const validEvents = records.filter(validateEvent);
-    const invalidEvents = records.filter(event => !validateEvent(event));
+    // Map each record to its event and topicArn
+    const parsedRecords = snsEvent.Records.map(record => ({
+        event: JSON.parse(record.Sns.Message),
+        topicArn: record.Sns.TopicArn
+    }));
+
+    const validRecords = parsedRecords.filter(({ event }) => validateEvent(event));
+    const invalidEvents = parsedRecords.filter(({ event }) => !validateEvent(event)).map(({ event }) => event);
 
     // console.info(`Valid events: ${validEvents.length}, Invalid events: ${invalidEvents.length}`);
 
     if (invalidEvents.length) await sendToDLQ(invalidEvents);
 
-    const dataEvents = validEvents.filter(event => event.type === 'data');
-    const controlEvents = validEvents.filter(event => event.type === 'control');
+    // Classify by topicArn
+    const dataEvents = validRecords
+        .filter(({ topicArn }) => topicArn === DATA_TOPIC_ARN)
+        .map(({ event }) => event);
+    const controlEvents = validRecords
+        .filter(({ topicArn }) => topicArn === CONTROL_TOPIC_ARN)
+        .map(({ event }) => event);
 
     // console.info(`Data events: ${dataEvents.length}, Control events: ${controlEvents.length}`);
 
