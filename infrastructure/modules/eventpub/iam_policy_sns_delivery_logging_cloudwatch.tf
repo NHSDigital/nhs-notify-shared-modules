@@ -34,15 +34,11 @@ data "aws_iam_policy_document" "sns_delivery_logging_cloudwatch" {
       "logs:PutRetentionPolicy",
     ]
 
-    resources = [
-      aws_cloudwatch_log_group.sns_delivery_logging_success_data[0].arn,
-      "${aws_cloudwatch_log_group.sns_delivery_logging_success_data[0].arn}:log-stream:*",
-      aws_cloudwatch_log_group.sns_delivery_logging_failure_data[0].arn,
-      "${aws_cloudwatch_log_group.sns_delivery_logging_failure_data[0].arn}:log-stream:*",
-      aws_cloudwatch_log_group.sns_delivery_logging_success_control[0].arn,
-      "${aws_cloudwatch_log_group.sns_delivery_logging_success_control[0].arn}:log-stream:*",
-      aws_cloudwatch_log_group.sns_delivery_logging_failure_control[0].arn,
-      "${aws_cloudwatch_log_group.sns_delivery_logging_failure_control[0].arn}:log-stream:*",
-    ]
+    resources = concat(
+      [for arn in values(aws_cloudwatch_log_group.sns_delivery_logging_success) : arn.arn],
+      [for arn in values(aws_cloudwatch_log_group.sns_delivery_logging_success) : "${arn.arn}:log-stream:*"],
+      [for arn in values(aws_cloudwatch_log_group.sns_delivery_logging_failure) : arn.arn],
+      [for arn in values(aws_cloudwatch_log_group.sns_delivery_logging_failure) : "${arn.arn}:log-stream:*"]
+    )
   }
 }
