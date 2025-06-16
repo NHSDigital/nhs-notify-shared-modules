@@ -50,10 +50,10 @@ function validateEvent(event) {
 }
 
 async function sendToEventBridge(events, eventBusArn) {
-    console.debug(`Sending ${events.length} events to EventBridge: ${eventBusArn}`);
+  const failedEvents = [];
 
-    const failedEvents = [];
-    for (let i = 0; i < events.length; i += EVENTBRIDGE_MAX_BATCH_SIZE) {
+  for (let i = 0; i < events.length; i += EVENTBRIDGE_MAX_BATCH_SIZE) {
+        console.debug(`Sending ${events.length} events to EventBridge: ${eventBusArn}`);
         const batch = events.slice(i, i + EVENTBRIDGE_MAX_BATCH_SIZE);
         const entries = batch.map(event => ({
             Source: 'custom.event',
@@ -93,9 +93,8 @@ async function sendToEventBridge(events, eventBusArn) {
 }
 
 async function sendToDLQ(events) {
-    console.warn(`Sending ${events.length} failed events to DLQ`);
-
-    for (const event of events) {
+  for (const event of events) {
+        console.warn(`Sending ${events.length} failed events to DLQ`);
         await sqs.send(new SendMessageCommand({ QueueUrl: DLQ_URL, MessageBody: JSON.stringify(event) }));
     }
 }
