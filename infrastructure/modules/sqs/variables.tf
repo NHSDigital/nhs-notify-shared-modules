@@ -110,3 +110,15 @@ variable "create_dlq" {
   type        = bool
   default     = false
 }
+
+variable "high_throughput_fifo" {
+  description = "For FIFO queues, specifies whether high throughput mode is enabled."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = var.high_throughput_fifo == false || var.fifo_queue == true
+    error_message = "high_throughput_fifo can only be true if fifo_queue is also true"
+  }
+}
+
