@@ -1,7 +1,7 @@
 resource "aws_sqs_queue" "deadletter_queue" {
   count = var.create_dlq ? 1 : 0
 
-  name = "${local.csi}-dlq"
+  name = "${local.csi}-dlq${var.fifo_queue ? ".fifo" : ""}"
 
   message_retention_seconds   = var.message_retention_seconds
   visibility_timeout_seconds  = var.visibility_timeout_seconds
