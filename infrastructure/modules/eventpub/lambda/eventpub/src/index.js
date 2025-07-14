@@ -30,22 +30,6 @@ function validateEvent(event) {
     if (!requiredFields.every(field => event.hasOwnProperty(field))) {
         return false;
     }
-    // Check nested data object and its required fields
-    const dataRequiredFields = [
-        'nhsNumber',
-        'delayedFallback',
-        'sendingGroupId',
-        'clientId',
-        'campaignId',
-        'supplierStatus',
-        'previousSupplierStatus'
-    ];
-    if (
-        typeof event.data !== 'object' ||
-        !dataRequiredFields.every(field => event.data.hasOwnProperty(field))
-    ) {
-        return false;
-    }
     return true;
 }
 
