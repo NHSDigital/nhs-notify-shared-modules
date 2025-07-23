@@ -9,6 +9,7 @@ drawio
 endcapture
 endfor
 endraw
+Git[Hh]ub
 GitHub
 Gitleaks
 Grype
