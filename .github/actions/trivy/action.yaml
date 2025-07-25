@@ -5,9 +5,11 @@ runs:
     - name: "Trivy Terraform IAC Scan"
       shell: bash
       run: |
+        components_exit_code=0
         modules_exit_code=0
 
-        ./scripts/terraform/trivy.sh ./infrastructure/modules || modules_exit_code=$?
+        ./scripts/terraform/trivy.sh ./infrastructure/terraform/components || components_exit_code=$?
+        ./scripts/terraform/trivy.sh ./infrastructure/terraform/modules || modules_exit_code=$?
 
         if [ $components_exit_code -ne 0 ] || [ $modules_exit_code -ne 0 ]; then
           echo "Trivy misconfigurations detected."
