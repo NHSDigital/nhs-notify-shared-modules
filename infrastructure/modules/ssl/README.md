@@ -7,7 +7,7 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.10.1 |
-| <a name="requirement_tls"></a> [tls](#requirement\_tls) | 4.0.5 |
+| <a name="requirement_tls"></a> [tls](#requirement\_tls) | 4.1.0 |
 ## Inputs
 
 | Name | Description | Type | Default | Required |
