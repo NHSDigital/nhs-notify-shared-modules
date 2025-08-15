@@ -41,11 +41,6 @@ variable "default_tags" {
 # Variables specific to this module
 ##
 
-variable "truststore_s3_bucket" {
-  type        = string
-  description = "The id of the mgmt truststore s3 bucket"
-}
-
 variable "name" {
   type        = string
   description = "A unique name to distinguish this module invocation from others within the same CSI scope"

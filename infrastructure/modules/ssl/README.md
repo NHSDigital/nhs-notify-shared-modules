@@ -25,7 +25,6 @@
 | <a name="input_subject_organization"></a> [subject\_organization](#input\_subject\_organization) | Organization for certificate subject | `string` | `"NHS England"` | no |
 | <a name="input_subject_organizational_unit"></a> [subject\_organizational\_unit](#input\_subject\_organizational\_unit) | Organizational unit for certificate subject | `string` | `"NHS Notify"` | no |
 | <a name="input_subject_province"></a> [subject\_province](#input\_subject\_province) | Province for certificate subject | `string` | `"West Yorkshire"` | no |
-| <a name="input_truststore_s3_bucket"></a> [truststore\_s3\_bucket](#input\_truststore\_s3\_bucket) | The id of the mgmt truststore s3 bucket | `string` | n/a | yes |
 ## Modules
 
 No modules.
