@@ -73,8 +73,6 @@ variable "enable_sns_delivery_logging" {
   default     = false
 }
 
-
-
 variable "sns_success_logging_sample_percent" {
   type        = number
   description = "Enable SNS Delivery Successful Sample Percentage"
@@ -113,4 +111,10 @@ variable "iam_permissions_boundary_arn" {
   type        = string
   description = "The ARN of the permissions boundary to use for the IAM role"
   default     = null
+}
+
+variable "firehose_raw_message_delivery" {
+  type        = bool
+  description = "Enables raw message delivery on firehose subscription"
+  default     = false
 }
