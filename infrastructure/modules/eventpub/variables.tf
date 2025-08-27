@@ -97,6 +97,12 @@ variable "enable_event_cache" {
   default     = false
 }
 
+variable "enable_firehose_raw_message_delivery" {
+  type        = bool
+  description = "Enables raw message delivery on firehose subscription"
+  default     = false
+}
+
 variable "data_plane_bus_arn" {
   type        = string
   description = "Data plane event bus arn"
@@ -111,10 +117,4 @@ variable "iam_permissions_boundary_arn" {
   type        = string
   description = "The ARN of the permissions boundary to use for the IAM role"
   default     = null
-}
-
-variable "firehose_raw_message_delivery" {
-  type        = bool
-  description = "Enables raw message delivery on firehose subscription"
-  default     = false
 }
