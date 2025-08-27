@@ -7,7 +7,7 @@ resource "tls_self_signed_cert" "ca_cert" {
     country             = var.subject_country
     province            = var.subject_province
     locality            = var.subject_locality
-    common_name         = var.subject_common_name
+    common_name         = "ca-${var.subject_common_name}"
     organization        = var.subject_organization
     organizational_unit = var.subject_organizational_unit
   }
