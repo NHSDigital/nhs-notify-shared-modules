@@ -73,8 +73,6 @@ variable "enable_sns_delivery_logging" {
   default     = false
 }
 
-
-
 variable "sns_success_logging_sample_percent" {
   type        = number
   description = "Enable SNS Delivery Successful Sample Percentage"
@@ -99,6 +97,12 @@ variable "enable_event_cache" {
   default     = false
 }
 
+variable "enable_firehose_raw_message_delivery" {
+  type        = bool
+  description = "Enables raw message delivery on firehose subscription"
+  default     = false
+}
+
 variable "data_plane_bus_arn" {
   type        = string
   description = "Data plane event bus arn"
@@ -113,4 +117,9 @@ variable "iam_permissions_boundary_arn" {
   type        = string
   description = "The ARN of the permissions boundary to use for the IAM role"
   default     = null
+}
+variable "force_destroy" {
+  type        = bool
+  description = "When enabled will force destroy event-cache S3 bucket"
+  default     = false
 }

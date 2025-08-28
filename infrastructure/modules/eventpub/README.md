@@ -17,10 +17,12 @@
 | <a name="input_data_plane_bus_arn"></a> [data\_plane\_bus\_arn](#input\_data\_plane\_bus\_arn) | Data plane event bus arn | `string` | n/a | yes |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | Default tag map for application to all taggable resources in the module | `map(string)` | `{}` | no |
 | <a name="input_enable_event_cache"></a> [enable\_event\_cache](#input\_enable\_event\_cache) | Enable caching of events to an S3 bucket | `bool` | `false` | no |
+| <a name="input_enable_firehose_raw_message_delivery"></a> [enable\_firehose\_raw\_message\_delivery](#input\_enable\_firehose\_raw\_message\_delivery) | Enables raw message delivery on firehose subscription | `bool` | `false` | no |
 | <a name="input_enable_sns_delivery_logging"></a> [enable\_sns\_delivery\_logging](#input\_enable\_sns\_delivery\_logging) | Enable SNS Delivery Failure Notifications | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the terraformscaffold environment the module is called for | `string` | n/a | yes |
 | <a name="input_event_cache_buffer_interval"></a> [event\_cache\_buffer\_interval](#input\_event\_cache\_buffer\_interval) | The buffer interval for data firehose | `number` | `500` | no |
 | <a name="input_event_cache_expiry_days"></a> [event\_cache\_expiry\_days](#input\_event\_cache\_expiry\_days) | s3 archiving expiry in days | `number` | `30` | no |
+| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | When enabled will force destroy event-cache S3 bucket | `bool` | `false` | no |
 | <a name="input_group"></a> [group](#input\_group) | The name of the tfscaffold group | `string` | `null` | no |
 | <a name="input_iam_permissions_boundary_arn"></a> [iam\_permissions\_boundary\_arn](#input\_iam\_permissions\_boundary\_arn) | The ARN of the permissions boundary to use for the IAM role | `string` | `null` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key arn to use for this function | `string` | n/a | yes |
