@@ -12,7 +12,7 @@ module "s3bucket_event_cache" {
   component      = var.component
 
   acl           = "private"
-  force_destroy = var.force_destroy_event_cache_bucket
+  force_destroy = var.force_destroy
   versioning    = true
 
   lifecycle_rules = [
