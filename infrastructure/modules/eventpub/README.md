@@ -22,6 +22,7 @@
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the terraformscaffold environment the module is called for | `string` | n/a | yes |
 | <a name="input_event_cache_buffer_interval"></a> [event\_cache\_buffer\_interval](#input\_event\_cache\_buffer\_interval) | The buffer interval for data firehose | `number` | `500` | no |
 | <a name="input_event_cache_expiry_days"></a> [event\_cache\_expiry\_days](#input\_event\_cache\_expiry\_days) | s3 archiving expiry in days | `number` | `30` | no |
+| <a name="input_force_destroy_event_cache_bucket"></a> [force\_destroy\_event\_cache\_bucket](#input\_force\_destroy\_event\_cache\_bucket) | When enabled will force destroy event-cache S3 bucket | `bool` | `false` | no |
 | <a name="input_group"></a> [group](#input\_group) | The name of the tfscaffold group | `string` | `null` | no |
 | <a name="input_iam_permissions_boundary_arn"></a> [iam\_permissions\_boundary\_arn](#input\_iam\_permissions\_boundary\_arn) | The ARN of the permissions boundary to use for the IAM role | `string` | `null` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key arn to use for this function | `string` | n/a | yes |

@@ -118,3 +118,9 @@ variable "iam_permissions_boundary_arn" {
   description = "The ARN of the permissions boundary to use for the IAM role"
   default     = null
 }
+
+variable "force_destroy_event_cache_bucket" {
+  type        = bool
+  description = "When enabled will force destroy event-cache S3 bucket"
+  default     = false
+}
