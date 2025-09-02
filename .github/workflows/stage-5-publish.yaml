@@ -84,14 +84,14 @@ jobs:
           for module in */; do
             module_name=${module%/}
             zip -r "../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" "$module_name"
-            # Publish to GitHub Packages
+            # Publish to GitHub Packages using generic packages API
             curl \
               -X PUT \
               -H "Accept: application/vnd.github+json" \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Content-Type: application/octet-stream" \
               --data-binary "@../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" \
-              "https://api.github.com/repos/${{ github.repository }}/packages/terraform/${module_name}/${{ inputs.version }}"
+              "https://api.github.com/repos/${{ github.repository }}/packages/generic/terraform-${module_name}/${{ inputs.version }}/module.zip"
           done
 
       # Remove the old "Upload Terraform modules as release assets" step since we're using packages now
