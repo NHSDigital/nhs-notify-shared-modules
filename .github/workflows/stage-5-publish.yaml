@@ -83,48 +83,15 @@ jobs:
 
       - name: "Package and Publish Terraform modules"
         run: |
-          cd infrastructure/modules
-          for module in */; do
-            module_name=${module%/}
-            zip -r "../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" "$module_name"
-          done
+          cd infrastructure
+          zip -r "../artifacts/terraform-modules-${{ inputs.version }}.zip" modules/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Upload Terraform module artifacts"
         uses: actions/upload-artifact@v4
         with:
           name: terraform-modules-${{ inputs.version }}
-          path: ./artifacts/terraform-*.zip
-
-      # Remove the old "Upload Terraform modules as release assets" step since we're using packages now
-      # - name: "Upload Terraform modules as release assets"
-      #   run: |
-      #     for zip in artifacts/terraform-*-${{ inputs.version }}.zip; do
-      #       filename=$(basename "$zip")
-      #       echo "Uploading $filename"
-      #       gh release upload ${{ inputs.version }} "$zip" --clobber
-      #     done
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # - name: "Upload other release asset 1"
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: "${{ steps.create_release.outputs.upload_url }}"
-      #     asset_path: ./*
-      #     asset_name: repository-template-${{ inputs.version }}.tar.gz
-      #     asset_content_type: "application/gzip"
-      # - name: "Upload other release asset 2"
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: "${{ steps.create_release.outputs.upload_url }}"
-      #     asset_path: ./*
-      #     asset_name: repository-template-${{ inputs.version }}.tar.gz
-      #     asset_content_type: "application/gzip"
+          path: ./artifacts/terraform-modules-*.zip
   success:
     name: "Success notification"
     runs-on: ubuntu-latest
