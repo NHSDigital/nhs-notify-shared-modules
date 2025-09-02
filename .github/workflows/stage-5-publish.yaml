@@ -84,7 +84,6 @@ jobs:
           for module in */; do
             module_name=${module%/}
             zip -r "../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" "$module_name"
-            
             # Publish to GitHub Packages
             curl \
               -X PUT \
