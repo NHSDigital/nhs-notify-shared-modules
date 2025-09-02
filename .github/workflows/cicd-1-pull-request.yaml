@@ -35,7 +35,14 @@ jobs:
         run: |
           datetime=$(date -u +'%Y-%m-%dT%H:%M:%S%z')
           BUILD_DATETIME=$datetime make version-create-effective-file dir=.
-          version=$(head -n 1 .version 2> /dev/null || echo unknown)
+          branch_name=${GITHUB_HEAD_REF:-$(echo $GITHUB_REF | sed 's#refs/heads/##')}
+          if [[ "$branch_name" == "main" ]]; then
+            version=$(head -n 1 .version 2> /dev/null || echo unknown)
+          else
+            # Clean branch name by removing special characters and converting to lowercase
+            clean_branch=$(echo "$branch_name" | tr -dc '[:alnum:]\n\r' | tr '[:upper:]' '[:lower:]')
+            version="${clean_branch}"
+          fi
           echo "build_datetime_london=$(TZ=Europe/London date --date=$datetime +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_OUTPUT
           echo "build_datetime=$datetime" >> $GITHUB_OUTPUT
           echo "build_timestamp=$(date --date=$datetime -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
