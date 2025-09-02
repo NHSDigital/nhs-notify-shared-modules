@@ -131,7 +131,7 @@ jobs:
     name: "Publish stage"
     needs: [metadata, acceptance-stage]
     uses: ./.github/workflows/stage-5-publish.yaml
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'push'
     with:
       build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
       build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"

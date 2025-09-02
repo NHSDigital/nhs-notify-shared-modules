@@ -51,6 +51,7 @@ jobs:
       - name: "Create release"
         id: create_release
         uses: actions/create-release@v1
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -68,6 +69,7 @@ jobs:
       #  shell: bash
       - name: "Upload jeykll docs release asset"
         uses: actions/upload-release-asset@v1
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -75,6 +77,24 @@ jobs:
           asset_path: ./artifacts/jekyll-docs-${{ inputs.version }}/artifact.tar
           asset_name: jekyll-docs-${{ inputs.version }}.tar
           asset_content_type: "application/gzip"
+
+      - name: "Package Terraform modules"
+        run: |
+          cd infrastructure/modules
+          for module in */; do
+            module_name=${module%/}
+            zip -r "../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" "$module_name"
+          done
+
+      - name: "Upload Terraform modules as release assets"
+        run: |
+          for zip in artifacts/terraform-*-${{ inputs.version }}.zip; do
+            filename=$(basename "$zip")
+            echo "Uploading $filename"
+            gh release upload ${{ inputs.version }} "$zip" --clobber
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: "Upload other release asset 1"
       #   uses: actions/upload-release-asset@v1
