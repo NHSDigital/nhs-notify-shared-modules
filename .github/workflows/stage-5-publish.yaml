@@ -83,15 +83,19 @@ jobs:
 
       - name: "Package and Publish Terraform modules"
         run: |
-          cd infrastructure
-          zip -r "../artifacts/terraform-modules-${{ inputs.version }}.zip" modules/
+          cd infrastructure/modules
+          for module in */; do
+            module_name=${module%/}
+            zip -r "../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" "$module_name"
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Upload Terraform module artifacts"
         uses: actions/upload-artifact@v4
         with:
           name: terraform-modules-${{ inputs.version }}
-          path: ./artifacts/terraform-modules-*.zip
+          path: ./artifacts/terraform-*.zip
+          overwrite: true
   success:
     name: "Success notification"
     runs-on: ubuntu-latest
