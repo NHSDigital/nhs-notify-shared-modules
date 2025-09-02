@@ -26,20 +26,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5.0.0
 
-      - name: "Package Terraform modules"
+      - name: "Package and Publish Terraform modules"
         run: |
           cd infrastructure/modules
           for module in */; do
             module_name=${module%/}
             zip -r "../../artifacts/terraform-${module_name}-${{ github.event.release.tag_name }}.zip" "$module_name"
-          done
-
-      - name: "Upload Terraform modules as release assets"
-        run: |
-          for zip in artifacts/terraform-*-${{ github.event.release.tag_name }}.zip; do
-            filename=$(basename "$zip")
-            echo "Uploading $filename"
-            gh release upload ${{ github.event.release.tag_name }} "$zip" --clobber
+            echo "Publishing $module_name module..."
+            gh release upload ${{ github.event.release.tag_name }} "../../artifacts/terraform-${module_name}-${{ github.event.release.tag_name }}.zip" --clobber
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
