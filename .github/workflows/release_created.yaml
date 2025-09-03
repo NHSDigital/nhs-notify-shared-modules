@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   deploy-main:
-    name: Deploy changes to main in nonprod AWS Account
+    name: Package and Publish Terraform Modules to GitHub Releases assets
     runs-on: ubuntu-latest
 
     permissions:
