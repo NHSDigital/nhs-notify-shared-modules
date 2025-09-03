@@ -32,7 +32,7 @@ jobs:
           for module in */; do
             module_name=${module%/}
             echo "Zipping contents of $module_name..."
-            (cd "$module_name" && zip -r "../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" .)
+            (cd "$module_name" && zip -r "../../../artifacts/terraform-${module_name}-${{ inputs.version }}.zip" .)
             echo "Publishing $module_name module..."
             gh release upload ${{ github.event.release.tag_name }} "../../artifacts/terraform-${module_name}-${{ github.event.release.tag_name }}.zip" --clobber
           done
