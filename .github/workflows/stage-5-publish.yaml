@@ -92,6 +92,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Upload Terraform module artifacts"
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           cd infrastructure/modules
           for module in */; do
