@@ -91,11 +91,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Upload Terraform module artifacts"
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-modules-${{ inputs.version }}
-          path: ./artifacts/terraform-*.zip
-          overwrite: true
+        shell: bash
+        run: |
+          for file in ./artifacts/terraform-*.zip; do
+            artifact_name=$(basename "$file" .zip)
+            echo "Uploading $file as artifact $artifact_name"
+            gh api \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/actions/artifacts \
+              -F name="$artifact_name" \
+              -F file=@"$file"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # uses: actions/upload-artifact@v4
+        # with:
+        #   name: terraform-modules-${{ inputs.version }}
+        #   path: ./artifacts/terraform-*.zip
+        #   overwrite: true
   success:
     name: "Success notification"
     runs-on: ubuntu-latest
