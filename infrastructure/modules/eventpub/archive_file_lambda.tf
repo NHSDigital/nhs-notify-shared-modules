@@ -1,9 +1,9 @@
 resource "archive_file" "lambda" {
   type       = "zip"
-  source_dir = "${path.root}/.terraform/modules/eventpub/lambda/eventpub/src"
+  source_dir = var.source_path
 
   # Timestamp in path to resolve https://github.com/hashicorp/terraform-provider-archive/issues/39
-  output_path = "${path.root}/.terraform/modules/eventpub/lambda/eventpub_${timestamp()}.zip"
+  output_path = var.output_path
   excludes = [
     # NodeJS Exclusions
     "**/__tests__",

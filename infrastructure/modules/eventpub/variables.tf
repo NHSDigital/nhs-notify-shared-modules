@@ -123,3 +123,13 @@ variable "force_destroy" {
   description = "When enabled will force destroy event-cache S3 bucket"
   default     = false
 }
+
+variable "source_path" {
+  type        = string
+  description = "Path to the source code for the lambda function" 
+}
+
+variable "output_path" {
+  type        = string
+  description = "Path to output the zipped lambda function"
+}
