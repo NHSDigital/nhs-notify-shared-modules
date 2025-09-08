@@ -1,8 +1,11 @@
 name: Github Release Created
 
 on:
-  release:
-    types: ["published"] # Inherits all input defaults
+  # release:
+  #   types: ["published"] # Inherits all input defaults
+  push:
+    branches:
+      - feature/CCM-11751_eventpub_fix
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,7 +34,7 @@ jobs:
             echo "Zipping contents of $module_name..."
             (cd "$module_name" && zip -r "$ARTIFACTS_DIR/terraform-${module_name}.zip" .)
             echo "Publishing $module_name module..."
-            gh release upload ${{ github.event.release.tag_name }} "$ARTIFACTS_DIR/terraform-${module_name}.zip" --clobber
+            gh release upload v2.0.21 "$ARTIFACTS_DIR/terraform-${module_name}.zip" --clobber
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
