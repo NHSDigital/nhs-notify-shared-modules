@@ -13,3 +13,9 @@ output "s3_bucket_event_cache" {
     bucket = module.s3bucket_event_cache[0].bucket
   } : {}
 }
+
+output "path" {
+  value = {
+    lambda = archive_file.lambda.source_dir
+  }
+}
