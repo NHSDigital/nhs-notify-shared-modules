@@ -44,7 +44,7 @@ resource "aws_backup_framework" "s3" {
 
     input_parameter {
       name  = "requiredRetentionDays"
-      value = "35"
+      value = "31"
     }
   }
 
@@ -65,7 +65,7 @@ resource "aws_backup_framework" "s3" {
 
     input_parameter {
       name  = "requiredRetentionDays"
-      value = "35"
+      value = "31"
     }
 
     input_parameter {
