@@ -1,9 +1,8 @@
-resource "archive_file" "lambda" {
-  type       = "zip"
-  source_dir = "${path.module}/../../../lambda/eventpub/src"
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../lambda/eventpub/src"
+  output_path = "${path.module}/../../../lambda/${local.csi}_eventpub.zip"
 
-  # Timestamp in path to resolve https://github.com/hashicorp/terraform-provider-archive/issues/39
-  output_path = "${path.module}/../../../lambda/eventpub_${timestamp()}.zip"
   excludes = [
     # NodeJS Exclusions
     "**/__tests__",
@@ -11,4 +10,6 @@ resource "archive_file" "lambda" {
     "**/package.json",
     "**/package-lock.json",
   ]
+
+  depends_on = [null_resource.force_archive]
 }
