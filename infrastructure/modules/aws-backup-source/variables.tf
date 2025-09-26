@@ -221,3 +221,15 @@ variable "backup_plan_config_dynamodb" {
     ]
   }
 }
+
+variable "vault_max_retention_days" {
+  type        = number
+  description = "Maximum retention days for the vault lock"
+  default     = 35
+}
+
+variable "vault_min_retention_days" {
+  type        = number
+  description = "Minimum retention days for the vault lock"
+  default     = 7
+}
