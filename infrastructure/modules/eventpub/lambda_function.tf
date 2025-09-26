@@ -9,8 +9,9 @@ resource "aws_lambda_function" "main" {
   memory_size = 128
   timeout     = 20
 
-  filename         = archive_file.lambda.output_path
-  source_code_hash = archive_file.lambda.output_base64sha256
+  s3_bucket         = aws_s3_object.lambda.bucket
+  s3_key            = aws_s3_object.lambda.key
+  s3_object_version = aws_s3_object.lambda.version_id
 
   logging_config {
     application_log_level = var.log_level
