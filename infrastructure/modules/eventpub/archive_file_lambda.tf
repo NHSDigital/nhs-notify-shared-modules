@@ -1,7 +1,7 @@
 data "archive_file" "lambda" {
   type        = "zip"
-  source_dir  = "${path.module}/../../../lambda/eventpub/src"
-  output_path = "${path.module}/../../../lambda/${local.csi}_eventpub.zip"
+  source_dir  = "${path.module}/lambda/eventpub/src"
+  output_path = "${path.module}/lambda/${local.csi}_eventpub.zip"
 
   excludes = [
     # NodeJS Exclusions
