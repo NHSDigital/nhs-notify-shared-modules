@@ -27,7 +27,10 @@ function validateEvent(event) {
         'data'
     ];
     // Check top-level required fields
-    if (!requiredFields.every(field => event.hasOwnProperty(field))) {
+    const missingFields = requiredFields.filter(field => !event.hasOwnProperty(field));
+
+    if (missingFields.length > 0) {
+        console.error(`Event validation failed. Missing required fields: ${missingFields.join(', ')}. EventID: ${event.id || 'unknown'}, EventType: ${event.type || 'unknown'}`);
         return false;
     }
     return true;
@@ -54,19 +57,20 @@ async function sendToEventBridge(events, eventBusArn) {
                 const response = await eventBridge.send(new PutEventsCommand({ Entries: entries }));
                 response.FailedEntryCount && response.Entries.forEach((entry, idx) => {
                     if (entry.ErrorCode) {
-                        console.warn(`Event failed with error: ${entry.ErrorCode}`);
+                        console.error(`Event failed to send to EventBridge. ErrorCode: ${entry.ErrorCode}, ErrorMessage: ${entry.ErrorMessage}, EventID: ${batch[idx].id}, EventType: ${batch[idx].type}`);
                         failedEvents.push(batch[idx]);
                     }
                 });
                 break;
             } catch (error) {
-                console.error(`EventBridge send error: ${error}`);
+                console.error(`EventBridge send error: ${error.name}, Message: ${error.message}, Code: ${error.$metadata?.httpStatusCode}, RequestId: ${error.$metadata?.requestId}`);
 
                 if (error.retryable) {
                     console.warn(`Retrying after backoff: attempt ${attempts + 1}`);
                     await new Promise(res => setTimeout(res, 2 ** attempts * 100));
                     attempts++;
                 } else {
+                    console.error(`Non-retryable error encountered. Moving ${batch.length} events to DLQ`);
                     failedEvents.push(...batch);
                     break;
                 }
@@ -77,9 +81,17 @@ async function sendToEventBridge(events, eventBusArn) {
 }
 
 async function sendToDLQ(events) {
+  if (events.length === 0) return;
+
+  console.warn(`Sending ${events.length} failed event(s) to DLQ: ${DLQ_URL}`);
+
   for (const event of events) {
-        console.warn(`Sending ${events.length} failed events to DLQ`);
-        await sqs.send(new SendMessageCommand({ QueueUrl: DLQ_URL, MessageBody: JSON.stringify(event) }));
+        try {
+            await sqs.send(new SendMessageCommand({ QueueUrl: DLQ_URL, MessageBody: JSON.stringify(event) }));
+            console.debug(`Successfully sent event ${event.id} to DLQ`);
+        } catch (error) {
+            console.error(`Failed to send event ${event.id} to DLQ - Name: ${error.name}, Message: ${error.message}, Code: ${error.$metadata?.httpStatusCode}, RequestId: ${error.$metadata?.requestId}`);
+        }
     }
 }
 
@@ -96,8 +108,10 @@ exports.handler = async (snsEvent) => {
     const invalidEvents = records.filter(event => !validateEvent(event));
 
     console.debug(`Valid events: ${validEvents.length}, Invalid events: ${invalidEvents.length}`);
-
-    if (invalidEvents.length) await sendToDLQ(invalidEvents);
+    if (invalidEvents.length) {
+        console.warn(`${invalidEvents.length} event(s) failed validation and will be sent to DLQ`);
+        await sendToDLQ(invalidEvents);
+    }
 
     const dataEvents = validEvents.filter(event => event.plane === 'data');
     const controlEvents = validEvents.filter(event => event.plane === 'control');
