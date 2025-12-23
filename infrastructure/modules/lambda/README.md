@@ -32,7 +32,7 @@
 | <a name="input_iam_policy_document"></a> [iam\_policy\_document](#input\_iam\_policy\_document) | n/a | <pre>object({<br/>    body = string<br/>  })</pre> | `null` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key arn to use for this function | `string` | n/a | yes |
 | <a name="input_lambda_at_edge"></a> [lambda\_at\_edge](#input\_lambda\_at\_edge) | Whether this Lambda is a Lambda@Edge function | `bool` | `false` | no |
-| <a name="input_lambda_dlq_message_retention_seconds"></a> [lambda\_dlq\_message\_retention\_seconds](#input\_lambda\_dlq\_message\_retention\_seconds) | The number of seconds to retain messages in the Lambda DLQ SQS queue | `number` | `86400` | no |
+| <a name="input_lambda_dlq_message_retention_seconds"></a> [lambda\_dlq\_message\_retention\_seconds](#input\_lambda\_dlq\_message\_retention\_seconds) | The number of seconds to retain messages in the Lambda DLQ SQS queue | `number` | `1209600` | no |
 | <a name="input_lambda_env_vars"></a> [lambda\_env\_vars](#input\_lambda\_env\_vars) | Lambda environment parameters map | `map(string)` | `{}` | no |
 | <a name="input_layers"></a> [layers](#input\_layers) | Lambda layer arns to include | `list(any)` | `[]` | no |
 | <a name="input_log_destination_arn"></a> [log\_destination\_arn](#input\_log\_destination\_arn) | Destination ARN to use for the log subscription filter | `string` | `""` | no |
