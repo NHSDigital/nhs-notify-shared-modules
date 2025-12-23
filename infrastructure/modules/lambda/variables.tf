@@ -186,7 +186,7 @@ variable "sns_destination_kms_key" {
 variable "lambda_dlq_message_retention_seconds" {
   type        = number
   description = "The number of seconds to retain messages in the Lambda DLQ SQS queue"
-  default     = 86400
+  default     = 1209600
 }
 
 variable "application_log_level" {
