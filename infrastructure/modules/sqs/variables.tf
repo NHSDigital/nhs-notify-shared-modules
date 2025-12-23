@@ -69,6 +69,12 @@ variable "message_retention_seconds" {
   default     = null
 }
 
+variable "dlq_message_retention_seconds" {
+  description = "The number of seconds Amazon SQS retains a message on the DLQ. Integer representing seconds, from 60 (1 minute) to 1209600 (14 days)"
+  type        = number
+  default     = 1209600
+}
+
 variable "visibility_timeout_seconds" {
   description = "The visibility timeout for the queue. An integer from 0 to 43200 (12 hours)"
   type        = number

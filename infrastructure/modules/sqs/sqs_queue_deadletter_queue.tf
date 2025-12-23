@@ -3,7 +3,7 @@ resource "aws_sqs_queue" "deadletter_queue" {
 
   name = "${local.csi}-dlq${var.fifo_queue ? ".fifo" : ""}"
 
-  message_retention_seconds   = var.message_retention_seconds
+  message_retention_seconds   = var.dlq_message_retention_seconds
   visibility_timeout_seconds  = var.visibility_timeout_seconds
   fifo_queue                  = var.fifo_queue
   content_based_deduplication = var.content_based_deduplication
