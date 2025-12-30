@@ -46,7 +46,7 @@
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | The runtime to use for the lambda function | `string` | n/a | yes |
 | <a name="input_schedule"></a> [schedule](#input\_schedule) | The fully qualified Cloudwatch Events schedule for when to run the lambda function, e.g. rate(1 day) or a cron() expression. Default disables all events resources | `string` | `""` | no |
-| <a name="input_send_to_firehose"></a> [send\_to\_firehose](#input\_send\_to\_firehose) | Enable sending logs to firehose | `bool` | `false` | no |
+| <a name="input_send_to_firehose"></a> [send\_to\_firehose](#input\_send\_to\_firehose) | Enable sending logs to firehose | `bool` | `true` | no |
 | <a name="input_sns_destination"></a> [sns\_destination](#input\_sns\_destination) | SNS Topic ARN to be used for on-failure Lambda invocation records | `string` | `null` | no |
 | <a name="input_sns_destination_kms_key"></a> [sns\_destination\_kms\_key](#input\_sns\_destination\_kms\_key) | KMS Key ARN to be used for SNS Topic for on-failure Lambda invocation records | `string` | `null` | no |
 | <a name="input_system_log_level"></a> [system\_log\_level](#input\_system\_log\_level) | The detail level of the Lambda platform event logs sent to CloudWatch | `string` | `"WARN"` | no |

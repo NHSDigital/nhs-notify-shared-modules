@@ -216,7 +216,7 @@ variable "lambda_at_edge" {
 variable "send_to_firehose" {
   type        = bool
   description = "Enable sending logs to firehose"
-  default     = false
+  default     = true
 }
 
 variable "filter_pattern" {
