@@ -116,3 +116,9 @@ variable "create_dlq" {
   type        = bool
   default     = false
 }
+
+variable "max_receive_count" {
+  description = "The maximum number of times a message can be received before being sent to the DLQ"
+  type        = number
+  default     = 3
+}
