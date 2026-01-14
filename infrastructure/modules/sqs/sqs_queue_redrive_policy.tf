@@ -4,6 +4,6 @@ resource "aws_sqs_queue_redrive_policy" "redrive_policy" {
   queue_url = aws_sqs_queue.sqs_queue.url
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.deadletter_queue[0].arn
-    maxReceiveCount     = 3
+    maxReceiveCount     = var.max_receive_count
   })
 }
