@@ -1,5 +1,5 @@
 module "s3bucket_event_cache" {
-  source = "git::https://github.com/NHSDigital/nhs-notify-shared-modules.git//infrastructure/modules/s3bucket?ref=v1.0.8"
+  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/v2.0.30/terraform-s3bucket.zip"
 
   count = var.enable_event_cache ? 1 : 0
 
@@ -36,9 +36,10 @@ module "s3bucket_event_cache" {
     }
   ]
 
-  policy_documents = [
-    data.aws_iam_policy_document.s3bucket_event_cache[0].json
-  ]
+  policy_documents = concat(
+    [data.aws_iam_policy_document.s3bucket_event_cache[0].json],
+    var.additional_policies_for_event_cache_bucket
+  )
 
   public_access = {
     block_public_acls       = true
