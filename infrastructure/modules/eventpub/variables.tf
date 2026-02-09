@@ -123,3 +123,9 @@ variable "force_destroy" {
   description = "When enabled will force destroy event-cache S3 bucket"
   default     = false
 }
+
+variable "additional_policies_for_event_cache_bucket" {
+  type        = list(string)
+  description = "A list of JSON policies to use to build the bucket policy"
+  default     = []
+}
