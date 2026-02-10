@@ -4,11 +4,20 @@ data "aws_iam_policy_document" "ecr" {
 
     actions = [
       "ecr:GetAuthorizationToken",
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchCheckLayerAvailability",
     ]
 
-    resources = ["*"]
+    resources = ["arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/*"]
   }
 }
