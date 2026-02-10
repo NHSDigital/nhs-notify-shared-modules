@@ -144,6 +144,8 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
+      - name: "Setup ASDF"
+        uses: asdf-vm/actions/setup@v4
       - name: "Lint Terraform"
         uses: ./.github/actions/lint-terraform
   trivy:
