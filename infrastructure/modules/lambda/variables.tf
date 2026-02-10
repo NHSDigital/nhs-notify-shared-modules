@@ -132,6 +132,17 @@ variable "image_config" {
   default     = null
 }
 
+variable "image_repository_names" {
+  type        = list(string)
+  description = "ECR repository names allowed for Image-based Lambda"
+  default     = []
+
+  validation {
+    condition     = lower(var.package_type) != "image" || length(var.image_repository_names) > 0
+    error_message = "image_repository_names must include at least one repository name when package_type is Image."
+  }
+}
+
 variable "schedule" {
   type        = string
   description = "The fully qualified Cloudwatch Events schedule for when to run the lambda function, e.g. rate(1 day) or a cron() expression. Default disables all events resources"

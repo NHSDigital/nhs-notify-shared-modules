@@ -31,6 +31,7 @@
 | <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | The name of the lambda handler function (passed directly to the Lambda's handler option) | `string` | `"handler"` | no |
 | <a name="input_iam_policy_document"></a> [iam\_policy\_document](#input\_iam\_policy\_document) | n/a | <pre>object({<br/>    body = string<br/>  })</pre> | `null` | no |
 | <a name="input_image_config"></a> [image\_config](#input\_image\_config) | Optional image configuration for Image-based Lambda | <pre>object({<br/>    entry_point       = optional(list(string))<br/>    command           = optional(list(string))<br/>    working_directory = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_image_repository_names"></a> [image\_repository\_names](#input\_image\_repository\_names) | ECR repository names allowed for Image-based Lambda | `list(string)` | `[]` | no |
 | <a name="input_image_uri"></a> [image\_uri](#input\_image\_uri) | ECR image URI for Image-based Lambda | `string` | `null` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key arn to use for this function | `string` | n/a | yes |
 | <a name="input_lambda_at_edge"></a> [lambda\_at\_edge](#input\_lambda\_at\_edge) | Whether this Lambda is a Lambda@Edge function | `bool` | `false` | no |
