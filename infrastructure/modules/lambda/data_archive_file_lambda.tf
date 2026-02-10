@@ -1,4 +1,5 @@
 data "archive_file" "lambda" {
+  count = var.package_type == "Zip" ? 1 : 0
   type       = "zip"
   source_dir = "${path.root}/${var.function_code_base_path}/${var.function_code_dir}"
 
