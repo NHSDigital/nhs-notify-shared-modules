@@ -22,14 +22,16 @@
 | <a name="input_filter_pattern"></a> [filter\_pattern](#input\_filter\_pattern) | Filter pattern to use for the log subscription filter | `string` | `""` | no |
 | <a name="input_force_lambda_code_deploy"></a> [force\_lambda\_code\_deploy](#input\_force\_lambda\_code\_deploy) | If the lambda package in s3 has the same commit id tag as the terraform build branch, the lambda will not update automatically. Set to True if making changes to Lambda code from on the same commit for example during development | `bool` | `false` | no |
 | <a name="input_function_code_base_path"></a> [function\_code\_base\_path](#input\_function\_code\_base\_path) | The base path to the sourcecode directories needed for this lambda | `string` | `"./"` | no |
-| <a name="input_function_code_dir"></a> [function\_code\_dir](#input\_function\_code\_dir) | The directory for this lambda (required for Zip) | `string` | `null` | no |
+| <a name="input_function_code_dir"></a> [function\_code\_dir](#input\_function\_code\_dir) | The directory for this lambda | `string` | `null` | no |
 | <a name="input_function_include_common"></a> [function\_include\_common](#input\_function\_include\_common) | Include the 'common' lambda module with this lambda | `bool` | `true` | no |
 | <a name="input_function_module_name"></a> [function\_module\_name](#input\_function\_module\_name) | The name of the function module as used by the lambda handler, e.g. index or exports | `string` | `"index"` | no |
 | <a name="input_function_name"></a> [function\_name](#input\_function\_name) | Base name of this lambda | `string` | n/a | yes |
-| <a name="input_function_s3_bucket"></a> [function\_s3\_bucket](#input\_function\_s3\_bucket) | The bucket to upload Lambda packages to (required for Zip) | `string` | `null` | no |
+| <a name="input_function_s3_bucket"></a> [function\_s3\_bucket](#input\_function\_s3\_bucket) | The bucket to upload Lambda packages to | `string` | `null` | no |
 | <a name="input_group"></a> [group](#input\_group) | The name of the tfscaffold group | `string` | `null` | no |
 | <a name="input_handler_function_name"></a> [handler\_function\_name](#input\_handler\_function\_name) | The name of the lambda handler function (passed directly to the Lambda's handler option) | `string` | `"handler"` | no |
 | <a name="input_iam_policy_document"></a> [iam\_policy\_document](#input\_iam\_policy\_document) | n/a | <pre>object({<br/>    body = string<br/>  })</pre> | `null` | no |
+| <a name="input_image_config"></a> [image\_config](#input\_image\_config) | Optional image configuration for Image-based Lambda | <pre>object({<br/>    entry_point       = optional(list(string))<br/>    command           = optional(list(string))<br/>    working_directory = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_image_uri"></a> [image\_uri](#input\_image\_uri) | ECR image URI for Image-based Lambda | `string` | `null` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key arn to use for this function | `string` | n/a | yes |
 | <a name="input_lambda_at_edge"></a> [lambda\_at\_edge](#input\_lambda\_at\_edge) | Whether this Lambda is a Lambda@Edge function | `bool` | `false` | no |
 | <a name="input_lambda_dlq_message_retention_seconds"></a> [lambda\_dlq\_message\_retention\_seconds](#input\_lambda\_dlq\_message\_retention\_seconds) | The number of seconds to retain messages in the Lambda DLQ SQS queue | `number` | `1209600` | no |
@@ -41,13 +43,11 @@
 | <a name="input_log_subscription_lambda_create_permission"></a> [log\_subscription\_lambda\_create\_permission](#input\_log\_subscription\_lambda\_create\_permission) | Whether to create a permission for the log forwarder. Set to false if using a generic one. | `bool` | `true` | no |
 | <a name="input_log_subscription_role_arn"></a> [log\_subscription\_role\_arn](#input\_log\_subscription\_role\_arn) | The ARN of the IAM role to use for the log subscription filter | `string` | `""` | no |
 | <a name="input_memory"></a> [memory](#input\_memory) | The amount of memory to apply to the created Lambda | `number` | n/a | yes |
+| <a name="input_package_type"></a> [package\_type](#input\_package\_type) | Lambda package type: Zip or Image | `string` | `"Zip"` | no |
 | <a name="input_permission_statements"></a> [permission\_statements](#input\_permission\_statements) | Statements giving an external source permission to invoke the Lambda function | <pre>list(object({<br/>    action         = optional(string)<br/>    principal      = string<br/>    source_arn     = optional(string)<br/>    source_account = optional(string)<br/>    statement_id   = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_project"></a> [project](#input\_project) | The name of the tfscaffold project | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
-| <a name="input_runtime"></a> [runtime](#input\_runtime) | The runtime to use for the lambda function (required for Zip) | `string` | `null` | no |
-| <a name="input_package_type"></a> [package\_type](#input\_package\_type) | Lambda package type: Zip or Image | `string` | `"Zip"` | no |
-| <a name="input_image_uri"></a> [image\_uri](#input\_image\_uri) | ECR image URI for Image-based Lambda | `string` | `null` | no |
-| <a name="input_image_config"></a> [image\_config](#input\_image\_config) | Optional image configuration for Image-based Lambda | <pre>object({<br/>    entry_point = optional(list(string))<br/>    command = optional(list(string))<br/>    working_directory = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_runtime"></a> [runtime](#input\_runtime) | The runtime to use for the lambda function | `string` | `null` | no |
 | <a name="input_schedule"></a> [schedule](#input\_schedule) | The fully qualified Cloudwatch Events schedule for when to run the lambda function, e.g. rate(1 day) or a cron() expression. Default disables all events resources | `string` | `""` | no |
 | <a name="input_send_to_firehose"></a> [send\_to\_firehose](#input\_send\_to\_firehose) | Enable sending logs to firehose | `bool` | `true` | no |
 | <a name="input_sns_destination"></a> [sns\_destination](#input\_sns\_destination) | SNS Topic ARN to be used for on-failure Lambda invocation records | `string` | `null` | no |
