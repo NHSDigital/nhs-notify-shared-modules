@@ -1,5 +1,5 @@
 resource "aws_s3_object" "lambda" {
-  count  = var.package_type == "Zip" ? 1 : 0
+  count  = local.package_type == "zip" ? 1 : 0
   bucket = var.function_s3_bucket
   key    = "${local.csi}.zip"
   source = data.archive_file.lambda[0].output_path

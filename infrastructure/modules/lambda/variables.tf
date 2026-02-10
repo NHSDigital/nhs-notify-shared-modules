@@ -95,7 +95,7 @@ variable "runtime" {
   default     = null
 
   validation {
-    condition     = var.package_type != "Zip" || (var.runtime != null && var.runtime != "")
+    condition     = lower(var.package_type) != "zip" || (var.runtime != null && var.runtime != "")
     error_message = "runtime must be set when package_type is Zip."
   }
 }
@@ -106,7 +106,7 @@ variable "package_type" {
   default     = "Zip"
 
   validation {
-    condition     = contains(["Zip", "Image"], var.package_type)
+    condition     = contains(["zip", "image"], lower(var.package_type))
     error_message = "package_type must be either Zip or Image."
   }
 }
@@ -117,7 +117,7 @@ variable "image_uri" {
   default     = null
 
   validation {
-    condition     = var.package_type != "Image" || (var.image_uri != null && var.image_uri != "")
+    condition     = lower(var.package_type) != "image" || (var.image_uri != null && var.image_uri != "")
     error_message = "image_uri must be set when package_type is Image."
   }
 }
@@ -163,7 +163,7 @@ variable "function_code_dir" {
   default     = null
 
   validation {
-    condition     = var.package_type != "Zip" || (var.function_code_dir != null && var.function_code_dir != "")
+    condition     = lower(var.package_type) != "zip" || (var.function_code_dir != null && var.function_code_dir != "")
     error_message = "function_code_dir must be set when package_type is Zip."
   }
 }
@@ -174,7 +174,7 @@ variable "function_s3_bucket" {
   default     = null
 
   validation {
-    condition     = var.package_type != "Zip" || (var.function_s3_bucket != null && var.function_s3_bucket != "")
+    condition     = lower(var.package_type) != "zip" || (var.function_s3_bucket != null && var.function_s3_bucket != "")
     error_message = "function_s3_bucket must be set when package_type is Zip."
   }
 }

@@ -18,6 +18,9 @@ data "aws_iam_policy_document" "ecr" {
       "ecr:BatchCheckLayerAvailability",
     ]
 
-    resources = ["arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/*"]
+    resources = [
+      for repo_name in var.image_repository_names :
+      "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${repo_name}"
+    ]
   }
 }

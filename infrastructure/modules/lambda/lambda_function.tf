@@ -2,21 +2,21 @@ resource "aws_lambda_function" "main" {
   description   = var.description
   function_name = local.csi
   role          = aws_iam_role.main.arn
-  handler       = var.package_type == "Zip" ? "${var.function_module_name}.${var.handler_function_name}" : null
-  runtime       = var.package_type == "Zip" ? var.runtime : null
-  package_type  = var.package_type
+  handler       = local.package_type == "zip" ? "${var.function_module_name}.${var.handler_function_name}" : null
+  runtime       = local.package_type == "zip" ? var.runtime : null
+  package_type  = title(local.package_type)
   publish       = true
   memory_size   = var.memory
   timeout       = var.timeout
 
-  s3_bucket         = var.package_type == "Zip" ? aws_s3_object.lambda[0].bucket : null
-  s3_key            = var.package_type == "Zip" ? aws_s3_object.lambda[0].key : null
-  s3_object_version = var.package_type == "Zip" ? aws_s3_object.lambda[0].version_id : null
+  s3_bucket         = local.package_type == "zip" ? aws_s3_object.lambda[0].bucket : null
+  s3_key            = local.package_type == "zip" ? aws_s3_object.lambda[0].key : null
+  s3_object_version = local.package_type == "zip" ? aws_s3_object.lambda[0].version_id : null
 
-  image_uri = var.package_type == "Image" ? var.image_uri : null
+  image_uri = local.package_type == "image" ? var.image_uri : null
 
   dynamic "image_config" {
-    for_each = var.package_type == "Image" && var.image_config != null ? [1] : []
+    for_each = local.package_type == "image" && var.image_config != null ? [1] : []
     content {
       entry_point       = try(var.image_config.entry_point, null)
       command           = try(var.image_config.command, null)
@@ -31,7 +31,7 @@ resource "aws_lambda_function" "main" {
     system_log_level      = var.system_log_level
   }
 
-  layers = var.package_type == "Zip" ? compact(concat(
+  layers = local.package_type == "zip" ? compact(concat(
     var.layers,
     [
       var.enable_lambda_insights && var.lambda_at_edge == false ? "arn:aws:lambda:${var.region}:580247275435:layer:LambdaInsightsExtension:53" : null
