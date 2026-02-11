@@ -1,28 +1,28 @@
 # Terraform Make Targets for Shared Modules
 # This repository contains only Terraform modules (no components or tfscaffold)
-# Modules are located in infrastructure/modules/
+# Modules are located in infrastructure/terraform/modules/
 
 # ==============================================================================
 # Formatting and Validation
 
 terraform-fmt: # Format Terraform module files @Quality
 	# Example: make terraform-fmt
-	@cd infrastructure && terraform fmt -recursive modules
+	@cd infrastructure/terraform && terraform fmt -recursive modules
 
 terraform-fmt-check: # Check Terraform module formatting @Quality
 	# Example: make terraform-fmt-check
-	@cd infrastructure && terraform fmt -check -recursive modules
+	@cd infrastructure/terraform && terraform fmt -check -recursive modules
 
 terraform-validate: # Validate a specific Terraform module - mandatory: module=[module_name] @Quality
 	# Example: make terraform-validate module=mymodule
 	# Note: Validation does not require environment/group as it checks syntax only
-	cd infrastructure/modules/$(module) && \
+	cd infrastructure/terraform/modules/$(module) && \
 	terraform init -backend=false && \
 	terraform validate
 
 terraform-validate-all: # Validate all Terraform modules @Quality
 	# Example: make terraform-validate-all
-	@for dir in infrastructure/modules/*; do \
+	@for dir in infrastructure/terraform/modules/*; do \
 		if [ -d "$$dir" ]; then \
 			echo "Validating $$(basename $$dir)..."; \
 			temp_provider=false; \
@@ -46,15 +46,15 @@ terraform-validate-all: # Validate all Terraform modules @Quality
 
 terraform-sec: # Run Trivy IaC security scanning on Terraform modules @Quality
 	# Example: make terraform-sec
-	./scripts/terraform/trivy-scan.sh --mode iac infrastructure/modules
+	./scripts/terraform/trivy-scan.sh --mode iac infrastructure/terraform/modules
 
 terraform-docs: # Generate Terraform module documentation - optional: module=[specific module, or all if omitted] @Quality
 	# Example: make terraform-docs module=mymodule
 	# Example: make terraform-docs (generates for all modules)
 	@if [ -n "$(module)" ]; then \
-		./scripts/terraform/terraform-docs.sh infrastructure/modules/$(module); \
+		./scripts/terraform/terraform-docs.sh infrastructure/terraform/modules/$(module); \
 	else \
-		for dir in infrastructure/modules/*; do \
+		for dir in infrastructure/terraform/modules/*; do \
 			if [ -d "$$dir" ]; then \
 				./scripts/terraform/terraform-docs.sh $$dir; \
 			fi; \

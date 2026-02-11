@@ -27,7 +27,7 @@ function main() {
 function terraform-docs() {
 
   make terraform-docs
-  git add infrastructure/modules/**/*.md
+  git add infrastructure/terraform/modules/**/*.md
 }
 
 # ==============================================================================

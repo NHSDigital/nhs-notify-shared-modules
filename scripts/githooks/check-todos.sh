@@ -27,6 +27,7 @@ set -euo pipefail
 
 EXCLUDED_FILES=(
   ".devcontainer/devcontainer.json"
+  ".pre-commit-hooks.yaml"
   ".tool-versions"
   ".vscode/extensions.json"
   "infrastructure/terraform/bin/terraform.sh"

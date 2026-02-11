@@ -25,7 +25,7 @@ jobs:
         run: |
           ARTIFACTS_DIR="$PWD/../../artifacts"
           mkdir -p "$ARTIFACTS_DIR"
-          cd infrastructure/modules
+          cd infrastructure/terraform/modules
           for module in */; do
             module_name=${module%/}
             echo "Zipping contents of $module_name..."
