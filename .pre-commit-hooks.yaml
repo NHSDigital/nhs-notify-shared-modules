@@ -21,3 +21,33 @@
   entry: scripts/githooks/check-file-format.sh
   language: script
   pass_filenames: false
+
+- id: check-markdown-format
+  name: Check Markdown format
+  entry: scripts/githooks/check-markdown-format.sh
+  language: script
+  pass_filenames: false
+
+- id: check-english-usage
+  name: Check English usage
+  entry: scripts/githooks/check-english-usage.sh
+  language: script
+  pass_filenames: false
+
+- id: lint-terraform
+  name: Lint Terraform
+  entry: scripts/githooks/check-terraform-format.sh
+  language: script
+  pass_filenames: false
+
+- id: generate-terraform-docs
+  name: Generate Terraform Docs
+  entry: scripts/githooks/check-terraform-docs.sh
+  language: script
+  pass_filenames: false
+
+- id: check-todo-usage
+  name: Check TODO usage
+  entry: scripts/githooks/check-todos.sh
+  language: script
+  pass_filenames: false
