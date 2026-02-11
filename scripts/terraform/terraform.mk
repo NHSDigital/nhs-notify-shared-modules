@@ -1,62 +1,89 @@
-# This file is for you! Edit it to implement your own Terraform make targets.
+# Terraform Make Targets for Shared Modules
+# This repository contains only Terraform modules (no components or tfscaffold)
+# Modules are located in infrastructure/modules/
 
 # ==============================================================================
-# Custom implementation - implementation of a make target should not exceed 5 lines of effective code.
-# In most cases there should be no need to modify the existing make targets.
+# Formatting and Validation
 
-terraform-fmt: # Format Terraform files - optional: terraform_dir|dir=[path to a directory where the command will be executed, relative to the project's top-level directory, default is one of the module variables or the example directory, if not set], terraform_opts|opts=[options to pass to the Terraform fmt command, default is '-recursive'] @Quality
-	make _terraform cmd="fmt" \
-		dir=$(or ${terraform_dir}, ${dir}) \
-		opts=$(or ${terraform_opts}, ${opts})
+terraform-fmt: # Format Terraform module files @Quality
+	# Example: make terraform-fmt
+	@cd infrastructure && terraform fmt -recursive modules
 
-_terraform: # Terraform command wrapper - mandatory: cmd=[command to execute]; optional: dir=[path to a directory where the command will be executed, relative to the project's top-level directory, default is one of the module variables or the example directory, if not set], opts=[options to pass to the Terraform command, default is none/empty]
-	# 'TERRAFORM_STACK' is passed to the functions as environment variable
-	TERRAFORM_STACK=$(or ${TERRAFORM_STACK}, $(or ${terraform_stack}, $(or ${STACK}, ${stack})))
-	dir=$(or ${dir}, ${TERRAFORM_STACK})
-	. "scripts/terraform/terraform.lib.sh"; \
-	terraform-${cmd} # 'dir' and 'opts' are accessible by the function as environment variables, if set
+terraform-fmt-check: # Check Terraform module formatting @Quality
+	# Example: make terraform-fmt-check
+	@cd infrastructure && terraform fmt -check -recursive modules
 
-# ==============================================================================
-# Quality checks - please DO NOT edit this section!
+terraform-validate: # Validate a specific Terraform module - mandatory: module=[module_name] @Quality
+	# Example: make terraform-validate module=mymodule
+	# Note: Validation does not require environment/group as it checks syntax only
+	cd infrastructure/modules/$(module) && \
+	terraform init -backend=false && \
+	terraform validate
 
-terraform-shellscript-lint: # Lint all Terraform module shell scripts @Quality
-	for file in $$(find scripts/terraform -type f -name "*.sh"); do
-		file=$${file} scripts/shellscript-linter.sh
-	done
-
-terraform-sec: # TFSEC check against Terraform files - optional: terraform_dir|dir=[path to a directory where the command will be executed, relative to the project's top-level directory, default is one of the module variables or the example directory, if not set], terraform_opts|opts=[options to pass to the Terraform fmt command, default is '-recursive'] @Quality
-	tfsec infrastructure/modules \
-		--force-all-dirs \
-		--exclude-downloaded-modules \
-		--config-file scripts/config/tfsec.yaml
-
-terraform-docs: # Terraform-docs check against Terraform files - optional: terraform_dir|dir=[path to a directory where the command will be executed, relative to the project's top-level directory, default is one of the module variables or the example directory, if not set], terraform_opts|opts=[options to pass to the Terraform fmt command, default is '-recursive'] @Quality
-	for dir in ./infrastructure/modules/*; do \
+terraform-validate-all: # Validate all Terraform modules @Quality
+	# Example: make terraform-validate-all
+	@for dir in infrastructure/modules/*; do \
 		if [ -d "$$dir" ]; then \
-			./scripts/terraform/terraform-docs.sh $$dir; \
-		fi \
+			echo "Validating $$(basename $$dir)..."; \
+			temp_provider=false; \
+			if grep -q "configuration_aliases.*us-east-1" "$$dir/versions.tf" 2>/dev/null; then \
+				echo "provider \"aws\" { alias = \"us-east-1\"; region = \"us-east-1\" }" > "$$dir/.tmp_providers.tf"; \
+				temp_provider=true; \
+			fi; \
+			cd $$dir && \
+			terraform init -backend=false && \
+			terraform validate; \
+			validation_result=$$?; \
+			cd - > /dev/null; \
+			if [ "$$temp_provider" = "true" ]; then \
+				rm -f "$$dir/.tmp_providers.tf"; \
+			fi; \
+			if [ $$validation_result -ne 0 ]; then \
+				exit $$validation_result; \
+			fi; \
+		fi; \
 	done
 
-# ==============================================================================
-# Configuration - please DO NOT edit this section!
+terraform-sec: # Run Trivy IaC security scanning on Terraform modules @Quality
+	# Example: make terraform-sec
+	./scripts/terraform/trivy-scan.sh --mode iac infrastructure/modules
 
-terraform-install: # Install Terraform @Installation
+terraform-docs: # Generate Terraform module documentation - optional: module=[specific module, or all if omitted] @Quality
+	# Example: make terraform-docs module=mymodule
+	# Example: make terraform-docs (generates for all modules)
+	@if [ -n "$(module)" ]; then \
+		./scripts/terraform/terraform-docs.sh infrastructure/modules/$(module); \
+	else \
+		for dir in infrastructure/modules/*; do \
+			if [ -d "$$dir" ]; then \
+				./scripts/terraform/terraform-docs.sh $$dir; \
+			fi; \
+		done; \
+	fi
+
+# ==============================================================================
+# Cleanup
+
+clean:: # Remove Terraform build artifacts and cache @Operations
+	# Example: make clean
+	rm -rf infrastructure/modules/*/.terraform
+	rm -rf infrastructure/modules/*/.terraform.lock.hcl
+
+# ==============================================================================
+# Installation
+
+terraform-install: # Install Terraform using asdf @Installation
+	# Example: make terraform-install
 	make _install-dependency name="terraform"
 
 # ==============================================================================
 
 ${VERBOSE}.SILENT: \
-	_terraform \
 	clean \
-	terraform-apply \
-	terraform-destroy \
-	terraform-example-clean \
-	terraform-example-destroy-aws-infrastructure \
-	terraform-example-provision-aws-infrastructure \
-	terraform-fmt \
 	terraform-docs \
-	terraform-init \
+	terraform-fmt \
+	terraform-fmt-check \
 	terraform-install \
-	terraform-plan \
-	terraform-shellscript-lint \
+	terraform-sec \
 	terraform-validate \
+	terraform-validate-all
