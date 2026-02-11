@@ -115,20 +115,22 @@ repos:
 ```
 
 **Available hooks:**
+
 - `sort-dictionary` - Sorts Vale dictionary files to avoid merge conflicts
-- `scan-secrets` - Scans for hardcoded secrets using gitleaks
+- `scan-secrets` - Scans for hard-coded secrets using Gitleaks
 - `check-file-format` - Validates EditorConfig compliance
 
 **Arguments:**
+
 - `scan-secrets`: `check={whole-history,last-commit,staged-changes}` (default: `staged-changes`)
 - `check-file-format`: `check={all,staged-changes,working-tree-changes,branch}` (default: `working-tree-changes`)
 
 ### GitHub Composite Actions
 
-Reusable GitHub Actions can be referenced directly from service repo workflows:
+Reusable GitHub Actions can be referenced directly from service repository workflows:
 
 ```yaml
-# In service repo's .github/workflows/*.yaml
+# In service repository's .github/workflows/*.yaml
 jobs:
   scan-secrets:
     steps:
@@ -136,13 +138,13 @@ jobs:
       - uses: NHSDigital/nhs-notify-shared-modules/.github/actions/scan-secrets@v2.1.0
 ```
 
-See [.github/actions/](./.github/actions/) for available actions.
+See the `.github/actions/` directory for available actions.
 
 ### Versioning Strategy
 
 - Use **semantic versioning** for releases (e.g., `v2.1.0`)
-- Service repos should **pin specific tags** rather than using `main`
-- Update service repo references after testing new shared-modules releases
+- Service repositories should **pin specific tags** rather than using `main`
+- Update service repository references after testing new shared-modules releases
 - Breaking changes require major version bump
 
 ### Testing
