@@ -11,7 +11,6 @@ dependencies: # Install dependencies needed to build and test the project @Pipel
 	# TODO: Implement installation of your project dependencies
 
 build: # Build the project artefact @Pipeline
-	(cd docs && make build)
 
 publish: # Publish the project artefact @Pipeline
 	# TODO: Implement the artefact publishing step
@@ -24,7 +23,6 @@ clean:: # Clean-up project resources (main) @Operations
 	# TODO: Implement project resources clean-up step
 
 config:: _install-dependencies version # Configure development environment (main) @Configuration
-	(cd docs && make install)
 
 version:
 	rm -f .version
