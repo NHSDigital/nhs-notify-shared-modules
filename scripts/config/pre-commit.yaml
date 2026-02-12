@@ -14,7 +14,6 @@ repos:
       - id: pretty-format-json
         args: ['--autofix']
         exclude: '(^|/)package(-lock)?\.json$'
-    # -   id: ...
   - repo: local
     hooks:
       - id: sort-dictionary
@@ -26,35 +25,35 @@ repos:
     hooks:
       - id: scan-secrets
         name: Scan secrets
-        entry: /usr/bin/env check=whole-history ./scripts/githooks/scan-secrets.sh
+        entry: /usr/bin/env check=whole-history ./.github/actions/scan-secrets/scan-secrets.sh
         language: script
         pass_filenames: false
   - repo: local
     hooks:
       - id: check-file-format
         name: Check file format
-        entry: /usr/bin/env check=branch ./scripts/githooks/check-file-format.sh
+        entry: /usr/bin/env check=branch ./.github/actions/check-file-format/check-file-format.sh
         language: script
         pass_filenames: false
   - repo: local
     hooks:
       - id: check-markdown-format
         name: Check Markdown format
-        entry: /usr/bin/env check=branch ./scripts/githooks/check-markdown-format.sh
+        entry: /usr/bin/env check=branch ./.github/actions/check-markdown-format/check-markdown-format.sh
         language: script
         pass_filenames: false
   - repo: local
     hooks:
       - id: check-english-usage
         name: Check English usage
-        entry: /usr/bin/env check=branch ./scripts/githooks/check-english-usage.sh
+        entry: /usr/bin/env check=branch ./.github/actions/check-english-usage/check-english-usage.sh
         language: script
         pass_filenames: false
   - repo: local
     hooks:
       - id: lint-terraform
         name: Lint Terraform
-        entry: ./scripts/githooks/check-terraform-format.sh
+        entry: ./.github/actions/lint-terraform/check-terraform-format.sh
         language: script
         pass_filenames: false
   - repo: local
@@ -68,6 +67,6 @@ repos:
     hooks:
       - id: check-todo-usage
         name: Check TODO usage
-        entry: /usr/bin/env check=branch ./scripts/githooks/check-todos.sh
+        entry: /usr/bin/env check=branch ./.github/actions/check-todo-usage/check-todos.sh
         language: script
         pass_filenames: false

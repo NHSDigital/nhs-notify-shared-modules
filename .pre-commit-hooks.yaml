@@ -1,0 +1,53 @@
+# Pre-commit Hook Manifest
+# This file defines hooks that this repository PROVIDES to other repos.
+# Service repos reference these via: repo: https://github.com/NHSDigital/nhs-notify-shared-modules
+#
+# This is NOT the pre-commit config for this repo (that's in scripts/config/pre-commit.yaml)
+
+- id: sort-dictionary
+  name: Sort dictionary
+  entry: scripts/githooks/sort-dictionary.sh
+  language: script
+  pass_filenames: false
+
+- id: scan-secrets
+  name: Scan secrets
+  entry: .github/actions/scan-secrets/scan-secrets.sh
+  language: script
+  pass_filenames: false
+
+- id: check-file-format
+  name: Check file format
+  entry: .github/actions/check-file-format/check-file-format.sh
+  language: script
+  pass_filenames: false
+
+- id: check-markdown-format
+  name: Check Markdown format
+  entry: .github/actions/check-markdown-format/check-markdown-format.sh
+  language: script
+  pass_filenames: false
+
+- id: check-english-usage
+  name: Check English usage
+  entry: .github/actions/check-english-usage/check-english-usage.sh
+  language: script
+  pass_filenames: false
+
+- id: lint-terraform
+  name: Lint Terraform
+  entry: .github/actions/lint-terraform/check-terraform-format.sh
+  language: script
+  pass_filenames: false
+
+- id: generate-terraform-docs
+  name: Generate Terraform Docs
+  entry: scripts/githooks/check-terraform-docs.sh
+  language: script
+  pass_filenames: false
+
+- id: check-todo-usage
+  name: Check TODO usage
+  entry: .github/actions/check-todo-usage/check-todos.sh
+  language: script
+  pass_filenames: false

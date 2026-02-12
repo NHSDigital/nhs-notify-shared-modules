@@ -1,0 +1,25 @@
+name: "Sync Repository Template"
+description: "Synchronise changes from the nhs-notify-repository-template"
+inputs:
+  github_token:
+    description: "GitHub token for checking out the template repository"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: "Check out template repository"
+      uses: actions/checkout@v4
+      with:
+        repository: NHSDigital/nhs-notify-repository-template
+        path: nhs-notify-repository-template
+        token: ${{ inputs.github_token }}
+
+    - name: "Run synchronisation script"
+      shell: bash
+      run: |
+        ./nhs-notify-repository-template/scripts/maintenance/sync-template-repo.sh
+
+    - name: "Clean up template repository"
+      shell: bash
+      run: |
+        rm -rf ./nhs-notify-repository-template

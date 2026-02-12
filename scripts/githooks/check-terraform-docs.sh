@@ -26,8 +26,14 @@ function main() {
 #   check_only=[do not format, run check only]
 function terraform-docs() {
 
+  # Skip if infrastructure/terraform/modules doesn't exist or is empty
+  if [ ! -d "infrastructure/terraform/modules" ] || [ -z "$(ls -A infrastructure/terraform/modules 2>/dev/null)" ]; then
+    echo "No Terraform modules found, skipping terraform-docs"
+    return 0
+  fi
+
   make terraform-docs
-  git add infrastructure/modules/**/*.md
+  git add infrastructure/terraform/modules/**/*.md || true
 }
 
 # ==============================================================================
