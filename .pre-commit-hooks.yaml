@@ -12,31 +12,31 @@
 
 - id: scan-secrets
   name: Scan secrets
-  entry: scripts/githooks/scan-secrets.sh
+  entry: .github/actions/scan-secrets/scan-secrets.sh
   language: script
   pass_filenames: false
 
 - id: check-file-format
   name: Check file format
-  entry: scripts/githooks/check-file-format.sh
+  entry: .github/actions/check-file-format/check-file-format.sh
   language: script
   pass_filenames: false
 
 - id: check-markdown-format
   name: Check Markdown format
-  entry: scripts/githooks/check-markdown-format.sh
+  entry: .github/actions/check-markdown-format/check-markdown-format.sh
   language: script
   pass_filenames: false
 
 - id: check-english-usage
   name: Check English usage
-  entry: scripts/githooks/check-english-usage.sh
+  entry: .github/actions/check-english-usage/check-english-usage.sh
   language: script
   pass_filenames: false
 
 - id: lint-terraform
   name: Lint Terraform
-  entry: scripts/githooks/check-terraform-format.sh
+  entry: .github/actions/lint-terraform/check-terraform-format.sh
   language: script
   pass_filenames: false
 
@@ -48,6 +48,6 @@
 
 - id: check-todo-usage
   name: Check TODO usage
-  entry: scripts/githooks/check-todos.sh
+  entry: .github/actions/check-todo-usage/check-todos.sh
   language: script
   pass_filenames: false
