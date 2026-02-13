@@ -1,6 +1,8 @@
 locals {
   module = "lambda"
 
+  package_type = lower(var.package_type)
+
   # Compound Scope Identifier
   csi = replace(
     format(

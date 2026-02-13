@@ -92,6 +92,55 @@ variable "log_retention_in_days" {
 variable "runtime" {
   type        = string
   description = "The runtime to use for the lambda function"
+  default     = null
+
+  validation {
+    condition     = lower(var.package_type) != "zip" || (var.runtime != null && var.runtime != "")
+    error_message = "runtime must be set when package_type is Zip."
+  }
+}
+
+variable "package_type" {
+  type        = string
+  description = "Lambda package type: Zip or Image"
+  default     = "Zip"
+
+  validation {
+    condition     = contains(["zip", "image"], lower(var.package_type))
+    error_message = "package_type must be either Zip or Image."
+  }
+}
+
+variable "image_uri" {
+  type        = string
+  description = "ECR image URI for Image-based Lambda"
+  default     = null
+
+  validation {
+    condition     = lower(var.package_type) != "image" || (var.image_uri != null && var.image_uri != "")
+    error_message = "image_uri must be set when package_type is Image."
+  }
+}
+
+variable "image_config" {
+  type = object({
+    entry_point       = optional(list(string))
+    command           = optional(list(string))
+    working_directory = optional(string)
+  })
+  description = "Optional image configuration for Image-based Lambda"
+  default     = null
+}
+
+variable "image_repository_names" {
+  type        = list(string)
+  description = "ECR repository names allowed for Image-based Lambda"
+  default     = []
+
+  validation {
+    condition     = lower(var.package_type) != "image" || length(var.image_repository_names) > 0
+    error_message = "image_repository_names must include at least one repository name when package_type is Image."
+  }
 }
 
 variable "schedule" {
@@ -122,11 +171,23 @@ variable "function_code_base_path" {
 variable "function_code_dir" {
   type        = string
   description = "The directory for this lambda"
+  default     = null
+
+  validation {
+    condition     = lower(var.package_type) != "zip" || (var.function_code_dir != null && var.function_code_dir != "")
+    error_message = "function_code_dir must be set when package_type is Zip."
+  }
 }
 
 variable "function_s3_bucket" {
   type        = string
   description = "The bucket to upload Lambda packages to"
+  default     = null
+
+  validation {
+    condition     = lower(var.package_type) != "zip" || (var.function_s3_bucket != null && var.function_s3_bucket != "")
+    error_message = "function_s3_bucket must be set when package_type is Zip."
+  }
 }
 
 variable "function_include_common" {
