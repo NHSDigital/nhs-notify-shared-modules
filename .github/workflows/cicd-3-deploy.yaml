@@ -103,7 +103,7 @@ jobs:
         run: |
           gh release download ${{steps.get-asset-version.outputs.release_version}} -p jekyll-docs-*.tar --output artifact.tar
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: jekyll-docs-${{steps.get-asset-version.outputs.release_version}}
           path: artifact.tar
