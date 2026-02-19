@@ -25,22 +25,39 @@ set -euo pipefail
 
 # ==============================================================================
 
-EXCLUDED_FILES=(
-  ".devcontainer/devcontainer.json"
-  ".tool-versions"
-  ".vscode/extensions.json"
-  "infrastructure/terraform/bin/terraform.sh"
-  "Makefile"
-  "project.code-workspace"
-  "src/jekyll-devcontainer/src/.devcontainer/devcontainer.json"
-)
+CONFIG_FILE="scripts/config/check-todos-ignore.conf"
 
-EXCLUDED_DIRS=(
-  ".git/"
-  ".venv/"
-  "docs/"
-  "node_modules/"
-)
+# Arrays to be populated from config file
+EXCLUDED_FILES=()
+EXCLUDED_DIRS=()
+
+
+# Load exclusions from configuration file
+function load_exclusions_from_config() {
+  local config_file="$1"
+  local section=""
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Skip empty lines and comments
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+
+    # Check for section headers
+    if [[ "$line" =~ ^\[([^]]+)\]$ ]]; then
+      section="${BASH_REMATCH[1]}"
+      continue
+    fi
+
+    # Add entries to appropriate arrays based on current section
+    case "$section" in
+      files)
+        EXCLUDED_FILES+=("$line")
+        ;;
+      directories)
+        EXCLUDED_DIRS+=("$line")
+        ;;
+    esac
+  done < "$config_file"
+}
 
 
 # Get files to check based on mode
@@ -68,12 +85,7 @@ function get_files_to_check() {
 
 
 function build_exclude_args() {
-  local args=(
-    --exclude=".github/actions/check-todo-usage/action.yaml"
-    --exclude=".github/workflows/stage-1-commit.yaml"
-    --exclude="scripts/config/pre-commit.yaml"
-    --exclude="scripts/githooks/check-todos.sh"
-  ) # Exclude this script and its references by default, as it naturally contains TODOs. Todo todo todo <- see?
+  local args=() # Exclusions are now loaded from config file
 
   if [ ${#EXCLUDED_DIRS[@]} -gt 0 ]; then
     for dir in "${EXCLUDED_DIRS[@]}"; do
@@ -202,6 +214,9 @@ function print_output() {
 
 function main() {
   cd "$(git rev-parse --show-toplevel)"
+
+  # Load exclusions from config file
+  load_exclusions_from_config "$CONFIG_FILE"
 
   local check_mode="${check:-working-tree-changes}"
   local exclude_args=$(build_exclude_args)

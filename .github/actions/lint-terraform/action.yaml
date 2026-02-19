@@ -15,7 +15,7 @@ runs:
     - name: "Check Terraform format"
       shell: bash
       run: |
-        check_only=true scripts/githooks/check-terraform-format.sh
+        check_only=true ${{ github.action_path }}/check-terraform-format.sh
     - name: "Validate Terraform"
       shell: bash
       run: |

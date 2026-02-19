@@ -18,17 +18,10 @@ jobs:
     - name: Check out the repository
       uses: actions/checkout@v4
 
-    - name: Check out external repository
-      uses: actions/checkout@v4
+    - name: Sync repository template
+      uses: ./.github/actions/sync-template-repo
       with:
-        repository: NHSDigital/nhs-notify-repository-template
-        path: nhs-notify-repository-template
-        token: ${{ github.token }}
-
-    - name: Run syncronisation script
-      run: |
-        ./nhs-notify-repository-template/scripts/githooks/sync-template-repo.sh
-        rm -Rf ./nhs-notify-repository-template
+        github_token: ${{ github.token }}
 
     - name: Create Pull Request
       if: ${{ !env.ACT }}

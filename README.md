@@ -34,7 +34,6 @@ Make use of this repository template to expedite your project setup and enhance 
 ## Documentation
 
 - [Built](/)
-- [Source](/docs/README.md)
 
 ## Setup
 
@@ -83,7 +82,70 @@ make config
 
 ## Usage
 
-After a successful installation, provide an informative example of how this project can be used. Additional code snippets, screenshots and demos work well in this space. You may also link to the other documentation resources, e.g. the [User Guide](./docs/user-guide.md) to demonstrate more use cases and to show more features.
+This repository provides shared resources for NHS Notify service repositories:
+
+### Terraform Modules
+
+Reusable Terraform modules are published as GitHub release assets. Service repos reference them via release URLs:
+
+```hcl
+module "lambda_example" {
+  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/v2.0.29/terraform-lambda.zip"
+  # ... module configuration
+}
+```
+
+See [infrastructure/modules/](./infrastructure/modules/) for available modules.
+
+### Pre-commit Hooks
+
+Centralised pre-commit hooks are defined in [.pre-commit-hooks.yaml](./.pre-commit-hooks.yaml) and can be consumed by service repos:
+
+```yaml
+# In service repo's scripts/config/pre-commit.yaml
+repos:
+  - repo: https://github.com/NHSDigital/nhs-notify-shared-modules
+    rev: v2.1.0  # Use specific tag for version control
+    hooks:
+      - id: sort-dictionary
+      - id: scan-secrets
+        args: [check=whole-history]
+      - id: check-file-format
+        args: [check=branch]
+```
+
+**Available hooks:**
+
+- `sort-dictionary` - Sorts Vale dictionary files to avoid merge conflicts
+- `scan-secrets` - Scans for hard-coded secrets using Gitleaks
+- `check-file-format` - Validates EditorConfig compliance
+
+**Arguments:**
+
+- `scan-secrets`: `check={whole-history,last-commit,staged-changes}` (default: `staged-changes`)
+- `check-file-format`: `check={all,staged-changes,working-tree-changes,branch}` (default: `working-tree-changes`)
+
+### GitHub Composite Actions
+
+Reusable GitHub Actions can be referenced directly from service repository workflows:
+
+```yaml
+# In service repository's .github/workflows/*.yaml
+jobs:
+  scan-secrets:
+    steps:
+      - uses: actions/checkout@v4
+      - uses: NHSDigital/nhs-notify-shared-modules/.github/actions/scan-secrets@v2.1.0
+```
+
+See the `.github/actions/` directory for available actions.
+
+### Versioning Strategy
+
+- Use **semantic versioning** for releases (e.g., `v2.1.0`)
+- Service repositories should **pin specific tags** rather than using `main`
+- Update service repository references after testing new shared-modules releases
+- Breaking changes require major version bump
 
 ### Testing
 
@@ -95,9 +157,7 @@ There are `make` tasks for you to configure to run your tests.  Run `make test` 
 
 The [C4 model](https://c4model.com/) is a simple and intuitive way to create software architecture diagrams that are clear, consistent, scalable and most importantly collaborative. This should result in documenting all the system interfaces, external dependencies and integration points.
 
-![Repository Template](./docs/diagrams/Repository_Template_GitHub_Generic.png)
-
-The source for diagrams should be in Git for change control and review purposes. Recommendations are [draw.io](https://app.diagrams.net/) (example above in [docs](.docs/diagrams/) folder) and [Mermaids](https://github.com/mermaid-js/mermaid). Here is an example Mermaids sequence diagram:
+The source for diagrams should be in Git for change control and review purposes. Recommendations are [draw.io](https://app.diagrams.net/) and [Mermaids](https://github.com/mermaid-js/mermaid). Here is an example Mermaids sequence diagram:
 
 ```mermaid
 sequenceDiagram
