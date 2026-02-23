@@ -129,3 +129,27 @@ variable "additional_policies_for_event_cache_bucket" {
   description = "A list of JSON policies to use to build the bucket policy"
   default     = []
 }
+
+variable "enable_event_publishing_anomaly_detection" {
+  type        = bool
+  description = "Enable CloudWatch anomaly detection alarm for SNS message publishing. Detects abnormal drops or spikes in event publishing volume."
+  default     = true
+}
+
+variable "event_publishing_anomaly_evaluation_periods" {
+  type        = number
+  description = "Number of evaluation periods for the publishing anomaly alarm. Each period is defined by event_publishing_anomaly_period."
+  default     = 2
+}
+
+variable "event_publishing_anomaly_period" {
+  type        = number
+  description = "The period in seconds over which the specified statistic is applied for anomaly detection. Minimum 300 seconds (5 minutes). Recommended: 300-600."
+  default     = 300
+}
+
+variable "event_publishing_anomaly_band_width" {
+  type        = number
+  description = "The width of the anomaly detection band. Higher values (e.g. 4-6) reduce sensitivity and noise, lower values (e.g. 2-3) increase sensitivity. Recommended: 2-4."
+  default     = 3
+}
