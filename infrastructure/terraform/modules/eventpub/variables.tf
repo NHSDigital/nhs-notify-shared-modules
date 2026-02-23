@@ -139,7 +139,7 @@ variable "enable_event_publishing_anomaly_detection" {
 variable "event_publishing_anomaly_evaluation_periods" {
   type        = number
   description = "Number of evaluation periods for the publishing anomaly alarm. Each period is defined by event_publishing_anomaly_period."
-  default     = 2
+  default     = 3
 }
 
 variable "event_publishing_anomaly_period" {
@@ -151,5 +151,5 @@ variable "event_publishing_anomaly_period" {
 variable "event_publishing_anomaly_band_width" {
   type        = number
   description = "The width of the anomaly detection band. Higher values (e.g. 4-6) reduce sensitivity and noise, lower values (e.g. 2-3) increase sensitivity. Recommended: 2-4."
-  default     = 3
+  default     = 5
 }
