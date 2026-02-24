@@ -18,11 +18,15 @@
 | <a name="input_data_plane_bus_arn"></a> [data\_plane\_bus\_arn](#input\_data\_plane\_bus\_arn) | Data plane event bus arn | `string` | n/a | yes |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | Default tag map for application to all taggable resources in the module | `map(string)` | `{}` | no |
 | <a name="input_enable_event_cache"></a> [enable\_event\_cache](#input\_enable\_event\_cache) | Enable caching of events to an S3 bucket | `bool` | `false` | no |
+| <a name="input_enable_event_publishing_anomaly_detection"></a> [enable\_event\_publishing\_anomaly\_detection](#input\_enable\_event\_publishing\_anomaly\_detection) | Enable CloudWatch anomaly detection alarm for SNS message publishing. Detects abnormal drops or spikes in event publishing volume. | `bool` | `true` | no |
 | <a name="input_enable_firehose_raw_message_delivery"></a> [enable\_firehose\_raw\_message\_delivery](#input\_enable\_firehose\_raw\_message\_delivery) | Enables raw message delivery on firehose subscription | `bool` | `false` | no |
 | <a name="input_enable_sns_delivery_logging"></a> [enable\_sns\_delivery\_logging](#input\_enable\_sns\_delivery\_logging) | Enable SNS Delivery Failure Notifications | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the terraformscaffold environment the module is called for | `string` | n/a | yes |
 | <a name="input_event_cache_buffer_interval"></a> [event\_cache\_buffer\_interval](#input\_event\_cache\_buffer\_interval) | The buffer interval for data firehose | `number` | `500` | no |
 | <a name="input_event_cache_expiry_days"></a> [event\_cache\_expiry\_days](#input\_event\_cache\_expiry\_days) | s3 archiving expiry in days | `number` | `30` | no |
+| <a name="input_event_publishing_anomaly_band_width"></a> [event\_publishing\_anomaly\_band\_width](#input\_event\_publishing\_anomaly\_band\_width) | The width of the anomaly detection band. Higher values (e.g. 4-6) reduce sensitivity and noise, lower values (e.g. 2-3) increase sensitivity. Recommended: 2-4. | `number` | `5` | no |
+| <a name="input_event_publishing_anomaly_evaluation_periods"></a> [event\_publishing\_anomaly\_evaluation\_periods](#input\_event\_publishing\_anomaly\_evaluation\_periods) | Number of evaluation periods for the publishing anomaly alarm. Each period is defined by event\_publishing\_anomaly\_period. | `number` | `3` | no |
+| <a name="input_event_publishing_anomaly_period"></a> [event\_publishing\_anomaly\_period](#input\_event\_publishing\_anomaly\_period) | The period in seconds over which the specified statistic is applied for anomaly detection. Minimum 300 seconds (5 minutes). Recommended: 300-600. | `number` | `300` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | When enabled will force destroy event-cache S3 bucket | `bool` | `false` | no |
 | <a name="input_group"></a> [group](#input\_group) | The name of the tfscaffold group | `string` | `null` | no |
 | <a name="input_iam_permissions_boundary_arn"></a> [iam\_permissions\_boundary\_arn](#input\_iam\_permissions\_boundary\_arn) | The ARN of the permissions boundary to use for the IAM role | `string` | `null` | no |
@@ -42,6 +46,7 @@
 
 | Name | Description |
 |------|-------------|
+| <a name="output_publishing_anomaly_alarm"></a> [publishing\_anomaly\_alarm](#output\_publishing\_anomaly\_alarm) | CloudWatch anomaly detection alarm details for SNS publishing |
 | <a name="output_s3_bucket_event_cache"></a> [s3\_bucket\_event\_cache](#output\_s3\_bucket\_event\_cache) | S3 Bucket ARN and Name for event cache |
 | <a name="output_sns_topic"></a> [sns\_topic](#output\_sns\_topic) | SNS Topic ARN and Name |
 <!-- vale on -->
