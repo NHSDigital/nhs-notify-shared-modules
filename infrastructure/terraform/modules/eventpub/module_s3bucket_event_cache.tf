@@ -1,5 +1,5 @@
 module "s3bucket_event_cache" {
-  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/v2.0.30/terraform-s3bucket.zip"
+  source = "git::https://github.com/NHSDigital/nhs-notify-shared-modules.git//infrastructure/terraform/modules/s3bucket?ref=feature/CCM-14600_Enable_Access_Logging_For_EventCache_Buckets"
 
   count = var.enable_event_cache ? 1 : 0
 
