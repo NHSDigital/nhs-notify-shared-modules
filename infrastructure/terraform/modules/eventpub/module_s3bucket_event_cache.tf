@@ -41,6 +41,8 @@ module "s3bucket_event_cache" {
     var.additional_policies_for_event_cache_bucket
   )
 
+  bucket_logging_target = var.eventcache_bucket_logging_target
+
   public_access = {
     block_public_acls       = true
     block_public_policy     = true
