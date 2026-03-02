@@ -155,7 +155,7 @@ variable "event_publishing_anomaly_band_width" {
 }
 
 variable "eventcache_bucket_logging_target" {
-  type        = map(string)
-  description = "Map of S3 bucket access logging target properties"
-  default     = {}
+  type        = string
+  description = "S3 bucket access logging target"
+  default     = ""
 }
