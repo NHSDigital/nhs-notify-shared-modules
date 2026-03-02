@@ -42,7 +42,7 @@ module "s3bucket_event_cache" {
   )
 
   bucket_logging_target = {
-    bucket = "${var.eventcache_bucket_logging_target}"
+    bucket = "${var.access_logging_bucket}"
   }
 
 

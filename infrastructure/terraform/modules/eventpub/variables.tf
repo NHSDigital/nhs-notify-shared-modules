@@ -154,8 +154,8 @@ variable "event_publishing_anomaly_band_width" {
   default     = 5
 }
 
-variable "eventcache_bucket_logging_target" {
+variable "access_logging_bucket" {
   type        = string
-  description = "S3 bucket access logging target"
+  description = "S3 Access logging bucket name."
   default     = ""
 }
