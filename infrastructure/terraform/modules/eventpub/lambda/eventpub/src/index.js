@@ -115,11 +115,12 @@ exports.handler = async (snsEvent) => {
 
     const dataEvents = validEvents.filter(event => event.plane === 'data');
     const controlEvents = validEvents.filter(event => event.plane === 'control');
+    const unknownEvents = validEvents.filter(event => event.plane !== 'data' && event.plane !== 'control');
 
-    console.debug(`Data events: ${dataEvents.length}, Control events: ${controlEvents.length}`);
+    console.debug(`Data events: ${dataEvents.length}, Control events: ${controlEvents.length}, Unknown events: ${unknownEvents.length}`);
 
     const failedDataEvents = await sendToEventBridge(dataEvents, DATA_PLANE_EVENT_BUS_ARN);
     const failedControlEvents = await sendToEventBridge(controlEvents, CONTROL_PLANE_EVENT_BUS_ARN);
 
-    await sendToDLQ([...failedDataEvents, ...failedControlEvents]);
+    await sendToDLQ([...failedDataEvents, ...failedControlEvents, ...unknownEvents]);
 };

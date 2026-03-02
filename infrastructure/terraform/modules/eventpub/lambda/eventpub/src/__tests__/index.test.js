@@ -68,6 +68,19 @@ describe('SNS to EventBridge Lambda', () => {
         expect(sqsMock.calls()).toHaveLength(1);
     });
 
+    test('Event with unknown plane field is sent to DLQ', async () => {
+        const eventUnknownPlane = { ...validCloudEvent, plane: "unknown" };
+
+        const snsEventUnknownPlane = {
+            Records: [
+                { Sns: { Message: JSON.stringify(eventUnknownPlane) } }
+            ]
+        };
+
+        await handler(snsEventUnknownPlane);
+
+        expect(sqsMock.calls()).toHaveLength(1);
+    });
 
     test('Retries on EventBridge failure and sends failed events to DLQ', async () => {
       eventBridgeMock
