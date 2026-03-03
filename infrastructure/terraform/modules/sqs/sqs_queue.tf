@@ -12,4 +12,8 @@ resource "aws_sqs_queue" "sqs_queue" {
   kms_data_key_reuse_period_seconds = var.kms_data_key_reuse_period_seconds
 
   tags = local.default_tags
+
+  timeouts {
+    delete = "15m"
+  }
 }
