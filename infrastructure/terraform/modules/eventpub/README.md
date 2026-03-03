@@ -11,6 +11,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_access_logging_bucket"></a> [access\_logging\_bucket](#input\_access\_logging\_bucket) | S3 Access logging bucket name. | `string` | `""` | no |
 | <a name="input_additional_policies_for_event_cache_bucket"></a> [additional\_policies\_for\_event\_cache\_bucket](#input\_additional\_policies\_for\_event\_cache\_bucket) | A list of JSON policies to use to build the bucket policy | `list(string)` | `[]` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
 | <a name="input_component"></a> [component](#input\_component) | The name of the terraformscaffold component calling this module | `string` | n/a | yes |
@@ -41,7 +42,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_s3bucket_event_cache"></a> [s3bucket\_event\_cache](#module\_s3bucket\_event\_cache) | https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/v2.0.30/terraform-s3bucket.zip | n/a |
+| <a name="module_s3bucket_event_cache"></a> [s3bucket\_event\_cache](#module\_s3bucket\_event\_cache) | https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/3.0.3/terraform-s3bucket.zip | n/a |
 ## Outputs
 
 | Name | Description |

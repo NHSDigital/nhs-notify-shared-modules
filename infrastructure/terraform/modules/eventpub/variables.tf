@@ -153,3 +153,9 @@ variable "event_publishing_anomaly_band_width" {
   description = "The width of the anomaly detection band. Higher values (e.g. 4-6) reduce sensitivity and noise, lower values (e.g. 2-3) increase sensitivity. Recommended: 2-4."
   default     = 5
 }
+
+variable "access_logging_bucket" {
+  type        = string
+  description = "S3 Access logging bucket name."
+  default     = ""
+}
