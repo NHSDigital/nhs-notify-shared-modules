@@ -4,5 +4,5 @@ resource "aws_s3_bucket_logging" "main" {
 
   # Enable S3 Bucket Logging to the logs bucket
   target_bucket = var.bucket_logging_target["bucket"]
-  target_prefix = lookup(var.bucket_logging_target, "prefix", "${aws_s3_bucket.main.id}/")
+  target_prefix = lookup(var.bucket_logging_target, "prefix", "${var.name}/")
 }
