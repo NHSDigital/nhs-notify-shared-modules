@@ -11,6 +11,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_access_logging_bucket"></a> [access\_logging\_bucket](#input\_access\_logging\_bucket) | S3 Access logging bucket name. | `string` | `""` | no |
 | <a name="input_additional_policies_for_event_cache_bucket"></a> [additional\_policies\_for\_event\_cache\_bucket](#input\_additional\_policies\_for\_event\_cache\_bucket) | A list of JSON policies to use to build the bucket policy | `list(string)` | `[]` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
 | <a name="input_component"></a> [component](#input\_component) | The name of the terraformscaffold component calling this module | `string` | n/a | yes |
@@ -27,7 +28,6 @@
 | <a name="input_event_publishing_anomaly_band_width"></a> [event\_publishing\_anomaly\_band\_width](#input\_event\_publishing\_anomaly\_band\_width) | The width of the anomaly detection band. Higher values (e.g. 4-6) reduce sensitivity and noise, lower values (e.g. 2-3) increase sensitivity. Recommended: 2-4. | `number` | `5` | no |
 | <a name="input_event_publishing_anomaly_evaluation_periods"></a> [event\_publishing\_anomaly\_evaluation\_periods](#input\_event\_publishing\_anomaly\_evaluation\_periods) | Number of evaluation periods for the publishing anomaly alarm. Each period is defined by event\_publishing\_anomaly\_period. | `number` | `3` | no |
 | <a name="input_event_publishing_anomaly_period"></a> [event\_publishing\_anomaly\_period](#input\_event\_publishing\_anomaly\_period) | The period in seconds over which the specified statistic is applied for anomaly detection. Minimum 300 seconds (5 minutes). Recommended: 300-600. | `number` | `300` | no |
-| <a name="input_eventcache_bucket_logging_target"></a> [eventcache\_bucket\_logging\_target](#input\_eventcache\_bucket\_logging\_target) | S3 bucket access logging target | `string` | `""` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | When enabled will force destroy event-cache S3 bucket | `bool` | `false` | no |
 | <a name="input_group"></a> [group](#input\_group) | The name of the tfscaffold group | `string` | `null` | no |
 | <a name="input_iam_permissions_boundary_arn"></a> [iam\_permissions\_boundary\_arn](#input\_iam\_permissions\_boundary\_arn) | The ARN of the permissions boundary to use for the IAM role | `string` | `null` | no |
@@ -42,7 +42,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_s3bucket_event_cache"></a> [s3bucket\_event\_cache](#module\_s3bucket\_event\_cache) | https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/v2.0.30/terraform-s3bucket.zip | n/a |
+| <a name="module_s3bucket_event_cache"></a> [s3bucket\_event\_cache](#module\_s3bucket\_event\_cache) | git::https://github.com/NHSDigital/nhs-notify-shared-modules.git//infrastructure/terraform/modules/s3bucket | feature/CCM-14600_Enable_Access_Logging_For_EventCache_Buckets |
 ## Outputs
 
 | Name | Description |
