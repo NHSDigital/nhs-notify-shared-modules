@@ -16,7 +16,7 @@ output "s3_bucket_event_cache" {
 
 output "publishing_anomaly_alarm" {
   description = "CloudWatch anomaly detection alarm details for SNS publishing"
-  value = var.enable_event_publishing_anomaly_detection ? {
+  value = var.enable_event_anomaly_detection ? {
     arn  = aws_cloudwatch_metric_alarm.publishing_anomaly[0].arn
     name = aws_cloudwatch_metric_alarm.publishing_anomaly[0].alarm_name
   } : null

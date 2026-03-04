@@ -1,10 +1,10 @@
 resource "aws_cloudwatch_metric_alarm" "publishing_anomaly" {
-  count = var.enable_event_publishing_anomaly_detection ? 1 : 0
+  count = var.enable_event_anomaly_detection ? 1 : 0
 
   alarm_name          = "${local.csi}-sns-publishing-anomaly"
   alarm_description   = "RELIABILITY: Anomaly detection alarm for abnormal SNS message publishing patterns. Detects unexpected drops or spikes in event publishing volume that may indicate service degradation or misconfiguration."
   comparison_operator = "LessThanLowerOrGreaterThanUpperThreshold"
-  evaluation_periods  = var.event_publishing_anomaly_evaluation_periods # Number of evaluation periods for the publishing anomaly alarm.
+  evaluation_periods  = var.event_anomaly_evaluation_periods # Number of evaluation periods for the publishing anomaly alarm.
   threshold_metric_id = "ad1"
   treat_missing_data  = "notBreaching"
   actions_enabled     = true
@@ -24,7 +24,7 @@ resource "aws_cloudwatch_metric_alarm" "publishing_anomaly" {
     metric {
       metric_name = "NumberOfMessagesPublished"
       namespace   = "AWS/SNS"
-      period      = var.event_publishing_anomaly_period # The period in seconds over which the specified statistic is applied for anomaly detection.
+      period      = var.event_anomaly_period # The period in seconds over which the specified statistic is applied for anomaly detection.
       stat        = "Sum"
 
       dimensions = {
@@ -35,7 +35,7 @@ resource "aws_cloudwatch_metric_alarm" "publishing_anomaly" {
 
   metric_query {
     id          = "ad1"
-    expression  = "ANOMALY_DETECTION_BAND(m1, ${var.event_publishing_anomaly_band_width})" # The width of the anomaly detection band. Higher values (e.g. 4-6) reduce sensitivity and noise, lower values (e.g. 2-3) increase sensitivity.
+    expression  = "ANOMALY_DETECTION_BAND(m1, ${var.event_anomaly_band_width})" # The width of the anomaly detection band. Higher values (e.g. 4-6) reduce sensitivity and noise, lower values (e.g. 2-3) increase sensitivity.
     label       = "NumberOfMessagesPublished (expected)"
     return_data = true
   }
