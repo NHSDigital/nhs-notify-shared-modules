@@ -18,6 +18,7 @@
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda | `string` | n/a | yes |
 | <a name="input_enable_dlq_and_notifications"></a> [enable\_dlq\_and\_notifications](#input\_enable\_dlq\_and\_notifications) | Create an SQS Queue and on-failure destination to be used as the Lambda's Dead Letter Queue and notifications | `bool` | `false` | no |
 | <a name="input_enable_lambda_insights"></a> [enable\_lambda\_insights](#input\_enable\_lambda\_insights) | Enable the lambda insights layer, this must be disabled for lambda@edge usage | `bool` | `true` | no |
+| <a name="input_enable_xray_tracing"></a> [enable\_xray\_tracing](#input\_enable\_xray\_tracing) | Enable AWS X-Ray active tracing for the Lambda function. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
 | <a name="input_filter_pattern"></a> [filter\_pattern](#input\_filter\_pattern) | Filter pattern to use for the log subscription filter | `string` | `""` | no |
 | <a name="input_force_lambda_code_deploy"></a> [force\_lambda\_code\_deploy](#input\_force\_lambda\_code\_deploy) | If the lambda package in s3 has the same commit id tag as the terraform build branch, the lambda will not update automatically. Set to True if making changes to Lambda code from on the same commit for example during development | `bool` | `false` | no |
