@@ -49,6 +49,13 @@ resource "aws_lambda_function" "main" {
     }
   }
 
+  dynamic "tracing_config" {
+    for_each = var.enable_xray_tracing ? [1] : []
+    content {
+      mode = "Active"
+    }
+  }
+
   dynamic "vpc_config" {
     for_each = var.vpc_config != null ? [""] : []
 

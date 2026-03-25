@@ -268,6 +268,12 @@ variable "enable_lambda_insights" {
   default     = true
 }
 
+variable "enable_xray_tracing" {
+  type        = bool
+  description = "Enable AWS X-Ray active tracing for the Lambda function."
+  default     = false
+}
+
 variable "lambda_at_edge" {
   type        = bool
   description = "Whether this Lambda is a Lambda@Edge function"
