@@ -39,8 +39,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run unit test suite"
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4      - name: "Run unit test suite"
         run: |
           make test-unit
       - name: "Save the result of fast test suite"
@@ -52,8 +51,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run linting"
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4      - name: "Run linting"
         run: |
           make test-lint
       - name: "Save the linting result"
@@ -66,8 +64,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Run test coverage check"
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4      - name: "Run test coverage check"
         run: |
           make test-coverage
       - name: "Save the coverage check result"
@@ -83,8 +80,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
-        with:
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4        with:
           fetch-depth: 0 # Full history is needed to improving relevancy of reporting
       - name: "Perform static analysis"
         uses: ./.github/actions/perform-static-analysis
