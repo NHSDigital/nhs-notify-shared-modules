@@ -50,16 +50,16 @@ function main() {
   check=${check:-working-tree-changes}
   case $check in
     "all")
-      filter="git ls-files"
+      filter="git ls-files -z"
       ;;
     "staged-changes")
-      filter="git diff --diff-filter=ACMRT --name-only --cached"
+      filter="git diff --diff-filter=ACMRT --name-only --cached -z"
       ;;
     "working-tree-changes")
-      filter="git diff --diff-filter=ACMRT --name-only"
+      filter="git diff --diff-filter=ACMRT --name-only -z"
       ;;
     "branch")
-      filter="git diff --diff-filter=ACMRT --name-only ${BRANCH_NAME:-origin/main}"
+      filter="git diff --diff-filter=ACMRT --name-only -z ${BRANCH_NAME:-origin/main}"
       ;;
     *)
       echo "Unrecognised check mode: $check" >&2 && exit 1
@@ -79,9 +79,17 @@ function main() {
 #   filter=[git command to filter the files to check]
 function run-editorconfig-natively() {
 
-  # shellcheck disable=SC2046,SC2086
+  local files=()
+  while IFS= read -r -d '' file; do
+    files+=("$file")
+  done < <($filter)
+
+  # If no files found, exit successfully
+  [[ ${#files[@]} -eq 0 ]] && return 0
+
+  # shellcheck disable=SC2086
   editorconfig \
-    --exclude '.git/' $dry_run_opt $($filter)
+    --exclude '.git/' $dry_run_opt "${files[@]}"
 }
 
 # Run editorconfig in a Docker container.
@@ -95,13 +103,24 @@ function run-editorconfig-in-docker() {
 
   # shellcheck disable=SC2155
   local image=$(name=mstruebing/editorconfig-checker docker-get-image-version-and-pull)
+
+  local files=()
+  while IFS= read -r -d '' file; do
+    files+=("$file")
+  done < <($filter)
+
   # We use /dev/null here as a backstop in case there are no files in the state
   # we choose. If the filter comes back empty, adding `/dev/null` onto it has
   # the effect of preventing `ec` from treating "no files" as "all the files".
+  if [[ ${#files[@]} -eq 0 ]]; then
+    files=(/dev/null)
+  fi
+
+  # shellcheck disable=SC2086
   docker run --rm --platform linux/amd64 \
     --volume "$PWD":/check \
     "$image" \
-      sh -c "ec --exclude '.git/' $dry_run_opt \$($filter) /dev/null"
+      ec --exclude '.git/' $dry_run_opt "${files[@]}"
 }
 
 # ==============================================================================
