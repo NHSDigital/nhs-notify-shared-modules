@@ -31,16 +31,16 @@ function main() {
   check=${check:-working-tree-changes}
   case $check in
     "all")
-      filter="git ls-files"
+      filter="git ls-files -z"
       ;;
     "staged-changes")
-      filter="git diff --diff-filter=ACMRT --name-only --cached"
+      filter="git diff --diff-filter=ACMRT --name-only --cached -z"
       ;;
     "working-tree-changes")
-      filter="git diff --diff-filter=ACMRT --name-only"
+      filter="git diff --diff-filter=ACMRT --name-only -z"
       ;;
     "branch")
-      filter="git diff --diff-filter=ACMRT --name-only ${BRANCH_NAME:-origin/main}"
+      filter="git diff --diff-filter=ACMRT --name-only -z ${BRANCH_NAME:-origin/main}"
       ;;
     *)
       echo "Unrecognised check mode: $check" >&2 && exit 1
@@ -59,10 +59,17 @@ function main() {
 #   filter=[git command to filter the files to check]
 function run-vale-natively() {
 
-  # shellcheck disable=SC2046
+  local files=()
+  while IFS= read -r -d '' file; do
+    files+=("$file")
+  done < <($filter)
+
+  # If no files found, exit successfully
+  [[ ${#files[@]} -eq 0 ]] && return 0
+
   vale \
     --config "$PWD/scripts/config/vale/vale.ini" \
-    $($filter)
+    "${files[@]}"
 }
 
 # Run Vale in a Docker container.
@@ -75,17 +82,26 @@ function run-vale-in-docker() {
 
   # shellcheck disable=SC2155
   local image=$(name=jdkato/vale docker-get-image-version-and-pull)
+
+  local files=()
+  while IFS= read -r -d '' file; do
+    files+=("$file")
+  done < <($filter)
+
   # We use /dev/null here to stop `vale` from complaining that it's
   # not been called correctly if the $filter happens to return an
   # empty list. As long as there's a filename, even if it's one that
   # will be ignored, `vale` is happy.
-  # shellcheck disable=SC2046,SC2086
+  if [[ ${#files[@]} -eq 0 ]]; then
+    files=(/dev/null)
+  fi
+
   docker run --rm --platform linux/amd64 \
     --volume "$PWD:/workdir" \
     --workdir /workdir \
     "$image" \
       --config /workdir/scripts/config/vale/vale.ini \
-      $($filter) /dev/null
+      "${files[@]}"
 }
 
 # ==============================================================================
