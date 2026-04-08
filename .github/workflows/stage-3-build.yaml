@@ -33,24 +33,13 @@ on:
         type: string
 
 jobs:
-  artefact-jekyll-docs:
-    name: "Build Docs"
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v4
-      - name: "Build docs"
-        uses: ./.github/actions/build-docs
-        with:
-          version: "${{ inputs.version }}"
   artefact-1:
     name: "Artefact 1"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: "Build artefact 1"
         run: |
           echo "Building artefact 1 ..."
@@ -60,14 +49,14 @@ jobs:
       - name: "Upload artefact 1"
         run: |
           echo "Uploading artefact 1 ..."
-          # TODO: Use either action/cache or action/upload-artifact
+          # Use either action/cache or action/upload-artifact
   artefact-n:
     name: "Artefact n"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: "Build artefact n"
         run: |
           echo "Building artefact n ..."
@@ -77,4 +66,4 @@ jobs:
       - name: "Upload artefact n"
         run: |
           echo "Uploading artefact n ..."
-          # TODO: Use either action/cache or action/upload-artifact
+          # Use either action/cache or action/upload-artifact

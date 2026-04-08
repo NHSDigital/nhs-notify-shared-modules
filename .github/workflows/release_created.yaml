@@ -1,0 +1,36 @@
+name: Github Release Created
+
+on:
+  release:
+    types: ["published"] # Inherits all input defaults
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-main:
+    name: Package and Publish Terraform Modules to GitHub Releases assets
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: "Package and Publish Terraform modules"
+        run: |
+          ARTIFACTS_DIR="$PWD/../../artifacts"
+          mkdir -p "$ARTIFACTS_DIR"
+          cd infrastructure/terraform/modules
+          for module in */; do
+            module_name=${module%/}
+            echo "Zipping contents of $module_name..."
+            (cd "$module_name" && zip -r "$ARTIFACTS_DIR/terraform-${module_name}.zip" .)
+            echo "Publishing $module_name module..."
+            gh release upload ${{ github.event.release.tag_name }} "$ARTIFACTS_DIR/terraform-${module_name}.zip" --clobber
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

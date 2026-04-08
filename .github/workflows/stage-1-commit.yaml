@@ -39,7 +39,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # Full history is needed to scan all commits
       - name: "Scan secrets"
@@ -50,7 +50,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # Full history is needed to compare branches
       - name: "Check file format"
@@ -61,7 +61,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # Full history is needed to compare branches
       - name: "Check Markdown format"
@@ -75,7 +75,7 @@ jobs:
         contents: write
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # Full history is needed to compare branches
       - name: "Check to see if Terraform Docs are up-to-date"
@@ -83,7 +83,7 @@ jobs:
           make terraform-docs
       - name: "Stage changes"
         run: |
-          git add infrastructure/modules/**/*.md
+          git add infrastructure/terraform/modules/**/*.md
       - name: "Check for changes in Terraform Docs"
         run: |
           if git diff --cached --name-only | grep -qE '\.md$'; then
@@ -96,11 +96,22 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # Full history is needed to compare branches
       - name: "Check English usage"
         uses: ./.github/actions/check-english-usage
+  check-todo-usage:
+    name: "Check TODO usage"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0 # Full history is needed to compare branches
+      - name: "Check TODO usage"
+        uses: ./.github/actions/check-todo-usage
   detect-terraform-changes:
     name: "Detect Terraform Changes"
     runs-on: ubuntu-latest
@@ -108,8 +119,7 @@ jobs:
       terraform_changed: ${{ steps.check.outputs.terraform_changed }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: "Check for Terraform changes"
         id: check
         run: |
@@ -132,7 +142,9 @@ jobs:
     if: needs.detect-terraform-changes.outputs.terraform_changed == 'true'
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: "Setup ASDF"
+        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47 # v4
       - name: "Lint Terraform"
         uses: ./.github/actions/lint-terraform
   trivy:
@@ -143,9 +155,9 @@ jobs:
     if: needs.detect-terraform-changes.outputs.terraform_changed == 'true'
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: "Setup ASDF"
-        uses: asdf-vm/actions/setup@v3
+        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47 # v4
       - name: "Perform Setup"
         uses: ./.github/actions/setup
       - name: "Trivy Scan"
@@ -159,7 +171,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: "Count lines of code"
         uses: ./.github/actions/create-lines-of-code-report
         with:
@@ -178,7 +190,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: "Scan dependencies"
         uses: ./.github/actions/scan-dependencies
         with:
