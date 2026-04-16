@@ -16,10 +16,14 @@ runs:
   steps:
     - name: Validate PR title
       shell: bash
+      env:
+        TITLE: ${{ inputs.title }}
+        PATTERN: ${{ inputs.pattern }}
+        MESSAGE: ${{ inputs.error_message }}
       run: |
-        title="${{ inputs.title }}"
-        pattern="${{ inputs.pattern }}"
-        message="${{ inputs.error_message }}"
+        title="$TITLE"
+        pattern="$PATTERN"
+        message="$MESSAGE"
 
         echo "PR title: $title"
         echo "Required pattern: $pattern"
