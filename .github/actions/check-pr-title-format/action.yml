@@ -2,9 +2,8 @@ name: Validate PR title
 description: Validate pull request title against a regex
 inputs:
   title:
-    descriptions: Pull request title
+    description: Pull request title
     required: true
-    required: false
   pattern:
     description: Regex pattern the PR title must match
     required: true
@@ -27,7 +26,7 @@ runs:
 
         if [[ "$title" =~ $pattern ]]; then
           echo "PR title is valid"
-        else if
+        else
           echo "::error::$message"
           exit 1
         fi
