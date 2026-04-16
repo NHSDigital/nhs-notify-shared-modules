@@ -1,0 +1,33 @@
+name: Validate PR title
+description: Validate pull request title against a regex
+inputs:
+  title:
+    descriptions: Pull request title
+    required: true
+    required: false
+  pattern:
+    description: Regex pattern the PR title must match
+    required: true
+  error_message:
+    description: Custom error message
+    required: false
+    default: Pull request title does not match required format
+runs:
+  using: composite
+  steps:
+    - name: Validate PR title
+      shell: bash
+      run: |
+        title="${{ inputs.title }}"
+        pattern="${{ inputs.pattern }}"
+        message="${{ inputs.error_message }}"
+
+        echo "PR title: $title"
+        echo "Required pattern: $pattern"
+
+        if [[ "$title" =~ $pattern ]]; then
+          echo "PR title is valid"
+        else if
+          echo "::error::$message"
+          exit 1
+        fi
