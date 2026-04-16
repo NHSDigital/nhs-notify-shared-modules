@@ -24,9 +24,24 @@ runs:
         echo "PR title: $title"
         echo "Required pattern: $pattern"
 
-        if [[ "$title" =~ $pattern ]]; then
+        if [ -z "$pattern" ]; then
+          echo "::error::Input 'pattern' must be a non-empty regular expression"
+          exit 1
+        fi
+        if printf '%s\n' "$title" | grep -Eq -- "$pattern"; then
           echo "PR title is valid"
         else
-          echo "::error::$message"
+          status=$?
+          case "$status" in
+            1)
+              echo "::error::$message"
+              ;;
+            2)
+              echo "::error::Input 'pattern' is not a valid regular expression: $pattern"
+              ;;
+            *)
+              echo "::error::Unexpected error while validating PR title"
+              ;;
+          esac
           exit 1
         fi
