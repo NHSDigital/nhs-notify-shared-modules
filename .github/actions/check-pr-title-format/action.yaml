@@ -6,7 +6,8 @@ inputs:
     required: true
   pattern:
     description: Regex pattern the PR title must match
-    required: true
+    required: false
+    default: '^CCM-[0-9]+: .+$'
   error_message:
     description: Custom error message
     required: false
