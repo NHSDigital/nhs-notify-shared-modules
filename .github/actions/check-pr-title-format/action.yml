@@ -25,6 +25,17 @@ runs:
         pattern="$PATTERN"
         message="$MESSAGE"
 
+        escape_workflow_command_value() {
+          local value="$1"
+          value="${value//'%'/'%25'}"
+          value="${value//$'\r'/'%0D'}"
+          value="${value//$'\n'/'%0A'}"
+          printf '%s' "$value"
+        }
+
+        escaped_message="$(escape_workflow_command_value "$message")"
+        escaped_pattern="$(escape_workflow_command_value "$pattern")"
+
         echo "PR title: $title"
         echo "Required pattern: $pattern"
 
@@ -38,10 +49,10 @@ runs:
           status=$?
           case "$status" in
             1)
-              echo "::error::$message"
+              echo "::error::$escaped_message"
               ;;
             2)
-              echo "::error::Input 'pattern' is not a valid regular expression: $pattern"
+              echo "::error::Input 'pattern' is not a valid regular expression: $escaped_pattern"
               ;;
             *)
               echo "::error::Unexpected error while validating PR title"
