@@ -4,14 +4,6 @@ inputs:
   title:
     description: Pull request title
     required: true
-  pattern:
-    description: Regex pattern the PR title must match
-    required: false
-    default: '^CCM-[0-9]+: .+$'
-  error_message:
-    description: Custom error message
-    required: false
-    default: Pull request title does not match required format
 runs:
   using: composite
   steps:
@@ -19,45 +11,16 @@ runs:
       shell: bash
       env:
         TITLE: ${{ inputs.title }}
-        PATTERN: ${{ inputs.pattern }}
-        MESSAGE: ${{ inputs.error_message }}
       run: |
         title="$TITLE"
-        pattern="$PATTERN"
-        message="$MESSAGE"
-
-        escape_workflow_command_value() {
-          local value="$1"
-          value="${value//'%'/'%25'}"
-          value="${value//$'\r'/'%0D'}"
-          value="${value//$'\n'/'%0A'}"
-          printf '%s' "$value"
-        }
-
-        escaped_message="$(escape_workflow_command_value "$message")"
-        escaped_pattern="$(escape_workflow_command_value "$pattern")"
+        pattern='^CCM-[0-9]+: .+$'
+        message='PR title must match: CCM-1234: Some Text'
 
         echo "PR title: $title"
-        echo "Required pattern: $pattern"
 
-        if [ -z "$pattern" ]; then
-          echo "::error::Input 'pattern' must be a non-empty regular expression"
-          exit 1
-        fi
         if printf '%s\n' "$title" | grep -Eq -- "$pattern"; then
           echo "PR title is valid"
         else
-          status=$?
-          case "$status" in
-            1)
-              echo "::error::$escaped_message"
-              ;;
-            2)
-              echo "::error::Input 'pattern' is not a valid regular expression: $escaped_pattern"
-              ;;
-            *)
-              echo "::error::Unexpected error while validating PR title"
-              ;;
-          esac
+          echo "::error::$message"
           exit 1
         fi
