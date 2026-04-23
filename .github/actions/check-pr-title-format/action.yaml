@@ -1,0 +1,26 @@
+name: Validate PR title
+description: "Validate pull request title against a regex"
+inputs:
+  title:
+    description: "Pull request title"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: "Validate PR title"
+      shell: bash
+      env:
+        TITLE: ${{ inputs.title }}
+      run: |
+        title="$TITLE"
+        pattern='^CCM-[0-9]+: .+$'
+        message='PR title must match: CCM-1234: Some Text'
+
+        echo "PR title: $title"
+
+        if printf '%s\n' "$title" | grep -Eq -- "$pattern"; then
+          echo "PR title is valid"
+        else
+          echo "::error::$message"
+          exit 1
+        fi
