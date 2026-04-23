@@ -1,13 +1,13 @@
 name: Validate PR title
-description: Validate pull request title against a regex
+description: "Validate pull request title against a regex"
 inputs:
   title:
-    description: Pull request title
+    description: "Pull request title"
     required: true
 runs:
-  using: composite
+  using: "composite"
   steps:
-    - name: Validate PR title
+    - name: "Validate PR title"
       shell: bash
       env:
         TITLE: ${{ inputs.title }}
