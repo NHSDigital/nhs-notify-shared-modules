@@ -15,6 +15,7 @@ set -euo pipefail
 #
 # Options:
 #   check={all,staged-changes,working-tree-changes,branch}  # Check mode, default is 'working-tree-changes'
+#   exclude=file1,file2                                     # Comma-separated file paths to skip
 #   dry_run=true                                            # Do not check, run dry run only, default is 'false'
 #   BRANCH_NAME=other-branch-than-main                      # Branch to compare with, default is `origin/main`
 #   FORCE_USE_DOCKER=true                                   # If set to true the command is run in a Docker container, default is 'false'
@@ -43,6 +44,7 @@ set -euo pipefail
 function main() {
 
   cd "$(git rev-parse --show-toplevel)"
+  apply-key-value-args "$@"
 
   # shellcheck disable=SC2154
   is-arg-true "${dry_run:-false}" && dry_run_opt="--dry-run"
@@ -82,7 +84,7 @@ function run-editorconfig-natively() {
   local files=()
   while IFS= read -r -d '' file; do
     files+=("$file")
-  done < <($filter)
+  done < <(get-filtered-files)
 
   # If no files found, exit successfully
   [[ ${#files[@]} -eq 0 ]] && return 0
@@ -107,7 +109,7 @@ function run-editorconfig-in-docker() {
   local files=()
   while IFS= read -r -d '' file; do
     files+=("$file")
-  done < <($filter)
+  done < <(get-filtered-files)
 
   # We use /dev/null here as a backstop in case there are no files in the state
   # we choose. If the filter comes back empty, adding `/dev/null` onto it has
@@ -123,6 +125,31 @@ function run-editorconfig-in-docker() {
       ec --exclude '.git/' $dry_run_opt "${files[@]}"
 }
 
+# Run the selected filter and remove files listed in the optional `exclude` argument.
+function get-filtered-files() {
+
+  local excludes_csv="${exclude:-}"
+
+  if [[ -z "$excludes_csv" ]]; then
+    $filter
+    return 0
+  fi
+
+  local excludes=()
+  IFS=',' read -r -a excludes <<< "$excludes_csv"
+
+  while IFS= read -r -d '' file; do
+    local skip=false
+    for ex in "${excludes[@]}"; do
+      ex="${ex#${ex%%[![:space:]]*}}"
+      ex="${ex%${ex##*[![:space:]]}}"
+      [[ "$file" == "$ex" ]] && skip=true && break
+    done
+
+    [[ "$skip" == false ]] && printf '%s\0' "$file"
+  done < <($filter)
+}
+
 # ==============================================================================
 
 function is-arg-true() {
@@ -132,6 +159,19 @@ function is-arg-true() {
   else
     return 1
   fi
+}
+
+# Parse arguments passed by pre-commit as KEY=VALUE and expose them as env vars.
+function apply-key-value-args() {
+
+  for arg in "$@"; do
+    if [[ "$arg" =~ ^[A-Za-z_][A-Za-z0-9_]*=.+$ ]]; then
+      export "$arg"
+    else
+      echo "Unknown argument format: $arg (expected key=value)" >&2
+      exit 126
+    fi
+  done
 }
 
 # ==============================================================================

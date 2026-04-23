@@ -214,6 +214,7 @@ function print_output() {
 
 function main() {
   cd "$(git rev-parse --show-toplevel)"
+  apply-key-value-args "$@"
 
   # Load exclusions from config file
   load_exclusions_from_config "$CONFIG_FILE"
@@ -242,6 +243,19 @@ function is-arg-true() {
   else
     return 1
   fi
+}
+
+# Parse arguments passed by pre-commit as KEY=VALUE and expose them as env vars.
+function apply-key-value-args() {
+
+  for arg in "$@"; do
+    if [[ "$arg" =~ ^[A-Za-z_][A-Za-z0-9_]*=.+$ ]]; then
+      export "$arg"
+    else
+      echo "Unknown argument format: $arg (expected key=value)" >&2
+      exit 126
+    fi
+  done
 }
 
 # ==============================================================================
