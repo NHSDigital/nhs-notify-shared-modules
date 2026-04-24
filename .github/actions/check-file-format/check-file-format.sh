@@ -90,7 +90,7 @@ function run-editorconfig-natively() {
   [[ ${#files[@]} -eq 0 ]] && return 0
 
   # shellcheck disable=SC2086
-  editorconfig \
+  editorconfig-checker \
     --exclude '.git/' $dry_run_opt "${files[@]}"
 }
 
