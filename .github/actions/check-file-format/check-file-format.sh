@@ -68,7 +68,7 @@ function main() {
       ;;
   esac
 
-  if command -v editorconfig > /dev/null 2>&1 && ! is-arg-true "${FORCE_USE_DOCKER:-false}"; then
+  if command -v editorconfig-checker > /dev/null 2>&1 && ! is-arg-true "${FORCE_USE_DOCKER:-false}"; then
     filter="$filter" dry_run_opt="${dry_run_opt:-}" run-editorconfig-natively
   else
     filter="$filter" dry_run_opt="${dry_run_opt:-}" run-editorconfig-in-docker
