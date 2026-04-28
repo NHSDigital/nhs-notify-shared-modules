@@ -3,7 +3,7 @@ module "s3bucket_event_cache" {
 
   count = var.enable_event_cache ? 1 : 0
 
-  name = "eventsub_event_cache"
+  name = "es_event_cache"
 
   aws_account_id = var.aws_account_id
   region         = var.region
