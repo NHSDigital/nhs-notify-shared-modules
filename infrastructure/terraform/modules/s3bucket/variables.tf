@@ -129,3 +129,9 @@ variable "object_ownership" {
   description = "Ownership of objects written to the bucket"
   default     = "BucketOwnerEnforced"
 }
+
+variable "enable_abac" {
+  type        = bool
+  description = "Toggle for enabling ABAC on the bucket. Defaults to false"
+  default     = false
+}

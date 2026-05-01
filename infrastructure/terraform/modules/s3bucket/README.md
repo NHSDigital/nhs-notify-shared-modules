@@ -18,6 +18,7 @@
 | <a name="input_bucket_notification_depends_on"></a> [bucket\_notification\_depends\_on](#input\_bucket\_notification\_depends\_on) | Bucket notification explicit dependencies for depends\_on meta | `list(any)` | `[]` | no |
 | <a name="input_component"></a> [component](#input\_component) | The name of the tfscaffold component | `string` | n/a | yes |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of default tags to apply to all taggable resources within the component | `map(string)` | `{}` | no |
+| <a name="input_enable_abac"></a> [enable\_abac](#input\_enable\_abac) | Toggle for enabling ABAC on the bucket. Defaults to false | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Boolean to toggle force destroy of bucket. Defaults to true; should be changed in exceptional circumstances | `bool` | `true` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of default encryption KMS key for this bucket. If omitted, will use AES256 | `string` | `null` | no |
