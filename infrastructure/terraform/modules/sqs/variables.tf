@@ -124,9 +124,17 @@ variable "enable_dlq_alarm" {
 }
 
 variable "dlq_alarm_config" {
-  description = "Map of optional CloudWatch alarm settings for the DLQ messages alarm. Supported keys: comparison_operator, evaluation_periods, period, statistic, threshold, actions_enabled, treat_missing_data"
-  type        = map(any)
-  default     = {}
+  description = "Object of optional CloudWatch alarm settings for the DLQ messages alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    statistic           = optional(string, "Sum")
+    threshold           = optional(number, 0)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
 }
 
 variable "enable_queue_oldest_message_alarm" {
@@ -136,9 +144,17 @@ variable "enable_queue_oldest_message_alarm" {
 }
 
 variable "queue_oldest_message_alarm_config" {
-  description = "Map of optional CloudWatch alarm settings for the main queue oldest message age alarm. Supported keys: comparison_operator, evaluation_periods, period, statistic, threshold, actions_enabled, treat_missing_data"
-  type        = map(any)
-  default     = {}
+  description = "Object of optional CloudWatch alarm settings for the main queue oldest message age alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    statistic           = optional(string, "Maximum")
+    threshold           = optional(number, 300)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
 }
 
 variable "max_receive_count" {
