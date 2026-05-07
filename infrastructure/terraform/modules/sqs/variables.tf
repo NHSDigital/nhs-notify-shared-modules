@@ -120,7 +120,25 @@ variable "create_dlq" {
 variable "enable_dlq_alarm" {
   description = "Create a CloudWatch alarm when messages are visible in the DLQ"
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "dlq_alarm_config" {
+  description = "Map of optional CloudWatch alarm settings for the DLQ messages alarm. Supported keys: comparison_operator, evaluation_periods, period, statistic, threshold, actions_enabled, treat_missing_data"
+  type        = map(any)
+  default     = {}
+}
+
+variable "enable_queue_oldest_message_alarm" {
+  description = "Create a CloudWatch alarm when the oldest visible message age breaches the configured threshold on the main queue"
+  type        = bool
+  default     = true
+}
+
+variable "queue_oldest_message_alarm_config" {
+  description = "Map of optional CloudWatch alarm settings for the main queue oldest message age alarm. Supported keys: comparison_operator, evaluation_periods, period, statistic, threshold, actions_enabled, treat_missing_data"
+  type        = map(any)
+  default     = {}
 }
 
 variable "max_receive_count" {

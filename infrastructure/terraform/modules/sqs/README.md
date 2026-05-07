@@ -18,8 +18,10 @@
 | <a name="input_create_dlq"></a> [create\_dlq](#input\_create\_dlq) | Create a DLQ | `bool` | `false` | no |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of default tags to apply to all taggable resources within the component | `map(string)` | `{}` | no |
 | <a name="input_delay_seconds"></a> [delay\_seconds](#input\_delay\_seconds) | Time in seconds that the delivery of all messages in the queue will be delayed. An integer from 0 to 900 (15 minutes). | `number` | `0` | no |
+| <a name="input_dlq_alarm_config"></a> [dlq\_alarm\_config](#input\_dlq\_alarm\_config) | Map of optional CloudWatch alarm settings for the DLQ messages alarm. Supported keys: comparison\\_operator, evaluation\\_periods, period, statistic, threshold, actions\\_enabled, treat\\_missing\\_data | `map(any)` | `{}` | no |
 | <a name="input_dlq_message_retention_seconds"></a> [dlq\_message\_retention\_seconds](#input\_dlq\_message\_retention\_seconds) | The number of seconds Amazon SQS retains a message on the DLQ. Integer representing seconds, from 60 (1 minute) to 1209600 (14 days) | `number` | `1209600` | no |
-| <a name="input_enable_dlq_alarm"></a> [enable\_dlq\_alarm](#input\_enable\_dlq\_alarm) | Create a CloudWatch alarm when messages are visible in the DLQ | `bool` | `false` | no |
+| <a name="input_enable_dlq_alarm"></a> [enable\_dlq\_alarm](#input\_enable\_dlq\_alarm) | Create a CloudWatch alarm when messages are visible in the DLQ | `bool` | `true` | no |
+| <a name="input_enable_queue_oldest_message_alarm"></a> [enable\_queue\_oldest\_message\_alarm](#input\_enable\_queue\_oldest\_message\_alarm) | Create a CloudWatch alarm when the oldest visible message age breaches the configured threshold on the main queue | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
 | <a name="input_fifo_queue"></a> [fifo\_queue](#input\_fifo\_queue) | Boolean designating a FIFO queue | `bool` | `false` | no |
 | <a name="input_kms_data_key_reuse_period_seconds"></a> [kms\_data\_key\_reuse\_period\_seconds](#input\_kms\_data\_key\_reuse\_period\_seconds) | The length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt or decrypt messages before calling AWS KMS again. An integer representing seconds, between 60 seconds (1 minute) and 86,400 seconds (24 hours) | `number` | `300` | no |
@@ -28,6 +30,7 @@
 | <a name="input_message_retention_seconds"></a> [message\_retention\_seconds](#input\_message\_retention\_seconds) | The number of seconds Amazon SQS retains a message. Integer representing seconds, from 60 (1 minute) to 1209600 (14 days) | `number` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the SQS Queue | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | The name of the tfscaffold project | `string` | n/a | yes |
+| <a name="input_queue_oldest_message_alarm_config"></a> [queue\_oldest\_message\_alarm\_config](#input\_queue\_oldest\_message\_alarm\_config) | Map of optional CloudWatch alarm settings for the main queue oldest message age alarm. Supported keys: comparison\\_operator, evaluation\\_periods, period, statistic, threshold, actions\\_enabled, treat\\_missing\\_data | `map(any)` | `{}` | no |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
 | <a name="input_sqs_kms_key_arn"></a> [sqs\_kms\_key\_arn](#input\_sqs\_kms\_key\_arn) | ARN of the KMS key to encrypt SQS queue messages | `string` | n/a | yes |
 | <a name="input_sqs_policy_overload"></a> [sqs\_policy\_overload](#input\_sqs\_policy\_overload) | Optional additional policy to extend the SQS Resource Policy | `string` | `""` | no |
