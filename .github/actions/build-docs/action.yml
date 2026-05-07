@@ -15,6 +15,8 @@ runs:
     - name: Npm cli install
       run: npm ci
       shell: bash
+      env:
+        NODE_AUTH_TOKEN: ${{ github.token }}
     - name: Setup Ruby
       uses: ruby/setup-ruby@3783f195e29b74ae398d7caca108814bbafde90e # v1.180.1
       with:
