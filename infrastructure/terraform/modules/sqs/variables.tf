@@ -117,6 +117,12 @@ variable "create_dlq" {
   default     = false
 }
 
+variable "enable_dlq_alarm" {
+  description = "Create a CloudWatch alarm when messages are visible in the DLQ"
+  type        = bool
+  default     = false
+}
+
 variable "max_receive_count" {
   description = "The maximum number of times a message can be received before being sent to the DLQ"
   type        = number
