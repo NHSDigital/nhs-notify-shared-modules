@@ -13,7 +13,6 @@ runs:
       with:
         node-version: 22
     - name: Npm cli install
-      working-directory: ./docs
       run: npm ci
       shell: bash
     - name: Setup Ruby
