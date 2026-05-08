@@ -117,6 +117,46 @@ variable "create_dlq" {
   default     = false
 }
 
+variable "enable_dlq_alarm" {
+  description = "Create a CloudWatch alarm when messages are visible in the DLQ"
+  type        = bool
+  default     = true
+}
+
+variable "dlq_alarm_config" {
+  description = "Object of optional CloudWatch alarm settings for the DLQ messages alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    statistic           = optional(string, "Sum")
+    threshold           = optional(number, 0)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
+}
+
+variable "enable_queue_oldest_message_alarm" {
+  description = "Create a CloudWatch alarm when the oldest visible message age breaches the configured threshold on the main queue"
+  type        = bool
+  default     = true
+}
+
+variable "queue_oldest_message_alarm_config" {
+  description = "Object of optional CloudWatch alarm settings for the main queue oldest message age alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    statistic           = optional(string, "Maximum")
+    threshold           = optional(number, 300)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
+}
+
 variable "max_receive_count" {
   description = "The maximum number of times a message can be received before being sent to the DLQ"
   type        = number
