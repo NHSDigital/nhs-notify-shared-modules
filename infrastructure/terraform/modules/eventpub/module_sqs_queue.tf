@@ -8,7 +8,7 @@ module "sqs_queue" {
   region                    = var.region
   name                      = local.csi
   create_dlq                = true
-  sqs_kms_key_arn           = var.sqs_kms_key_arn
+  sqs_kms_key_arn           = var.kms_key_arn
   sqs_policy_overload       = data.aws_iam_policy_document.allow_sns_send.json
   message_retention_seconds = 1209600 # 14 days
 }
