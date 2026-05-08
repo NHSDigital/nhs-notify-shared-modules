@@ -6,7 +6,7 @@ resource "aws_lambda_function" "main" {
   handler     = "index.handler"
   runtime     = "nodejs22.x"
   publish     = true
-  memory_size = 128
+  memory_size = 512
   timeout     = 20
 
   filename         = data.archive_file.lambda.output_path
@@ -28,3 +28,18 @@ resource "aws_lambda_function" "main" {
     }
   }
 }
+
+resource "aws_lambda_event_source_mapping" "sqs_to_lambda" {
+  event_source_arn                   = module.sqs_queue.sqs_queue_arn
+  function_name                      = aws_lambda_function.main.function_name
+  batch_size                         = 5000
+  maximum_batching_window_in_seconds = 0
+  function_response_types = [
+    "ReportBatchItemFailures"
+  ]
+
+  scaling_config {
+    maximum_concurrency = 20
+  }
+}
+

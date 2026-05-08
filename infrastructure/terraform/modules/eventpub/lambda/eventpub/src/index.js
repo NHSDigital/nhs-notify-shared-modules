@@ -95,15 +95,15 @@ async function sendToDLQ(events) {
     }
 }
 
-exports.handler = async (snsEvent) => {
-    console.debug(`Received SNS event with ${snsEvent.Records.length} records.`);
+exports.handler = async (sqsEvent) => {
+    console.debug(`Received SQS event with ${sqsEvent.Records.length} records.`);
 
     if (THROTTLE_DELAY_MS > 0) {
         console.info(`Throttling enabled. Delaying processing by ${THROTTLE_DELAY_MS}ms`);
         await new Promise(res => setTimeout(res, THROTTLE_DELAY_MS));
     }
 
-    const records = snsEvent.Records.map(record => JSON.parse(record.Sns.Message));
+    const records = sqsEvent.Records.map(record => JSON.parse(record.body));
     const validEvents = records.filter(validateEvent);
     const invalidEvents = records.filter(event => !validateEvent(event));
 
