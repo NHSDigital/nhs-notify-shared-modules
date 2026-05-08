@@ -1,5 +1,5 @@
 module "sqs_queue" {
-  source = "../sqs"
+  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/3.1.3/terraform-sqs.zip"
 
   aws_account_id      = var.aws_account_id
   component           = var.component
