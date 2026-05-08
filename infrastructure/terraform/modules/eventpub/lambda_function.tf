@@ -33,7 +33,7 @@ resource "aws_lambda_event_source_mapping" "sqs_to_lambda" {
   event_source_arn                   = module.sqs_queue.sqs_queue_arn
   function_name                      = aws_lambda_function.main.function_name
   batch_size                         = 5000
-  maximum_batching_window_in_seconds = 0
+  maximum_batching_window_in_seconds = 1
   function_response_types = [
     "ReportBatchItemFailures"
   ]
