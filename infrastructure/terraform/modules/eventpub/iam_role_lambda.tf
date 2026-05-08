@@ -82,6 +82,22 @@ data "aws_iam_policy_document" "lambda" {
   }
 
   statement {
+    sid    = "AllowSQSInput"
+    effect = "Allow"
+
+    actions = [
+      "sqs:ReceiveMessage",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ChangeMessageVisibility",
+    ]
+
+    resources = [
+      module.sqs_queue.sqs_queue_arn,
+    ]
+  }
+
+  statement {
     sid    = "KMSCloudwatchKeyAccess"
     effect = "Allow"
 
