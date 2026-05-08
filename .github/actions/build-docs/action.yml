@@ -13,7 +13,7 @@ runs:
       with:
         node-version: 22
     - name: Npm cli install
-      run: npm ci --workspace=docs
+      run: npm ci --workspace=docs --workspace=src/cloudevents
       shell: bash
     - name: Setup Ruby
       uses: ruby/setup-ruby@3783f195e29b74ae398d7caca108814bbafde90e # v1.180.1
