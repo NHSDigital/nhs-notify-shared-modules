@@ -103,6 +103,8 @@ exports.handler = async (sqsEvent) => {
         await new Promise(res => setTimeout(res, THROTTLE_DELAY_MS));
     }
 
+    console.log(record.body);
+
     const records = sqsEvent.Records.map(record => JSON.parse(record.body));
     const validEvents = records.filter(validateEvent);
     const invalidEvents = records.filter(event => !validateEvent(event));

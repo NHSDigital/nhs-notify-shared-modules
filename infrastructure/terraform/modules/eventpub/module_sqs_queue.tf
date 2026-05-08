@@ -1,5 +1,5 @@
 module "sqs_queue" {
-  source = "../../sqs"
+  source = "../sqs"
 
   aws_account_id      = var.aws_account_id
   component           = var.component
