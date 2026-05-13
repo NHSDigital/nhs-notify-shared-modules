@@ -2,11 +2,13 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -23,14 +25,13 @@
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
 | <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types) | The resource types to include in the OAM link. | `list(string)` | <pre>[<br/>  "AWS::CloudWatch::Metric",<br/>  "AWS::Logs::LogGroup"<br/>]</pre> | no |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | <a name="output_log_subscription_role_arn"></a> [log\_subscription\_role\_arn](#output\_log\_subscription\_role\_arn) | The ARN of the log subscription IAM role. |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->
