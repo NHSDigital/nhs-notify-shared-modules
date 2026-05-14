@@ -42,4 +42,3 @@ resource "aws_lambda_event_source_mapping" "sqs_to_lambda" {
     maximum_concurrency = 24
   }
 }
-

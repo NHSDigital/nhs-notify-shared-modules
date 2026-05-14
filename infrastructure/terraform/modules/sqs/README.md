@@ -2,11 +2,13 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -35,9 +37,7 @@
 | <a name="input_sqs_kms_key_arn"></a> [sqs\_kms\_key\_arn](#input\_sqs\_kms\_key\_arn) | ARN of the KMS key to encrypt SQS queue messages | `string` | n/a | yes |
 | <a name="input_sqs_policy_overload"></a> [sqs\_policy\_overload](#input\_sqs\_policy\_overload) | Optional additional policy to extend the SQS Resource Policy | `string` | `""` | no |
 | <a name="input_visibility_timeout_seconds"></a> [visibility\_timeout\_seconds](#input\_visibility\_timeout\_seconds) | The visibility timeout for the queue. An integer from 0 to 43200 (12 hours) | `number` | `300` | no |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
@@ -52,6 +52,7 @@ No modules.
 | <a name="output_sqs_queue_oldest_message_alarm_arn"></a> [sqs\_queue\_oldest\_message\_alarm\_arn](#output\_sqs\_queue\_oldest\_message\_alarm\_arn) | The ARN of the CloudWatch alarm for oldest visible message age in the SQS queue |
 | <a name="output_sqs_queue_oldest_message_alarm_name"></a> [sqs\_queue\_oldest\_message\_alarm\_name](#output\_sqs\_queue\_oldest\_message\_alarm\_name) | The name of the CloudWatch alarm for oldest visible message age in the SQS queue |
 | <a name="output_sqs_queue_url"></a> [sqs\_queue\_url](#output\_sqs\_queue\_url) | The URL of the SQS queue |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

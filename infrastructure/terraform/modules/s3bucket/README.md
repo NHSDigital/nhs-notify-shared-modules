@@ -2,11 +2,13 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -31,9 +33,7 @@
 | <a name="input_public_access"></a> [public\_access](#input\_public\_access) | Object representing the public access rules of the bucket | <pre>object({<br/>    block_public_acls       = bool<br/>    block_public_policy     = bool<br/>    ignore_public_acls      = bool<br/>    restrict_public_buckets = bool<br/>  })</pre> | <pre>{<br/>  "block_public_acls": true,<br/>  "block_public_policy": true,<br/>  "ignore_public_acls": true,<br/>  "restrict_public_buckets": true<br/>}</pre> | no |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
 | <a name="input_versioning"></a> [versioning](#input\_versioning) | Toggle for versioning the bucket. Defaults to true | `bool` | `true` | no |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
@@ -47,6 +47,7 @@ No modules.
 | <a name="output_id"></a> [id](#output\_id) | The ID of the S3 bucket |
 | <a name="output_policy"></a> [policy](#output\_policy) | The policy of the S3 bucket |
 | <a name="output_region"></a> [region](#output\_region) | The AWS region where the S3 bucket is located |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

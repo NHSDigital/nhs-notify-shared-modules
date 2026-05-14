@@ -2,11 +2,13 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -57,9 +59,7 @@
 | <a name="input_system_log_level"></a> [system\_log\_level](#input\_system\_log\_level) | The detail level of the Lambda platform event logs sent to CloudWatch | `string` | `"WARN"` | no |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | Timeout in seconds of the lambda function invocation | `number` | n/a | yes |
 | <a name="input_vpc_config"></a> [vpc\_config](#input\_vpc\_config) | Lambdas can run in a VPC, should be a map containing a subnet\_ids list and a security\_group\_ids list | `map(any)` | `null` | no |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
@@ -72,6 +72,7 @@ No modules.
 | <a name="output_function_qualified_arn"></a> [function\_qualified\_arn](#output\_function\_qualified\_arn) | Qualified ARN of the Lambda function, including version or alias |
 | <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | ARN of the IAM role associated with the Lambda function |
 | <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | Name of the IAM role associated with the Lambda function |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->
