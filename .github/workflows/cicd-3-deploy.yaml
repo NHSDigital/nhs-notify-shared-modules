@@ -79,21 +79,39 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ ${{inputs.include_prereleases}} == true ]]; then
+          INPUTS_INCLUDE_PRERELEASES="${{ inputs.include_prereleases }}"
+          INPUTS_INCLUDE_PRERELEASES=${INPUTS_INCLUDE_PRERELEASES:-"true"}
+
+          INPUTS_VERSION="${{ inputs.version }}"
+          INPUTS_VERSION=${INPUTS_VERSION:-"latest"}
+
+
+          if [[ $INPUTS_INCLUDE_PRERELEASES == true ]]; then
             json=$(gh release list --json tagName --limit 1 --exclude-drafts)
           else
             json=$(gh release list --json tagName --limit 1 --exclude-drafts --exclude-pre-releases)
           fi
 
-          echo $json
+          echo "Release list response: $json"
 
-          release_version=$(echo $json | (jq -r '.[0].tagName'))
-          if [[ $release_version == null ]]; then exit 1; else echo $release_version; fi
+          # Check if the response is empty
+          if [[ "$json" == "[]" ]] || [[ -z "$json" ]]; then
+            echo "::error::No releases found. Please create a release before deploying docs."
+            exit 1
+          fi
 
-          if [[ ${{inputs.version}} == latest ]]; then
-            echo release_version=$(echo $release_version) >> $GITHUB_OUTPUT
+          release_version=$(echo $json | jq -r '.[0].tagName')
+          if [[ "$release_version" == "null" ]] || [[ -z "$release_version" ]]; then
+            echo "::error::Could not extract release version from: $json"
+            exit 1
+          fi
+
+          echo "Found release version: $release_version"
+
+          if [[ $INPUTS_VERSION == latest ]]; then
+            echo "release_version=$release_version" >> $GITHUB_OUTPUT
           else
-            echo release_version=$(echo ${{inputs.version}}) >> $GITHUB_OUTPUT
+            echo "release_version=$INPUTS_VERSION" >> $GITHUB_OUTPUT
           fi
 
       - name: "Get release version"
