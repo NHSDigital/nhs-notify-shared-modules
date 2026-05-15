@@ -11,11 +11,18 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: write
+  packages: write
+
 jobs:
   metadata:
     name: "Set CI/CD metadata"
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    permissions:
+      contents: read
     outputs:
       build_datetime_london: ${{ steps.variables.outputs.build_datetime_london }}
       build_datetime: ${{ steps.variables.outputs.build_datetime }}
