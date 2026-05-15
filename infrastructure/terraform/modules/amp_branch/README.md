@@ -2,11 +2,13 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -28,14 +30,13 @@
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
 | <a name="input_stage"></a> [stage](#input\_stage) | Determine what stage is being deployed for | `string` | `null` | no |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | <a name="output_name"></a> [name](#output\_name) | Name of the Amplify branch |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

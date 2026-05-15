@@ -11,10 +11,13 @@ sections:
 
 content: |-
   {{ .Header }}
+
   {{ .Requirements }}
+
   {{ .Inputs }}
-  {{ .Modules }}
+
   {{ .Outputs }}
+
   {{ .Footer }}
 
 output:

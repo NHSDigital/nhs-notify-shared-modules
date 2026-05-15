@@ -2,11 +2,13 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -23,9 +25,7 @@
 | <a name="input_name"></a> [name](#input\_name) | A unique name to distinguish this module invocation from others within the same CSI scope | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
@@ -36,6 +36,7 @@ No modules.
 | <a name="output_replica_key_arn"></a> [replica\_key\_arn](#output\_replica\_key\_arn) | ARN of the Replica KMS key |
 | <a name="output_replica_key_id"></a> [replica\_key\_id](#output\_replica\_key\_id) | ID of the Replica KMS key |
 | <a name="output_user_policy_arn"></a> [user\_policy\_arn](#output\_user\_policy\_arn) | ARN of the user IAM policy |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

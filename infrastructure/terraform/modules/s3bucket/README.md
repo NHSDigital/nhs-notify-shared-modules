@@ -2,11 +2,13 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -18,6 +20,7 @@
 | <a name="input_bucket_notification_depends_on"></a> [bucket\_notification\_depends\_on](#input\_bucket\_notification\_depends\_on) | Bucket notification explicit dependencies for depends\_on meta | `list(any)` | `[]` | no |
 | <a name="input_component"></a> [component](#input\_component) | The name of the tfscaffold component | `string` | n/a | yes |
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of default tags to apply to all taggable resources within the component | `map(string)` | `{}` | no |
+| <a name="input_enable_abac"></a> [enable\_abac](#input\_enable\_abac) | Toggle for enabling ABAC on the bucket. Defaults to false | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Boolean to toggle force destroy of bucket. Defaults to true; should be changed in exceptional circumstances | `bool` | `true` | no |
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | ARN of default encryption KMS key for this bucket. If omitted, will use AES256 | `string` | `null` | no |
@@ -30,9 +33,7 @@
 | <a name="input_public_access"></a> [public\_access](#input\_public\_access) | Object representing the public access rules of the bucket | <pre>object({<br/>    block_public_acls       = bool<br/>    block_public_policy     = bool<br/>    ignore_public_acls      = bool<br/>    restrict_public_buckets = bool<br/>  })</pre> | <pre>{<br/>  "block_public_acls": true,<br/>  "block_public_policy": true,<br/>  "ignore_public_acls": true,<br/>  "restrict_public_buckets": true<br/>}</pre> | no |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
 | <a name="input_versioning"></a> [versioning](#input\_versioning) | Toggle for versioning the bucket. Defaults to true | `bool` | `true` | no |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
@@ -46,6 +47,7 @@ No modules.
 | <a name="output_id"></a> [id](#output\_id) | The ID of the S3 bucket |
 | <a name="output_policy"></a> [policy](#output\_policy) | The policy of the S3 bucket |
 | <a name="output_region"></a> [region](#output\_region) | The AWS region where the S3 bucket is located |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

@@ -31,6 +31,7 @@ jobs:
       build_timestamp: ${{ steps.variables.outputs.build_timestamp }}
       build_epoch: ${{ steps.variables.outputs.build_epoch }}
       nodejs_version: ${{ steps.variables.outputs.nodejs_version }}
+      pnpm_version: ${{ steps.variables.outputs.pnpm_version }}
       python_version: ${{ steps.variables.outputs.python_version }}
       terraform_version: ${{ steps.variables.outputs.terraform_version }}
       version: ${{ steps.variables.outputs.version }}
@@ -46,6 +47,7 @@ jobs:
           echo "build_timestamp=$(date --date=$datetime -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
           echo "build_epoch=$(date --date=$datetime -u +'%s')" >> $GITHUB_OUTPUT
           echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
+          echo "pnpm_version=$(grep "^pnpm\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "python_version=$(grep "^python\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "terraform_version=$(grep "^terraform\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
           echo "version=$(head -n 1 .version 2> /dev/null || echo unknown)" >> $GITHUB_OUTPUT
@@ -77,21 +79,39 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ ${{inputs.include_prereleases}} == true ]]; then
+          INPUTS_INCLUDE_PRERELEASES="${{ inputs.include_prereleases }}"
+          INPUTS_INCLUDE_PRERELEASES=${INPUTS_INCLUDE_PRERELEASES:-"true"}
+
+          INPUTS_VERSION="${{ inputs.version }}"
+          INPUTS_VERSION=${INPUTS_VERSION:-"latest"}
+
+
+          if [[ $INPUTS_INCLUDE_PRERELEASES == true ]]; then
             json=$(gh release list --json tagName --limit 1 --exclude-drafts)
           else
             json=$(gh release list --json tagName --limit 1 --exclude-drafts --exclude-pre-releases)
           fi
 
-          echo $json
+          echo "Release list response: $json"
 
-          release_version=$(echo $json | (jq -r '.[0].tagName'))
-          if [[ $release_version == null ]]; then exit 1; else echo $release_version; fi
+          # Check if the response is empty
+          if [[ "$json" == "[]" ]] || [[ -z "$json" ]]; then
+            echo "::error::No releases found. Please create a release before deploying docs."
+            exit 1
+          fi
 
-          if [[ ${{inputs.version}} == latest ]]; then
-            echo release_version=$(echo $release_version) >> $GITHUB_OUTPUT
+          release_version=$(echo $json | jq -r '.[0].tagName')
+          if [[ "$release_version" == "null" ]] || [[ -z "$release_version" ]]; then
+            echo "::error::Could not extract release version from: $json"
+            exit 1
+          fi
+
+          echo "Found release version: $release_version"
+
+          if [[ $INPUTS_VERSION == latest ]]; then
+            echo "release_version=$release_version" >> $GITHUB_OUTPUT
           else
-            echo release_version=$(echo ${{inputs.version}}) >> $GITHUB_OUTPUT
+            echo "release_version=$INPUTS_VERSION" >> $GITHUB_OUTPUT
           fi
 
       - name: "Get release version"
@@ -102,13 +122,13 @@ jobs:
         run: |
           gh release download ${{steps.get-asset-version.outputs.release_version}} -p jekyll-docs-*.tar --output artifact.tar
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jekyll-docs-${{steps.get-asset-version.outputs.release_version}}
           path: artifact.tar
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
         with:
           artifact_name: jekyll-docs-${{steps.get-asset-version.outputs.release_version}}

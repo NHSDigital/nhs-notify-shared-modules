@@ -12,10 +12,12 @@ runs:
     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         node-version: 22
-    - name: Npm cli install
-      working-directory: ./docs
-      run: npm ci
+        cache: 'pnpm'
+        cache-dependency-path: 'docs/pnpm-lock.yaml'
+    - name: Install pnpm dependencies
+      run: pnpm install --frozen-lockfile
       shell: bash
+      working-directory: ./docs
     - name: Setup Ruby
       uses: ruby/setup-ruby@3783f195e29b74ae398d7caca108814bbafde90e # v1.180.1
       with:

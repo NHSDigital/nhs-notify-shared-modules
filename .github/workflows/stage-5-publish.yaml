@@ -1,0 +1,87 @@
+name: "Publish stage"
+
+on:
+  workflow_call:
+    inputs:
+      build_datetime:
+        description: "Build datetime, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      build_timestamp:
+        description: "Build timestamp, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      build_epoch:
+        description: "Build epoch, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      nodejs_version:
+        description: "Node.js version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      pnpm_version:
+        description: "pnpm version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      python_version:
+        description: "Python version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      terraform_version:
+        description: "Terraform version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      version:
+        description: "Version of the software, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      is_version_prerelease:
+        description: "Is this a semantically versioned pre release, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+jobs:
+  publish:
+    name: "Publish packages"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: "Get artifacts: jekyll docs"
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          path: ./artifacts/jekyll-docs-${{ inputs.version }}
+          name: jekyll-docs-${{ inputs.version }}
+
+      - name: Draft Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create \
+          "${{ inputs.version }}" \
+          --draft \
+          --latest \
+          --title "${{ inputs.version }}" \
+          --notes "Release of ${{ inputs.version }}" \
+          ${{ inputs.is_version_prerelease == 'true' && '--prerelease' || '' }}
+
+      - name: "Upload jekyll docs release asset"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cp ./artifacts/jekyll-docs-${{ inputs.version }}/artifact.tar $RUNNER_TEMP/jekyll-docs-${{ inputs.version }}.tar
+          gh release upload \
+          "${{ inputs.version }}" \
+          $RUNNER_TEMP/jekyll-docs-${{ inputs.version }}.tar#jekyll-docs-${{ inputs.version }}
+
+      - name: Publish Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release edit "${{ inputs.version }}" --draft=false

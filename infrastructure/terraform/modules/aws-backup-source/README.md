@@ -47,9 +47,11 @@ module "test_aws_backup" {
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 No requirements.
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -75,12 +77,11 @@ No requirements.
 | <a name="input_restore_testing_plan_start_window"></a> [restore\_testing\_plan\_start\_window](#input\_restore\_testing\_plan\_start\_window) | Start window from the scheduled time during which the test should start | `number` | `1` | no |
 | <a name="input_vault_max_retention_days"></a> [vault\_max\_retention\_days](#input\_vault\_max\_retention\_days) | Maximum retention days for the vault lock | `number` | `35` | no |
 | <a name="input_vault_min_retention_days"></a> [vault\_min\_retention\_days](#input\_vault\_min\_retention\_days) | Minimum retention days for the vault lock | `number` | `7` | no |
-## Modules
 
-No modules.
 ## Outputs
 
 No outputs.
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

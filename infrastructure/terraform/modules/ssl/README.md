@@ -2,12 +2,14 @@
 <!-- markdownlint-disable -->
 <!-- vale off -->
 
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.10.1 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | 4.1.0 |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -25,9 +27,7 @@
 | <a name="input_subject_organization"></a> [subject\_organization](#input\_subject\_organization) | Organization for certificate subject | `string` | `"NHS England"` | no |
 | <a name="input_subject_organizational_unit"></a> [subject\_organizational\_unit](#input\_subject\_organizational\_unit) | Organizational unit for certificate subject | `string` | `"NHS Notify"` | no |
 | <a name="input_subject_province"></a> [subject\_province](#input\_subject\_province) | Province for certificate subject | `string` | `"West Yorkshire"` | no |
-## Modules
 
-No modules.
 ## Outputs
 
 | Name | Description |
@@ -35,6 +35,7 @@ No modules.
 | <a name="output_cacert_pem"></a> [cacert\_pem](#output\_cacert\_pem) | Truststore |
 | <a name="output_server_crt"></a> [server\_crt](#output\_server\_crt) | Server Certificate |
 | <a name="output_server_key"></a> [server\_key](#output\_server\_key) | Server Key |
+
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->
