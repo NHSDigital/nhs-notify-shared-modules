@@ -1,17 +1,17 @@
-## Pass-through Output Example
+# Pass-through Output Example
 
 If you are consuming this module from a higher-level module or environment stack,
 you can re-expose the alarm details with outputs such as:
 
 ```hcl
 output "processor_lambda_error_rate_alarm_name" {
-	description = "CloudWatch alarm name for processor Lambda error rate"
-	value       = module.my_lambda.lambda_error_rate_alarm_name
+  description = "CloudWatch alarm name for processor Lambda error rate"
+  value       = module.my_lambda.lambda_error_rate_alarm_name
 }
 
 output "processor_lambda_error_rate_alarm_arn" {
-	description = "CloudWatch alarm ARN for processor Lambda error rate"
-	value       = module.my_lambda.lambda_error_rate_alarm_arn
+  description = "CloudWatch alarm ARN for processor Lambda error rate"
+  value       = module.my_lambda.lambda_error_rate_alarm_arn
 }
 ```
 
