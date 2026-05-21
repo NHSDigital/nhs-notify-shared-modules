@@ -1,3 +1,20 @@
+# Pass-through Output Example
+
+If you are consuming this module from a higher-level module or environment stack,
+you can re-expose the alarm details with outputs such as:
+
+```hcl
+output "processor_lambda_error_rate_alarm_name" {
+  description = "CloudWatch alarm name for processor Lambda error rate"
+  value       = module.my_lambda.lambda_error_rate_alarm_name
+}
+
+output "processor_lambda_error_rate_alarm_arn" {
+  description = "CloudWatch alarm ARN for processor Lambda error rate"
+  value       = module.my_lambda.lambda_error_rate_alarm_arn
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
 <!-- vale off -->
@@ -19,7 +36,11 @@
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of default tags to apply to all taggable resources within the component | `map(string)` | `{}` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda | `string` | n/a | yes |
 | <a name="input_enable_dlq_and_notifications"></a> [enable\_dlq\_and\_notifications](#input\_enable\_dlq\_and\_notifications) | Create an SQS Queue and on-failure destination to be used as the Lambda's Dead Letter Queue and notifications | `bool` | `false` | no |
+| <a name="input_enable_dlq_messages_alarm"></a> [enable\_dlq\_messages\_alarm](#input\_enable\_dlq\_messages\_alarm) | Create a CloudWatch alarm when visible messages are present in the Lambda DLQ | `bool` | `true` | no |
+| <a name="input_enable_duration_alarm"></a> [enable\_duration\_alarm](#input\_enable\_duration\_alarm) | Create a CloudWatch alarm when Lambda duration percentile exceeds the configured threshold | `bool` | `true` | no |
+| <a name="input_enable_error_rate_alarm"></a> [enable\_error\_rate\_alarm](#input\_enable\_error\_rate\_alarm) | Create a CloudWatch alarm when Lambda error rate exceeds the configured percentage threshold | `bool` | `true` | no |
 | <a name="input_enable_lambda_insights"></a> [enable\_lambda\_insights](#input\_enable\_lambda\_insights) | Enable the lambda insights layer, this must be disabled for lambda@edge usage | `bool` | `true` | no |
+| <a name="input_enable_throttles_alarm"></a> [enable\_throttles\_alarm](#input\_enable\_throttles\_alarm) | Create a CloudWatch alarm when Lambda throttles exceed the configured threshold | `bool` | `true` | no |
 | <a name="input_enable_xray_tracing"></a> [enable\_xray\_tracing](#input\_enable\_xray\_tracing) | Enable AWS X-Ray active tracing for the Lambda function. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
 | <a name="input_filter_pattern"></a> [filter\_pattern](#input\_filter\_pattern) | Filter pattern to use for the log subscription filter | `string` | `""` | no |
@@ -39,7 +60,11 @@
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key arn to use for this function | `string` | n/a | yes |
 | <a name="input_lambda_at_edge"></a> [lambda\_at\_edge](#input\_lambda\_at\_edge) | Whether this Lambda is a Lambda@Edge function | `bool` | `false` | no |
 | <a name="input_lambda_dlq_message_retention_seconds"></a> [lambda\_dlq\_message\_retention\_seconds](#input\_lambda\_dlq\_message\_retention\_seconds) | The number of seconds to retain messages in the Lambda DLQ SQS queue | `number` | `1209600` | no |
+| <a name="input_lambda_dlq_messages_alarm_config"></a> [lambda\_dlq\_messages\_alarm\_config](#input\_lambda\_dlq\_messages\_alarm\_config) | Object of optional CloudWatch alarm settings for the Lambda DLQ messages alarm | <pre>object({<br/>    comparison_operator = optional(string, "GreaterThanThreshold")<br/>    evaluation_periods  = optional(number, 1)<br/>    period              = optional(number, 300)<br/>    statistic           = optional(string, "Sum")<br/>    threshold           = optional(number, 0)<br/>    actions_enabled     = optional(bool, true)<br/>    treat_missing_data  = optional(string, "notBreaching")<br/>  })</pre> | `{}` | no |
+| <a name="input_lambda_duration_alarm_config"></a> [lambda\_duration\_alarm\_config](#input\_lambda\_duration\_alarm\_config) | Object of optional CloudWatch alarm settings for the Lambda duration percentile alarm | <pre>object({<br/>    comparison_operator = optional(string, "GreaterThanThreshold")<br/>    evaluation_periods  = optional(number, 1)<br/>    period              = optional(number, 300)<br/>    percentile          = optional(string, "p95")<br/>    threshold_ms        = optional(number)<br/>    actions_enabled     = optional(bool, true)<br/>    treat_missing_data  = optional(string, "notBreaching")<br/>  })</pre> | `{}` | no |
 | <a name="input_lambda_env_vars"></a> [lambda\_env\_vars](#input\_lambda\_env\_vars) | Lambda environment parameters map | `map(string)` | `{}` | no |
+| <a name="input_lambda_error_rate_alarm_config"></a> [lambda\_error\_rate\_alarm\_config](#input\_lambda\_error\_rate\_alarm\_config) | Object of optional CloudWatch alarm settings for the Lambda error rate alarm | <pre>object({<br/>    comparison_operator = optional(string, "GreaterThanThreshold")<br/>    evaluation_periods  = optional(number, 1)<br/>    period              = optional(number, 300)<br/>    threshold           = optional(number, 1)<br/>    actions_enabled     = optional(bool, true)<br/>    treat_missing_data  = optional(string, "notBreaching")<br/>  })</pre> | `{}` | no |
+| <a name="input_lambda_throttles_alarm_config"></a> [lambda\_throttles\_alarm\_config](#input\_lambda\_throttles\_alarm\_config) | Object of optional CloudWatch alarm settings for the Lambda throttles alarm | <pre>object({<br/>    comparison_operator = optional(string, "GreaterThanThreshold")<br/>    evaluation_periods  = optional(number, 1)<br/>    period              = optional(number, 300)<br/>    statistic           = optional(string, "Sum")<br/>    threshold           = optional(number, 0)<br/>    actions_enabled     = optional(bool, true)<br/>    treat_missing_data  = optional(string, "notBreaching")<br/>  })</pre> | `{}` | no |
 | <a name="input_layers"></a> [layers](#input\_layers) | Lambda layer arns to include | `list(any)` | `[]` | no |
 | <a name="input_log_destination_arn"></a> [log\_destination\_arn](#input\_log\_destination\_arn) | Destination ARN to use for the log subscription filter | `string` | `""` | no |
 | <a name="input_log_level"></a> [log\_level](#input\_log\_level) | The log level to be used in lambda functions within the component. Any log with a lower severity than the configured value will not be logged: https://docs.python.org/3/library/logging.html#levels | `string` | `"INFO"` | no |
@@ -72,6 +97,14 @@
 | <a name="output_function_qualified_arn"></a> [function\_qualified\_arn](#output\_function\_qualified\_arn) | Qualified ARN of the Lambda function, including version or alias |
 | <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | ARN of the IAM role associated with the Lambda function |
 | <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | Name of the IAM role associated with the Lambda function |
+| <a name="output_lambda_dlq_messages_alarm_arn"></a> [lambda\_dlq\_messages\_alarm\_arn](#output\_lambda\_dlq\_messages\_alarm\_arn) | The ARN of the CloudWatch alarm for Lambda DLQ messages |
+| <a name="output_lambda_dlq_messages_alarm_name"></a> [lambda\_dlq\_messages\_alarm\_name](#output\_lambda\_dlq\_messages\_alarm\_name) | The name of the CloudWatch alarm for Lambda DLQ messages |
+| <a name="output_lambda_duration_alarm_arn"></a> [lambda\_duration\_alarm\_arn](#output\_lambda\_duration\_alarm\_arn) | The ARN of the CloudWatch alarm for Lambda duration percentile |
+| <a name="output_lambda_duration_alarm_name"></a> [lambda\_duration\_alarm\_name](#output\_lambda\_duration\_alarm\_name) | The name of the CloudWatch alarm for Lambda duration percentile |
+| <a name="output_lambda_error_rate_alarm_arn"></a> [lambda\_error\_rate\_alarm\_arn](#output\_lambda\_error\_rate\_alarm\_arn) | The ARN of the CloudWatch alarm for Lambda error rate |
+| <a name="output_lambda_error_rate_alarm_name"></a> [lambda\_error\_rate\_alarm\_name](#output\_lambda\_error\_rate\_alarm\_name) | The name of the CloudWatch alarm for Lambda error rate |
+| <a name="output_lambda_throttles_alarm_arn"></a> [lambda\_throttles\_alarm\_arn](#output\_lambda\_throttles\_alarm\_arn) | The ARN of the CloudWatch alarm for Lambda throttles |
+| <a name="output_lambda_throttles_alarm_name"></a> [lambda\_throttles\_alarm\_name](#output\_lambda\_throttles\_alarm\_name) | The name of the CloudWatch alarm for Lambda throttles |
 
 <!-- vale on -->
 <!-- markdownlint-enable -->
