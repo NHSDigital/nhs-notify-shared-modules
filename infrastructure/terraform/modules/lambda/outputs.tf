@@ -47,3 +47,33 @@ output "lambda_error_rate_alarm_arn" {
   description = "The ARN of the CloudWatch alarm for Lambda error rate"
   value       = var.enable_error_rate_alarm ? aws_cloudwatch_metric_alarm.lambda_error_rate[0].arn : null
 }
+
+output "lambda_throttles_alarm_name" {
+  description = "The name of the CloudWatch alarm for Lambda throttles"
+  value       = var.enable_throttles_alarm ? aws_cloudwatch_metric_alarm.lambda_throttles[0].alarm_name : null
+}
+
+output "lambda_throttles_alarm_arn" {
+  description = "The ARN of the CloudWatch alarm for Lambda throttles"
+  value       = var.enable_throttles_alarm ? aws_cloudwatch_metric_alarm.lambda_throttles[0].arn : null
+}
+
+output "lambda_duration_alarm_name" {
+  description = "The name of the CloudWatch alarm for Lambda duration percentile"
+  value       = var.enable_duration_alarm ? aws_cloudwatch_metric_alarm.lambda_duration[0].alarm_name : null
+}
+
+output "lambda_duration_alarm_arn" {
+  description = "The ARN of the CloudWatch alarm for Lambda duration percentile"
+  value       = var.enable_duration_alarm ? aws_cloudwatch_metric_alarm.lambda_duration[0].arn : null
+}
+
+output "lambda_dlq_messages_alarm_name" {
+  description = "The name of the CloudWatch alarm for Lambda DLQ messages"
+  value       = var.enable_dlq_and_notifications && var.enable_dlq_messages_alarm ? aws_cloudwatch_metric_alarm.lambda_dlq_messages[0].alarm_name : null
+}
+
+output "lambda_dlq_messages_alarm_arn" {
+  description = "The ARN of the CloudWatch alarm for Lambda DLQ messages"
+  value       = var.enable_dlq_and_notifications && var.enable_dlq_messages_alarm ? aws_cloudwatch_metric_alarm.lambda_dlq_messages[0].arn : null
+}
