@@ -1,3 +1,20 @@
+## Pass-through Output Example
+
+If you are consuming this module from a higher-level module or environment stack,
+you can re-expose the alarm details with outputs such as:
+
+```hcl
+output "processor_lambda_error_rate_alarm_name" {
+	description = "CloudWatch alarm name for processor Lambda error rate"
+	value       = module.my_lambda.lambda_error_rate_alarm_name
+}
+
+output "processor_lambda_error_rate_alarm_arn" {
+	description = "CloudWatch alarm ARN for processor Lambda error rate"
+	value       = module.my_lambda.lambda_error_rate_alarm_arn
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
 <!-- vale off -->
@@ -9,6 +26,51 @@
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12 |
 
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_archive"></a> [archive](#provider\_archive) | n/a |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
+| <a name="provider_external"></a> [external](#provider\_external) | n/a |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_cloudwatch_event_rule.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
+| [aws_cloudwatch_event_target.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
+| [aws_cloudwatch_log_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.main_edge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_subscription_filter.firehose](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_subscription_filter) | resource |
+| [aws_cloudwatch_metric_alarm.lambda_error_rate](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm) | resource |
+| [aws_iam_policy.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.ecr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.publish](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.put_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy.send_message](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_role_policy_attachment.insights](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.xray](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_lambda_function.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_lambda_function_event_invoke_config.lambda_destination](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config) | resource |
+| [aws_lambda_permission.events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_s3_object.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
+| [aws_sqs_queue.lambda_dlq](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue) | resource |
+| [archive_file.lambda](https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file) | data source |
+| [aws_iam_policy_document.ecr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.lambda_assumerole](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.publish](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.put_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.send_message](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [external_external.git_commit](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -19,6 +81,7 @@
 | <a name="input_default_tags"></a> [default\_tags](#input\_default\_tags) | A map of default tags to apply to all taggable resources within the component | `map(string)` | `{}` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda | `string` | n/a | yes |
 | <a name="input_enable_dlq_and_notifications"></a> [enable\_dlq\_and\_notifications](#input\_enable\_dlq\_and\_notifications) | Create an SQS Queue and on-failure destination to be used as the Lambda's Dead Letter Queue and notifications | `bool` | `false` | no |
+| <a name="input_enable_error_rate_alarm"></a> [enable\_error\_rate\_alarm](#input\_enable\_error\_rate\_alarm) | Create a CloudWatch alarm when Lambda error rate exceeds the configured percentage threshold | `bool` | `true` | no |
 | <a name="input_enable_lambda_insights"></a> [enable\_lambda\_insights](#input\_enable\_lambda\_insights) | Enable the lambda insights layer, this must be disabled for lambda@edge usage | `bool` | `true` | no |
 | <a name="input_enable_xray_tracing"></a> [enable\_xray\_tracing](#input\_enable\_xray\_tracing) | Enable AWS X-Ray active tracing for the Lambda function. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
@@ -40,6 +103,7 @@
 | <a name="input_lambda_at_edge"></a> [lambda\_at\_edge](#input\_lambda\_at\_edge) | Whether this Lambda is a Lambda@Edge function | `bool` | `false` | no |
 | <a name="input_lambda_dlq_message_retention_seconds"></a> [lambda\_dlq\_message\_retention\_seconds](#input\_lambda\_dlq\_message\_retention\_seconds) | The number of seconds to retain messages in the Lambda DLQ SQS queue | `number` | `1209600` | no |
 | <a name="input_lambda_env_vars"></a> [lambda\_env\_vars](#input\_lambda\_env\_vars) | Lambda environment parameters map | `map(string)` | `{}` | no |
+| <a name="input_lambda_error_rate_alarm_config"></a> [lambda\_error\_rate\_alarm\_config](#input\_lambda\_error\_rate\_alarm\_config) | Object of optional CloudWatch alarm settings for the Lambda error rate alarm | <pre>object({<br/>    comparison_operator = optional(string, "GreaterThanThreshold")<br/>    evaluation_periods  = optional(number, 1)<br/>    period              = optional(number, 300)<br/>    threshold           = optional(number, 1)<br/>    actions_enabled     = optional(bool, true)<br/>    treat_missing_data  = optional(string, "notBreaching")<br/>  })</pre> | `{}` | no |
 | <a name="input_layers"></a> [layers](#input\_layers) | Lambda layer arns to include | `list(any)` | `[]` | no |
 | <a name="input_log_destination_arn"></a> [log\_destination\_arn](#input\_log\_destination\_arn) | Destination ARN to use for the log subscription filter | `string` | `""` | no |
 | <a name="input_log_level"></a> [log\_level](#input\_log\_level) | The log level to be used in lambda functions within the component. Any log with a lower severity than the configured value will not be logged: https://docs.python.org/3/library/logging.html#levels | `string` | `"INFO"` | no |
@@ -72,7 +136,8 @@
 | <a name="output_function_qualified_arn"></a> [function\_qualified\_arn](#output\_function\_qualified\_arn) | Qualified ARN of the Lambda function, including version or alias |
 | <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | ARN of the IAM role associated with the Lambda function |
 | <a name="output_iam_role_name"></a> [iam\_role\_name](#output\_iam\_role\_name) | Name of the IAM role associated with the Lambda function |
-
+| <a name="output_lambda_error_rate_alarm_arn"></a> [lambda\_error\_rate\_alarm\_arn](#output\_lambda\_error\_rate\_alarm\_arn) | The ARN of the CloudWatch alarm for Lambda error rate |
+| <a name="output_lambda_error_rate_alarm_name"></a> [lambda\_error\_rate\_alarm\_name](#output\_lambda\_error\_rate\_alarm\_name) | The name of the CloudWatch alarm for Lambda error rate |
 <!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

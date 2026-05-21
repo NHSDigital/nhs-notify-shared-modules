@@ -37,3 +37,13 @@ output "cloudwatch_log_group_name" {
   description = "Name of the CloudWatch Log Group for the Lambda function"
   value       = aws_cloudwatch_log_group.main.name
 }
+
+output "lambda_error_rate_alarm_name" {
+  description = "The name of the CloudWatch alarm for Lambda error rate"
+  value       = var.enable_error_rate_alarm ? aws_cloudwatch_metric_alarm.lambda_error_rate[0].alarm_name : null
+}
+
+output "lambda_error_rate_alarm_arn" {
+  description = "The ARN of the CloudWatch alarm for Lambda error rate"
+  value       = var.enable_error_rate_alarm ? aws_cloudwatch_metric_alarm.lambda_error_rate[0].arn : null
+}

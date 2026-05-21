@@ -274,6 +274,25 @@ variable "enable_xray_tracing" {
   default     = false
 }
 
+variable "enable_error_rate_alarm" {
+  type        = bool
+  description = "Create a CloudWatch alarm when Lambda error rate exceeds the configured percentage threshold"
+  default     = true
+}
+
+variable "lambda_error_rate_alarm_config" {
+  description = "Object of optional CloudWatch alarm settings for the Lambda error rate alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    threshold           = optional(number, 1)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
+}
+
 variable "lambda_at_edge" {
   type        = bool
   description = "Whether this Lambda is a Lambda@Edge function"
