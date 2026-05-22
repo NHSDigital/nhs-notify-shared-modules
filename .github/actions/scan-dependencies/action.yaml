@@ -42,6 +42,13 @@ runs:
       run: |
         export BUILD_DATETIME=${{ inputs.build_datetime }}
         ./scripts/reports/scan-vulnerabilities.sh
+    - name: "Generate vulnerabilities summary"
+      shell: bash
+      run: |
+        ./scripts/reports/parse-vulnerabilities.sh vulnerabilities-repository-report.json | tee vulnerabilities-summary.md
+        if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+          cat vulnerabilities-summary.md >> "$GITHUB_STEP_SUMMARY"
+        fi
     - name: "Compress vulnerabilities report"
       shell: bash
       run: zip vulnerabilities-repository-report.json.zip vulnerabilities-repository-report.json
@@ -52,6 +59,23 @@ runs:
         name: vulnerabilities-repository-report.json.zip
         path: ./vulnerabilities-repository-report.json.zip
         retention-days: 21
+    - name: "Upload vulnerabilities summary as an artefact"
+      if: ${{ !env.ACT }}
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      with:
+        name: vulnerabilities-summary.md
+        path: ./vulnerabilities-summary.md
+        retention-days: 21
+    - name: "Fail if Critical or High vulnerabilities found"
+      shell: bash
+      run: |
+        CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' vulnerabilities-repository-report.json)
+        HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' vulnerabilities-repository-report.json)
+        echo "Critical: $CRITICAL_COUNT, High: $HIGH_COUNT"
+        if [[ "$CRITICAL_COUNT" -gt 0 || "$HIGH_COUNT" -gt 0 ]]; then
+          echo "::error::Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities"
+          exit 1
+        fi
     - name: "Check prerequisites for sending the reports"
       shell: bash
       id: check
