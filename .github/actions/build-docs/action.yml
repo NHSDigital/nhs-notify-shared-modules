@@ -9,15 +9,14 @@ runs:
   steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+    - name: Install pnpm
+      uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
     - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
       with:
         node-version: 22
-        cache: 'pnpm'
-        cache-dependency-path: 'docs/pnpm-lock.yaml'
     - name: Install pnpm dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --frozen-lockfile --filter docs
       shell: bash
-      working-directory: ./docs
     - name: Setup Ruby
       uses: ruby/setup-ruby@4eb9f110bac952a8b68ecf92e3b5c7a987594ba6 # v1.292.0
       with:
