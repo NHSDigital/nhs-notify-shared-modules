@@ -20,6 +20,8 @@ runs:
     - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
       with:
         node-version: ${{ inputs.node_version }}
+        cache: "pnpm"
+        cache-dependency-path: "pnpm-lock.yaml"
     - name: Install pnpm dependencies
       run: pnpm install --frozen-lockfile --filter docs
       shell: bash
