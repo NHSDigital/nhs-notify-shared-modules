@@ -18,7 +18,7 @@ runs:
       with:
         run_install: false
     - name: Verify PNPM Cache Directory
-        run: |
+      run: |
           PNPM_STORE_PATH="$( pnpm store path --silent )"
           if [ ! -d "$PNPM_STORE_PATH" ]; then
             echo "PNPM store directory does not exist, creating it."
