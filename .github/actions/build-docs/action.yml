@@ -4,6 +4,10 @@ inputs:
   version:
     description: "Version number"
     required: true
+  node_version:
+    description: "Node.js version"
+    required: false
+    default: "22"
 runs:
   using: "composite"
   steps:
@@ -13,7 +17,7 @@ runs:
       uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
     - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
       with:
-        node-version: 22
+        node-version: ${{ inputs.node_version }}
     - name: Install pnpm dependencies
       run: pnpm install --frozen-lockfile --filter docs
       shell: bash
