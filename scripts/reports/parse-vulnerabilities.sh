@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+# WARNING: This file is managed via the repository template.
+# Local changes may diverge from the template source of truth.
+#
 # Parse vulnerability report JSON and output a human-readable summary
 # Usage: ./parse-vulnerabilities.sh <path-to-report.json>
 #
