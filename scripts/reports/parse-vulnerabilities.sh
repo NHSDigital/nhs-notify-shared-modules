@@ -24,13 +24,27 @@ if ! command -v jq &> /dev/null; then
 fi
 
 # Get counts by severity
+count_unique_severity() {
+    local severity="$1"
+
+    jq -r --arg sev "$severity" '
+        [.matches[] | select(.vulnerability.severity == $sev) | {
+            id: .vulnerability.id,
+            package: .artifact.name,
+            version: .artifact.version
+        }]
+        | unique_by(.id + .package + .version)
+        | length
+    ' "$REPORT_FILE"
+}
+
 echo "## Vulnerability Report Summary"
 echo ""
 
-CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' "$REPORT_FILE")
-HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' "$REPORT_FILE")
-MEDIUM_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length' "$REPORT_FILE")
-LOW_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Low")] | length' "$REPORT_FILE")
+CRITICAL_COUNT=$(count_unique_severity "Critical")
+HIGH_COUNT=$(count_unique_severity "High")
+MEDIUM_COUNT=$(count_unique_severity "Medium")
+LOW_COUNT=$(count_unique_severity "Low")
 TOTAL=$((CRITICAL_COUNT + HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
 
 echo "**Total: $TOTAL vulnerabilities** ($CRITICAL_COUNT Critical, $HIGH_COUNT High, $MEDIUM_COUNT Medium, $LOW_COUNT Low)"
