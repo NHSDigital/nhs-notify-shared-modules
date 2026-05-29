@@ -8,6 +8,10 @@ inputs:
     description: "Node.js version"
     required: false
     default: "22"
+  pnpm_filters:
+    description: "Extra pnpm workspace filters passed to pnpm install"
+    required: false
+    default: "--filter ./docs"
 runs:
   using: "composite"
   steps:
@@ -21,7 +25,7 @@ runs:
       with:
         node-version: ${{ inputs.node_version }}
     - name: Install pnpm dependencies
-      run: pnpm install --frozen-lockfile --filter docs
+      run: pnpm install --frozen-lockfile ${{ inputs.pnpm_filters }}
       shell: bash
     - name: Setup Ruby
       uses: ruby/setup-ruby@4eb9f110bac952a8b68ecf92e3b5c7a987594ba6 # v1.292.0
