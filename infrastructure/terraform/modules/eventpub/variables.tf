@@ -99,7 +99,7 @@ variable "enable_event_cache" {
 
 variable "event_cache_restrict_data_access" {
   type        = bool
-  description = "Whether to restrict access to PII data in the event cache bucket"
+  description = "Whether to restrict access to data in the event cache bucket"
   default     = false
 }
 

@@ -56,7 +56,7 @@ module "s3bucket_event_cache" {
 
   default_tags = {
     Name                = "Event Cache Storage"
-    NHSE-RESTRICTED-PID = "True"
+    NHSE-RESTRICTED-PID = var.event_cache_restrict_data_access ? "True" : "False"
   }
 }
 
