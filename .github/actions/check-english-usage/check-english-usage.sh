@@ -35,13 +35,13 @@ function main() {
       filter="git ls-files -z"
       ;;
     "staged-changes")
-      filter="git diff --diff-filter=ACMRT --name-only --cached -z"
+      filter="git diff --diff-filter=ACMRT --name-only --cached --ignore-submodules=all -z"
       ;;
     "working-tree-changes")
-      filter="git diff --diff-filter=ACMRT --name-only -z"
+      filter="git diff --diff-filter=ACMRT --name-only --ignore-submodules=all -z"
       ;;
     "branch")
-      filter="git diff --diff-filter=ACMRT --name-only -z ${BRANCH_NAME:-origin/main}"
+      filter="git diff --diff-filter=ACMRT --name-only --ignore-submodules=all -z ${BRANCH_NAME:-origin/main}"
       ;;
     *)
       echo "Unrecognised check mode: $check" >&2 && exit 1

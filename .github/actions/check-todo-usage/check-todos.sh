@@ -65,13 +65,13 @@ function get_files_to_check() {
   local mode="$1"
   case "$mode" in
     staged-changes)
-      git diff --diff-filter=ACMRT --name-only --cached # ACMRT only show files added, copied, modified, renamed or that had their type changed (eg. file → symlink) in this commit. This leaves out deleted files.
+      git diff --diff-filter=ACMRT --name-only --cached --ignore-submodules=all # ACMRT only show files added, copied, modified, renamed or that had their type changed (eg. file → symlink) in this commit. This leaves out deleted files.
       ;;
     working-tree-changes)
-      git ls-files --others --exclude-standard && git diff --diff-filter=ACMRT --name-only
+      git ls-files --others --exclude-standard && git diff --diff-filter=ACMRT --name-only --ignore-submodules=all
       ;;
     branch)
-      git diff --diff-filter=ACMRT --name-only ${BRANCH_NAME:-origin/main}
+      git diff --diff-filter=ACMRT --name-only --ignore-submodules=all ${BRANCH_NAME:-origin/main}
       ;;
     all)
       git ls-files && git ls-files --others --exclude-standard
