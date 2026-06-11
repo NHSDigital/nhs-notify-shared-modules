@@ -1,0 +1,48 @@
+name: "Create GitHub release"
+description: "Creates a GitHub release using softprops/action-gh-release"
+inputs:
+  token:
+    description: "GitHub token"
+    required: true
+  tag_name:
+    description: "The name of the tag for this release"
+    required: true
+  release_name:
+    description: "The name of the release"
+    required: false
+    default: ""
+  body:
+    description: "Text describing the contents of the release"
+    required: false
+    default: ""
+  draft:
+    description: "true to create a draft release, false to create a published one"
+    required: false
+    default: "false"
+  prerelease:
+    description: "true to identify the release as a prerelease"
+    required: false
+    default: "false"
+outputs:
+  upload_url:
+    description: "URL for uploading assets to the release"
+    value: ${{ steps.release.outputs.upload_url }}
+  url:
+    description: "URL of the release"
+    value: ${{ steps.release.outputs.url }}
+  id:
+    description: "The release ID"
+    value: ${{ steps.release.outputs.id }}
+runs:
+  using: "composite"
+  steps:
+    - name: "Create release"
+      id: release
+      uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+      with:
+        token: ${{ inputs.token }}
+        tag_name: ${{ inputs.tag_name }}
+        name: ${{ inputs.release_name }}
+        body: ${{ inputs.body }}
+        draft: ${{ inputs.draft }}
+        prerelease: ${{ inputs.prerelease }}
