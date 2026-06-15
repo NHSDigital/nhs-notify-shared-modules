@@ -13,7 +13,7 @@ resource "aws_lambda_function" "main" {
   s3_key            = local.package_type == "zip" ? aws_s3_object.lambda[0].key : null
   s3_object_version = local.package_type == "zip" ? aws_s3_object.lambda[0].version_id : null
 
-  image_uri = local.package_type == "image" ? var.image_uri : null
+  image_uri = local.package_type == "image" ? local.effective_image_uri : null
 
   dynamic "image_config" {
     for_each = local.package_type == "image" && var.image_config != null ? [1] : []
