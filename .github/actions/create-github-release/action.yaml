@@ -42,7 +42,7 @@ runs:
       with:
         token: ${{ inputs.token }}
         tag_name: ${{ inputs.tag_name }}
-        name: ${{ inputs.release_name }}
+        name: ${{ inputs.release_name || inputs.tag_name }}
         body: ${{ inputs.body }}
         draft: ${{ inputs.draft }}
         prerelease: ${{ inputs.prerelease }}
