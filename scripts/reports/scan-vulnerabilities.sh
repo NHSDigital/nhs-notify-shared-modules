@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_TOOLING_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+TOOLING_ROOT="${TOOLING_ROOT:-${DEFAULT_TOOLING_ROOT}}"
+
 # Script to scan an SBOM file for CVEs (Common Vulnerabilities and Exposures).
 # This is a grype command wrapper. It will run grype natively if it is
 # installed, otherwise it will run it in a Docker container.
@@ -42,7 +46,7 @@ function run-grype-natively() {
 
   grype \
     sbom:"$PWD/sbom-repository-report.json" \
-    --config "$PWD/scripts/config/grype.yaml" \
+    --config "$TOOLING_ROOT/scripts/config/grype.yaml" \
     --output json \
     --file "$PWD/vulnerabilities-repository-report.tmp.json"
 }
@@ -50,16 +54,17 @@ function run-grype-natively() {
 function run-grype-in-docker() {
 
   # shellcheck disable=SC1091
-  source ./scripts/docker/docker.lib.sh
+  source "$TOOLING_ROOT/scripts/docker/docker.lib.sh"
 
   # shellcheck disable=SC2155
   local image=$(name=ghcr.io/anchore/grype docker-get-image-version-and-pull)
   docker run --rm --platform linux/amd64 \
     --volume "$PWD":/workdir \
+    --volume "$TOOLING_ROOT":/tooling \
     --volume /tmp/grype/db:/.cache/grype/db \
     "$image" \
       sbom:/workdir/sbom-repository-report.json \
-      --config /workdir/scripts/config/grype.yaml \
+      --config /tooling/scripts/config/grype.yaml \
       --output json \
       --file /workdir/vulnerabilities-repository-report.tmp.json
 }
