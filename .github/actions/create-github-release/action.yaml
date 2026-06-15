@@ -2,7 +2,7 @@ name: "Create GitHub release"
 description: "Creates a GitHub release using softprops/action-gh-release"
 inputs:
   token:
-    description: "GitHub token"
+    description: "GitHub token (requires contents: write permission to create releases)"
     required: true
   tag_name:
     description: "The name of the tag for this release"
