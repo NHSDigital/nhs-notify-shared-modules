@@ -29,13 +29,38 @@ runs:
     - name: "Check if dependency scan should be skipped"
       id: skip-check
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         SHOULD_SKIP="false"
 
-        if [[ -n "${{ inputs.skip_if_pr_has_label }}" ]] && [[ -f "${GITHUB_EVENT_PATH}" ]]; then
-          PR_LABELS=$(jq -r '.pull_request.labels[]?.name' "${GITHUB_EVENT_PATH}")
-          if echo "${PR_LABELS}" | grep -Fxq "${{ inputs.skip_if_pr_has_label }}"; then
-            SHOULD_SKIP="true"
+        # Only check labels if a skip label is configured
+        if [[ -n "${{ inputs.skip_if_pr_has_label }}" ]]; then
+          PR_NUMBER=""
+
+          # Try to get PR number from event context first (for direct PR triggers)
+          if [[ -n "${{ github.event.pull_request.number }}" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+          fi
+
+          # If no PR number from event, try to find it from the branch (for workflow_call context)
+          if [[ -z "${PR_NUMBER}" ]]; then
+            REF="${{ github.ref }}"
+            if [[ "${REF}" == refs/heads/* ]]; then
+              BRANCH_NAME="${REF#refs/heads/}"
+              # Find PR for this branch
+              RESULT=$(gh pr list --head "${BRANCH_NAME}" --limit 1 --json number --jq '.[0].number' 2>/dev/null || echo "")
+              if [[ -n "${RESULT}" && "${RESULT}" != "null" ]]; then
+                PR_NUMBER="${RESULT}"
+              fi
+            fi
+          fi
+
+          # If we have a PR number, query its labels
+          if [[ -n "${PR_NUMBER}" ]]; then
+            if gh pr view "${PR_NUMBER}" --json labels --jq '.labels[].name' | grep -Fxq "${{ inputs.skip_if_pr_has_label }}"; then
+              SHOULD_SKIP="true"
+            fi
           fi
         fi
 
