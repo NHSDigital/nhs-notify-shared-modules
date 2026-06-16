@@ -49,10 +49,13 @@ runs:
             if [[ "${REF}" == refs/heads/* ]]; then
               BRANCH_NAME="${REF#refs/heads/}"
               # Find PR for this branch
-              RESULT=$(gh pr list --head "${BRANCH_NAME}" --limit 1 --json number --jq '.[0].number' 2>/dev/null || echo "")
+              RESULT=$(gh pr list --head "${BRANCH_NAME}" --limit 1 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
               if [[ -n "${RESULT}" && "${RESULT}" != "null" ]]; then
                 PR_NUMBER="${RESULT}"
               fi
+            elif [[ "${REF}" == refs/pull/* ]]; then
+              PR_NUMBER="${REF#refs/pull/}"
+              PR_NUMBER="${PR_NUMBER%%/*}"
             fi
           fi
 
