@@ -131,8 +131,8 @@ runs:
       if: steps.skip-check.outputs.should_skip != 'true'
       shell: bash
       run: |
-        CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' vulnerabilities-repository-report.json)
-        HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' vulnerabilities-repository-report.json)
+        CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' vulnerabilities-repository-report.json)
+        HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' vulnerabilities-repository-report.json)
         echo "Critical: $CRITICAL_COUNT, High: $HIGH_COUNT"
         if [[ "$CRITICAL_COUNT" -gt 0 || "$HIGH_COUNT" -gt 0 ]]; then
           echo "::error::Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities"

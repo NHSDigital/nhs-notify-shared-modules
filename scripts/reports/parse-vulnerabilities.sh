@@ -36,7 +36,7 @@ count_unique_severity() {
             package: .artifact.name,
             version: .artifact.version
         }]
-        | unique_by(.id + .package + .version)
+        | unique_by([.id, .package, .version])
         | length
     ' "$REPORT_FILE"
 }
@@ -77,7 +77,7 @@ print_severity_section() {
             fix: (.vulnerability.fix.versions[0] // "N/A"),
             description: .vulnerability.description
         }]
-        | unique_by(.id + .package + .version)
+        | unique_by([.id, .package, .version])
         | sort_by(.package)
         | .[]
         | "| \(.package) | \(.language) | \(.version) | \(.fix) | \(.description[0:70])... |"
