@@ -1,4 +1,3 @@
-[A-Z]+s
 [Bb]undler
 Bitwarden
 bot
@@ -21,17 +20,20 @@ Gitleaks
 Grype
 idempotence
 Jira
+lockfile
 markdownlint
 npm
 OAuth
 Octokit
 onboarding
 Podman
+[Pp]npm
 Python
 rawContent
 relative_url
 [Rr]epo
 sed
+simplifiable
 Syft
 toolchain
 Trivy

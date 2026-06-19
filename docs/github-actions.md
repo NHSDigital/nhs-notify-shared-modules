@@ -16,6 +16,7 @@ This repository provides reusable composite actions for NHS Notify projects.
 - [Check English Usage](github-actions/check-english-usage.html) - Validates writing style using Vale
 - [Check File Format](github-actions/check-file-format.html) - Validates file formatting standards
 - [Check Markdown Format](github-actions/check-markdown-format.html) - Checks Markdown files with markdownlint
+- [Check pnpm Overrides](github-actions/check-overrides.html) - Discovers and removes stale pnpm overrides
 - [Check PR Title Format](github-actions/check-pr-title-format.html) - Validates PR titles against regex
 - [Check TODO Usage](github-actions/check-todo-usage.html) - Validates TODO comment format
 - [Create Lines of Code Report](github-actions/create-lines-of-code-report.html) - Counts lines of code
