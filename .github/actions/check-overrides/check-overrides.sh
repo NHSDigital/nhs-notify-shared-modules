@@ -20,9 +20,6 @@ function main() {
   echo "Installing check-overrides dependencies..."
   (cd "${TOOL_DIR}" && npm ci)
 
-  echo "Installing project dependencies..."
-  (cd "${project_dir}" && pnpm install --frozen-lockfile)
-
   local args=("--project-dir" "${project_dir}")
 
   if [[ "${apply}" == "true" ]]; then
