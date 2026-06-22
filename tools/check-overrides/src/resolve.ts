@@ -26,9 +26,11 @@ export const regenerateLockfile = async (
   await new Promise<void>((resolve, reject) => {
     const child = spawn("pnpm", args, {
       cwd: projectDir,
-      stdio: ["ignore", "ignore", "pipe"],
+      stdio: ["ignore", "pipe", "pipe"],
     });
+    const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
+    child.stdout.on("data", (chunk: Buffer) => stdoutChunks.push(chunk));
     child.stderr.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
     child.on("error", reject);
     child.on("close", (code) => {
@@ -36,10 +38,12 @@ export const regenerateLockfile = async (
         resolve();
         return;
       }
+      const stdout = Buffer.concat(stdoutChunks).toString("utf8");
       const stderr = Buffer.concat(stderrChunks).toString("utf8");
+      const output = [stdout, stderr].filter(Boolean).join("\n");
       reject(
         new Error(
-          `pnpm ${args.join(" ")} failed with exit code ${code}\n${stderr}`,
+          `pnpm ${args.join(" ")} failed with exit code ${code}\n${output}`,
         ),
       );
     });

@@ -43,6 +43,7 @@ const workspaceFile =
   jest.requireMock<typeof import("src/workspace-file")>("src/workspace-file");
 
 type FakeChild = EventEmitter & {
+  stdout: EventEmitter;
   stderr: EventEmitter;
 };
 
@@ -50,13 +51,21 @@ const makeChild = (
   exitCode: number,
   stderrText = "",
   errorToEmit?: Error,
+  stdoutText = "",
 ): FakeChild => {
+  const stdout = new EventEmitter();
   const stderr = new EventEmitter();
-  const child = Object.assign(new EventEmitter(), { stderr }) as FakeChild;
+  const child = Object.assign(new EventEmitter(), {
+    stdout,
+    stderr,
+  }) as FakeChild;
   setImmediate(() => {
     if (errorToEmit) {
       child.emit("error", errorToEmit);
       return;
+    }
+    if (stdoutText) {
+      stdout.emit("data", Buffer.from(stdoutText, "utf8"));
     }
     if (stderrText) {
       stderr.emit("data", Buffer.from(stderrText, "utf8"));
