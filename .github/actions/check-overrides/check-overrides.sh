@@ -13,7 +13,8 @@ function main() {
     exit 1
   fi
 
-  local project_dir="${PROJECT_DIR:-.}"
+  local project_dir
+  project_dir="$(cd "${PROJECT_DIR:-.}" && pwd)"
   local apply="${APPLY:-false}"
 
   echo "Installing check-overrides dependencies..."
