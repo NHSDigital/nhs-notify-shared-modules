@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_TOOLING_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+TOOLING_ROOT="${TOOLING_ROOT:-${DEFAULT_TOOLING_ROOT}}"
+
 # Script to generate SBOM (Software Bill of Materials) for the repository
 # content and any artefact created by the CI/CD pipeline. This is a syft command
 # wrapper. It will run syft natively if it is installed, otherwise it will run
@@ -39,22 +43,23 @@ function create-report() {
 function run-syft-natively() {
 
   syft packages dir:"$PWD" \
-    --config "$PWD/scripts/config/syft.yaml" \
+    --config "$TOOLING_ROOT/scripts/config/syft.yaml" \
     --output spdx-json="$PWD/sbom-repository-report.tmp.json"
 }
 
 function run-syft-in-docker() {
 
   # shellcheck disable=SC1091
-  source ./scripts/docker/docker.lib.sh
+  source "$TOOLING_ROOT/scripts/docker/docker.lib.sh"
 
   # shellcheck disable=SC2155
   local image=$(name=ghcr.io/anchore/syft docker-get-image-version-and-pull)
   docker run --rm --platform linux/amd64 \
     --volume "$PWD":/workdir \
+    --volume "$TOOLING_ROOT":/tooling \
     "$image" \
       packages dir:/workdir \
-      --config /workdir/scripts/config/syft.yaml \
+      --config /tooling/scripts/config/syft.yaml \
       --output spdx-json=/workdir/sbom-repository-report.tmp.json
 }
 

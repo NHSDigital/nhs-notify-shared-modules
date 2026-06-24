@@ -19,52 +19,139 @@ inputs:
   idp_aws_report_upload_bucket_endpoint:
     description: "IDP AWS report upload endpoint to upload the report to"
     required: false
+  skip_if_pr_has_label:
+    description: "Skip dependency scanning when the triggering PR has this label"
+    required: false
+    default: "skip-dependencies-check"
 runs:
   using: "composite"
   steps:
-    - name: "Generate SBOM"
+    - name: "Check if dependency scan should be skipped"
+      id: skip-check
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        SHOULD_SKIP="false"
+
+        # Only check labels if a skip label is configured
+        if [[ -n "${{ inputs.skip_if_pr_has_label }}" ]]; then
+          PR_NUMBER=""
+
+          # Try to get PR number from event context first (for direct PR triggers)
+          if [[ -n "${{ github.event.pull_request.number }}" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+          fi
+
+          # If no PR number from event, try to find it from the branch (for workflow_call context)
+          if [[ -z "${PR_NUMBER}" ]]; then
+            REF="${{ github.ref }}"
+            if [[ "${REF}" == refs/heads/* ]]; then
+              BRANCH_NAME="${REF#refs/heads/}"
+              # Find PR for this branch
+              RESULT=$(gh pr list --head "${BRANCH_NAME}" --limit 1 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              if [[ -n "${RESULT}" && "${RESULT}" != "null" ]]; then
+                PR_NUMBER="${RESULT}"
+              fi
+            elif [[ "${REF}" == refs/pull/* ]]; then
+              PR_NUMBER="${REF#refs/pull/}"
+              PR_NUMBER="${PR_NUMBER%%/*}"
+            fi
+          fi
+
+          # If we have a PR number, query its labels
+          if [[ -n "${PR_NUMBER}" ]]; then
+            if gh pr view "${PR_NUMBER}" --json labels --jq '.labels[].name' | grep -Fxq "${{ inputs.skip_if_pr_has_label }}"; then
+              SHOULD_SKIP="true"
+            fi
+          fi
+        fi
+
+        echo "should_skip=${SHOULD_SKIP}" >> "$GITHUB_OUTPUT"
+    - name: "Skip dependency scan"
+      if: steps.skip-check.outputs.should_skip == 'true'
       shell: bash
       run: |
+        echo "Dependency scan skipped because PR has label '${{ inputs.skip_if_pr_has_label }}'."
+    - name: "Generate SBOM"
+      if: steps.skip-check.outputs.should_skip != 'true'
+      shell: bash
+      run: |
+        ACTION_ROOT="$(cd "${GITHUB_ACTION_PATH}/../../.." && pwd)"
+        export TOOLING_ROOT="${ACTION_ROOT}"
         export BUILD_DATETIME=${{ inputs.build_datetime }}
-        ./scripts/reports/create-sbom-report.sh
+        "${ACTION_ROOT}/scripts/reports/create-sbom-report.sh"
     - name: "Compress SBOM report"
+      if: steps.skip-check.outputs.should_skip != 'true'
       shell: bash
       run: zip sbom-repository-report.json.zip sbom-repository-report.json
     - name: "Upload SBOM report as an artefact"
-      if: ${{ !env.ACT }}
+      if: ${{ !env.ACT && steps.skip-check.outputs.should_skip != 'true' }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: sbom-repository-report.json.zip
         path: ./sbom-repository-report.json.zip
         retention-days: 21
     - name: "Scan vulnerabilities"
+      if: steps.skip-check.outputs.should_skip != 'true'
       shell: bash
       run: |
+        ACTION_ROOT="$(cd "${GITHUB_ACTION_PATH}/../../.." && pwd)"
+        export TOOLING_ROOT="${ACTION_ROOT}"
         export BUILD_DATETIME=${{ inputs.build_datetime }}
-        ./scripts/reports/scan-vulnerabilities.sh
+        "${ACTION_ROOT}/scripts/reports/scan-vulnerabilities.sh"
+    - name: "Generate vulnerabilities summary"
+      if: steps.skip-check.outputs.should_skip != 'true'
+      shell: bash
+      run: |
+        ACTION_ROOT="$(cd "${GITHUB_ACTION_PATH}/../../.." && pwd)"
+        "${ACTION_ROOT}/scripts/reports/parse-vulnerabilities.sh" vulnerabilities-repository-report.json | tee vulnerabilities-summary.md
+        if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+          cat vulnerabilities-summary.md >> "$GITHUB_STEP_SUMMARY"
+        fi
     - name: "Compress vulnerabilities report"
+      if: steps.skip-check.outputs.should_skip != 'true'
       shell: bash
       run: zip vulnerabilities-repository-report.json.zip vulnerabilities-repository-report.json
     - name: "Upload vulnerabilities report as an artefact"
-      if: ${{ !env.ACT }}
+      if: ${{ !env.ACT && steps.skip-check.outputs.should_skip != 'true' }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: vulnerabilities-repository-report.json.zip
         path: ./vulnerabilities-repository-report.json.zip
         retention-days: 21
+    - name: "Upload vulnerabilities summary as an artefact"
+      if: ${{ !env.ACT && steps.skip-check.outputs.should_skip != 'true' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: vulnerabilities-summary.md
+        path: ./vulnerabilities-summary.md
+        retention-days: 21
+    - name: "Fail if Critical or High vulnerabilities found"
+      if: steps.skip-check.outputs.should_skip != 'true'
+      shell: bash
+      run: |
+        CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' vulnerabilities-repository-report.json)
+        HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' vulnerabilities-repository-report.json)
+        echo "Critical: $CRITICAL_COUNT, High: $HIGH_COUNT"
+        if [[ "$CRITICAL_COUNT" -gt 0 || "$HIGH_COUNT" -gt 0 ]]; then
+          echo "::error::Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities"
+          exit 1
+        fi
     - name: "Check prerequisites for sending the reports"
+      if: steps.skip-check.outputs.should_skip != 'true'
       shell: bash
       id: check
       run: echo "secrets_exist=${{ inputs.idp_aws_report_upload_role_name != '' && inputs.idp_aws_report_upload_bucket_endpoint != '' }}" >> $GITHUB_OUTPUT
     - name: "Authenticate to send the reports"
-      if: steps.check.outputs.secrets_exist == 'true'
+      if: steps.skip-check.outputs.should_skip != 'true' && steps.check.outputs.secrets_exist == 'true'
       uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5 # v6.1.2
       with:
         role-to-assume: arn:aws:iam::${{ inputs.idp_aws_report_upload_account_id }}:role/${{ inputs.idp_aws_report_upload_role_name }}
         aws-region: ${{ inputs.idp_aws_report_upload_region }}
     - name: "Send the SBOM and vulnerabilities reports to the central location"
       shell: bash
-      if: steps.check.outputs.secrets_exist == 'true'
+      if: steps.skip-check.outputs.should_skip != 'true' && steps.check.outputs.secrets_exist == 'true'
       run: |
         aws s3 cp \
           ./sbom-repository-report.json.zip \
