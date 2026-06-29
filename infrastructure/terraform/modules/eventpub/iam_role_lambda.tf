@@ -77,7 +77,7 @@ data "aws_iam_policy_document" "lambda" {
     ]
 
     resources = [
-      aws_sqs_queue.dlq.arn
+      module.sqs_queue.sqs_dlq_arn
     ]
   }
 

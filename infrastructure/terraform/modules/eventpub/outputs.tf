@@ -6,14 +6,6 @@ output "sns_topic" {
   }
 }
 
-output "dlq" {
-  description = "EventPub DLQ name and ARN"
-  value = {
-    arn  = aws_sqs_queue.dlq.arn
-    name = aws_sqs_queue.dlq.name
-  }
-}
-
 output "sqs_queue" {
   description = "EventPub SQS queue name, ARN, and DLQ details"
   value = {

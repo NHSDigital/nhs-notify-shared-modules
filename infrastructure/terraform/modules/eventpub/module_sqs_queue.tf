@@ -6,7 +6,7 @@ module "sqs_queue" {
   environment               = var.environment
   project                   = var.project
   region                    = var.region
-  name                      = local.csi
+  name                      = var.name
   create_dlq                = true
   sqs_kms_key_arn           = var.kms_key_arn
   sqs_policy_overload       = data.aws_iam_policy_document.allow_sns_send.json
