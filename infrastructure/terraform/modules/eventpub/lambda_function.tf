@@ -23,7 +23,6 @@ resource "aws_lambda_function" "main" {
     variables = {
       DATA_PLANE_EVENT_BUS_ARN    = var.data_plane_bus_arn
       CONTROL_PLANE_EVENT_BUS_ARN = var.control_plane_bus_arn
-      DLQ_URL                     = module.sqs_queue.sqs_dlq_url
       THROTTLE_DELAY_MS           = "0"
     }
   }

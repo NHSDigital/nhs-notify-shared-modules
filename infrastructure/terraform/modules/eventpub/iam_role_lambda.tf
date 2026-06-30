@@ -55,33 +55,6 @@ data "aws_iam_policy_document" "lambda" {
   }
 
   statement {
-    sid    = "PutEvents"
-    effect = "Allow"
-
-    actions = [
-      "events:PutEvents",
-    ]
-
-    resources = [
-      var.control_plane_bus_arn,
-      var.data_plane_bus_arn,
-    ]
-  }
-
-  statement {
-    sid    = "DLQPutMessage"
-    effect = "Allow"
-
-    actions = [
-      "sqs:SendMessage",
-    ]
-
-    resources = [
-      module.sqs_queue.sqs_dlq_arn
-    ]
-  }
-
-  statement {
     sid    = "AllowSQSInput"
     effect = "Allow"
 

@@ -1,10 +1,8 @@
 const { handler } = require('../index.js');
 const { mockClient } = require('aws-sdk-client-mock');
-const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const { EventBridgeClient, PutEventsCommand } = require('@aws-sdk/client-eventbridge');
 
 const eventBridgeMock = mockClient(EventBridgeClient);
-const sqsMock = mockClient(SQSClient);
 
 const validCloudEvent = {
   id: "123e4567-e89b-12d3-a456-426614174000",
@@ -34,72 +32,82 @@ const invalidCloudEvent = {
   data: {}
 };
 
-const snsEvent = {
+const sqsEvent = {
   Records: [
-    { Sns: { Message: JSON.stringify(validCloudEvent) } }
+    {
+      messageId: 'msg-1',
+      body: JSON.stringify({ Message: JSON.stringify(validCloudEvent) })
+    }
   ]
 };
 
-const snsEventInvalid = {
+const sqsEventInvalid = {
   Records: [
-    { Sns: { Message: JSON.stringify(invalidCloudEvent) } }
+    {
+      messageId: 'msg-1',
+      body: JSON.stringify({ Message: JSON.stringify(invalidCloudEvent) })
+    }
   ]
 };
 
-describe('SNS to EventBridge Lambda', () => {
+describe('SQS to EventBridge Lambda', () => {
     beforeEach(() => {
         eventBridgeMock.reset();
-        sqsMock.reset();
     });
 
     test('Valid event is sent to the correct EventBridge bus', async () => {
         eventBridgeMock.on(PutEventsCommand).resolves({ FailedEntryCount: 0, Entries: [{}] });
 
-        await handler(snsEvent);
+        const result = await handler(sqsEvent);
 
         expect(eventBridgeMock.calls()).toHaveLength(1);
+        expect(result.batchItemFailures).toHaveLength(0);
     });
 
-    test('Invalid event is sent to DLQ', async () => {
-        sqsMock.on(SendMessageCommand).resolves({ MessageId: '123' });
+    test('Invalid event is reported as a batch item failure', async () => {
+        const result = await handler(sqsEventInvalid);
 
-        await handler(snsEventInvalid);
-
-        expect(sqsMock.calls()).toHaveLength(1);
+        expect(result.batchItemFailures).toHaveLength(1);
+        expect(result.batchItemFailures[0].itemIdentifier).toBe('msg-1');
     });
 
-    test('Event with unknown plane field is sent to DLQ', async () => {
+    test('Event with unknown plane field is reported as a batch item failure', async () => {
         const eventUnknownPlane = { ...validCloudEvent, plane: "unknown" };
 
-        const snsEventUnknownPlane = {
+        const sqsEventUnknownPlane = {
             Records: [
-                { Sns: { Message: JSON.stringify(eventUnknownPlane) } }
+                {
+                    messageId: 'msg-1',
+                    body: JSON.stringify({ Message: JSON.stringify(eventUnknownPlane) })
+                }
             ]
         };
 
-        await handler(snsEventUnknownPlane);
+        const result = await handler(sqsEventUnknownPlane);
 
-        expect(sqsMock.calls()).toHaveLength(1);
+        expect(result.batchItemFailures).toHaveLength(1);
+        expect(result.batchItemFailures[0].itemIdentifier).toBe('msg-1');
     });
 
-    test('Retries on EventBridge failure and sends failed events to DLQ', async () => {
+    test('Retries on EventBridge failure and reports failed events as batch item failures', async () => {
       eventBridgeMock
           .on(PutEventsCommand)
           .rejectsOnce(Object.assign(new Error('Rate limit exceeded'), { retryable: true }))
           .resolves({ FailedEntryCount: 1, Entries: [{ ErrorCode: 'InternalFailure' }] });
-      sqsMock.on(SendMessageCommand).resolves({ MessageId: '123' });
 
-      await handler(snsEvent);
+      const result = await handler(sqsEvent);
 
       expect(eventBridgeMock.calls()).toHaveLength(2);
-      expect(sqsMock.calls()).toHaveLength(1);
+      expect(result.batchItemFailures).toHaveLength(1);
     });
 
     test('Throttling delays event processing', async () => {
       process.env.THROTTLE_DELAY_MS = '500';
       jest.useFakeTimers();
 
-      const handlerPromise = handler(snsEvent);
+      eventBridgeMock.on(PutEventsCommand).resolves({ FailedEntryCount: 0, Entries: [{}] });
+
+      const handlerPromise = handler(sqsEvent);
       jest.advanceTimersByTime(500);
       await handlerPromise;
 
