@@ -67,6 +67,7 @@ describe('SQS to EventBridge Lambda', () => {
     test('Invalid event is reported as a batch item failure', async () => {
         const result = await handler(sqsEventInvalid);
 
+        expect(eventBridgeMock.calls()).toHaveLength(0);
         expect(result.batchItemFailures).toHaveLength(1);
         expect(result.batchItemFailures[0].itemIdentifier).toBe('msg-1');
     });
