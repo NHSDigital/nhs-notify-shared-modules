@@ -109,7 +109,7 @@ exports.handler = async (sqsEvent) => {
         }
     }
 
-    console.debug(`Data events: ${dataPlaneEvents.length}, Control events: ${controlPlaneEvents.length}, Unknown events: ${batchItemFailures.length}`);
+    console.debug(`Data events: ${dataPlaneEvents.length}, Control events: ${controlPlaneEvents.length}, Invalid/Unknown events: ${batchItemFailures.length}`);
 
     batchItemFailures.push(...await sendToEventBridge(dataPlaneEvents, DATA_PLANE_EVENT_BUS_ARN));
     batchItemFailures.push(...await sendToEventBridge(controlPlaneEvents, CONTROL_PLANE_EVENT_BUS_ARN));
