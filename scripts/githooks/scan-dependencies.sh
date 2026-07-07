@@ -13,8 +13,3 @@ export GRYPE_FAIL_ON_SEVERITY="${GRYPE_FAIL_ON_SEVERITY:-high}"
 "${TOOLING_ROOT}/scripts/reports/create-sbom-report.sh" > /dev/null 2>&1
 "${TOOLING_ROOT}/scripts/reports/scan-vulnerabilities.sh"
 "${TOOLING_ROOT}/scripts/reports/parse-vulnerabilities.sh" vulnerabilities-repository-report.json
-
-# Display the vulnerability report
-if [[ -f vulnerabilities-repository-report.json ]]; then
-  cat vulnerabilities-repository-report.json
-fi
