@@ -79,7 +79,7 @@ print_severity_section() {
             (.vulnerability.fix.versions[0] // "N/A"),
             ((.vulnerability.description // "N/A") | .[0:70] + "...")
         ] | @tsv)
-    ' "$REPORT_FILE" | sort -u | column -t -s $'\t' -o ' | '
+    ' "$REPORT_FILE" | sort -u | sed 's/	/ | /g'
 
     echo ""
 }
