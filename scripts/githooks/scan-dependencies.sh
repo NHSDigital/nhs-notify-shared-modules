@@ -48,7 +48,19 @@ elif [[ -f vulnerabilities-repository-report.tmp.json ]]; then
 fi
 
 if [[ -n "$REPORT_FILE" ]]; then
-  jq -r '.matches[] | select(.vulnerability.severity == "Critical" or .vulnerability.severity == "High") | "\(.vulnerability.severity | ascii_upcase): \(.vulnerability.id) - \(.artifact.name)@\(.artifact.version)"' "$REPORT_FILE" | sort
+  # Create markdown table of Critical and High vulns
+  jq -r '
+    ["ID", "Package", "Language", "Version", "Fix", "Description"],
+    (.matches[] | select(.vulnerability.severity == "Critical" or .vulnerability.severity == "High") | [
+      .vulnerability.id,
+      .artifact.name,
+      (.artifact.language // "unknown"),
+      .artifact.version,
+      (if .vulnerability.fix.state then .vulnerability.fix.state else "no fix available" end),
+      .vulnerability.description
+    ]) |
+    @csv
+  ' "$REPORT_FILE" | column -t -s',' | sed 's/"//g'
 else
   echo "No vulnerability report found"
 fi
