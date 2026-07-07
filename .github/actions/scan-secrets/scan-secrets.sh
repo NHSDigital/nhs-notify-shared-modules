@@ -182,6 +182,9 @@ function show-secret-scan-help() {
   printf '%b\n' "${bold}${yellow}If this is a real secret:${reset}"
   printf '%s\n\n' '- Remove and rotate the secret immediately.'
   printf '%b\n' "${bold}${yellow}If this is a false positive:${reset}"
+  printf '%s\n' '- For false positives introduced in your change, prefer an inline allow with a short justification.'
+  printf '%s\n' '- For findings that exist only in historical commits, add the fingerprint to .gitleaksignore.'
+  printf '%s\n' '- The gitleaks.toml allowlist is reserved for lock files and binaries; do not use it otherwise.'
   printf '%s\n' '- Follow PLAT-KOP-020 for handling and safely ignoring gitleaks false positives:'
   printf '%b\n\n' "  ${cyan}https://nhsd-confluence.digital.nhs.uk/spaces/RIS/pages/1429674058/PLAT-KOP-020+-+Handling+and+Safely+Ignoring+Gitleaks+False+Positives${reset}"
 }
