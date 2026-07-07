@@ -66,24 +66,20 @@ print_severity_section() {
 
     echo "### $severity ($count)"
     echo ""
-    echo "| ID | Package | Language | Version | Fix | Description |"
-    echo "|----|---------|---------|---------|-----|-------------|"
 
     jq -r --arg sev "$severity" '
-        [.matches[] | select(.vulnerability.severity == $sev) | {
-            id: .vulnerability.id,
-            severity: .vulnerability.severity,
-            package: .artifact.name,
-            language: .artifact.language,
-            version: .artifact.version,
-            fix: (.vulnerability.fix.versions[0] // "N/A"),
-            description: .vulnerability.description
-        }]
-        | unique_by([.id, .package, .version])
-        | sort_by(.id, .package)
-        | .[]
-        | "| \(.id) | \(.package) | \(.language) | \(.version) | \(.fix) | \(.description[0:70])... |"
-    ' "$REPORT_FILE"
+        (["ID", "Package", "Language", "Version", "File", "Fix", "Description"] | @tsv),
+        (["ID", "Package", "Language", "Version", "File", "Fix", "Description"] | map(length*"-") | @tsv),
+        (.matches[] | select(.vulnerability.severity == $sev) | [
+            .vulnerability.id,
+            .artifact.name,
+            .artifact.language,
+            .artifact.version,
+            (.artifact.locations[0].path // "N/A"),
+            (.vulnerability.fix.versions[0] // "N/A"),
+            ((.vulnerability.description // "N/A") | .[0:70] + "...")
+        ] | @tsv)
+    ' "$REPORT_FILE" | sort -u | column -t -s $'\t' -o ' | '
 
     echo ""
 }
