@@ -19,8 +19,20 @@ echo "Step 2: Scanning vulnerabilities..."
 [[ -f vulnerabilities-repository-report.tmp.json ]] && echo "  ✓ Vulnerability scan complete" || echo "  ✗ Vulnerability report not found"
 
 echo "Step 3: Parsing vulnerabilities..."
-"${TOOLING_ROOT}/scripts/reports/parse-vulnerabilities.sh" vulnerabilities-repository-report.json
-[[ -f vulnerabilities-repository-report.json ]] && echo "  ✓ Vulnerabilities parsed" || echo "  ✗ Parsed report not found"
+REPORT_FILE=""
+if [[ -f vulnerabilities-repository-report.json ]]; then
+  REPORT_FILE="vulnerabilities-repository-report.json"
+elif [[ -f vulnerabilities-repository-report.tmp.json ]]; then
+  REPORT_FILE="vulnerabilities-repository-report.tmp.json"
+fi
+
+if [[ -n "$REPORT_FILE" ]]; then
+  "${TOOLING_ROOT}/scripts/reports/parse-vulnerabilities.sh" "$REPORT_FILE"
+  echo "  ✓ Vulnerabilities parsed"
+else
+  echo "  ✗ No vulnerability report found"
+  exit 1
+fi
 
 # Display Critical and High vulnerabilities
 echo ""
