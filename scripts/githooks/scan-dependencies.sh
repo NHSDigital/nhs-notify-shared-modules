@@ -16,7 +16,6 @@ echo "Step 1: Creating SBOM..."
 
 echo "Step 2: Scanning vulnerabilities..."
 "${TOOLING_ROOT}/scripts/reports/scan-vulnerabilities.sh" || true
-[[ -f vulnerabilities-repository-report.tmp.json ]] && echo "  ✓ Vulnerability scan complete" || echo "  ✗ Vulnerability report not found"
 
 echo "Step 3: Parsing vulnerabilities..."
 REPORT_FILE=""
@@ -27,9 +26,16 @@ elif [[ -f vulnerabilities-repository-report.tmp.json ]]; then
 fi
 
 if [[ -n "$REPORT_FILE" ]]; then
-  "${TOOLING_ROOT}/scripts/reports/parse-vulnerabilities.sh" "$REPORT_FILE"
+  "${TOOLING_ROOT}/scripts/reports/parse-vulnerabilities.sh" "$REPORT_FILE" "true"
   echo "  ✓ Vulnerabilities parsed"
-else
-  echo "  ✗ No vulnerability report found"
-  exit 1
+
+  # Check if Critical or High vulnerabilities exist and fail
+  CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' "$REPORT_FILE")
+  HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' "$REPORT_FILE")
+
+  if [[ "$CRITICAL_COUNT" -gt 0 || "$HIGH_COUNT" -gt 0 ]]; then
+    echo ""
+    echo "❌ Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities"
+    exit 1
+  fi
 fi

@@ -4,17 +4,19 @@
 # Local changes may diverge from the template source of truth.
 #
 # Parse vulnerability report JSON and output a human-readable summary
-# Usage: ./parse-vulnerabilities.sh <path-to-report.json>
-#
+# Usage: ./parse-vulnerabilities.sh <path-to-report.json> [critical-high-only]
+# Options:
+#   critical-high-only  Only print Critical and High severity sections
 
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <vulnerability-report.json>"
+    echo "Usage: $0 <vulnerability-report.json> [critical-high-only]"
     exit 1
 fi
 
 REPORT_FILE="$1"
+FILTER_CRITICAL_HIGH_ONLY="${2:-false}"
 
 if [[ ! -f "$REPORT_FILE" ]]; then
     echo "Error: File not found: $REPORT_FILE"
@@ -88,20 +90,8 @@ print_severity_section() {
 
 print_severity_section "Critical" "$CRITICAL_COUNT"
 print_severity_section "High" "$HIGH_COUNT"
-print_severity_section "Medium" "$MEDIUM_COUNT"
-print_severity_section "Low" "$LOW_COUNT"
 
-# Priority packages summary
-echo "---"
-echo ""
-echo "### Priority Packages to Update"
-echo ""
-
-jq -r '
-    [.matches[] | select(.vulnerability.severity == "Critical" or .vulnerability.severity == "High") | .artifact.name]
-    | unique
-    | sort
-    | join(", ")
-' "$REPORT_FILE" | fold -s -w 80
-
-echo ""
+if [[ "$FILTER_CRITICAL_HIGH_ONLY" != "true" ]]; then
+  print_severity_section "Medium" "$MEDIUM_COUNT"
+  print_severity_section "Low" "$LOW_COUNT"
+fi
