@@ -55,8 +55,7 @@ function run-grype-natively() {
     sbom:"$PWD/sbom-repository-report.json" \
     --output json \
     $fail_on_opt \
-    --file "$PWD/vulnerabilities-repository-report.tmp.json" \
-    > /dev/null 2>&1
+    --file "$PWD/vulnerabilities-repository-report.tmp.json"
 }
 
 function run-grype-in-docker() {
@@ -82,8 +81,7 @@ function run-grype-in-docker() {
       sbom:/workdir/sbom-repository-report.json \
       --output json \
       $fail_on_opt \
-      --file /workdir/vulnerabilities-repository-report.tmp.json \
-      > /dev/null 2>&1
+      --file /workdir/vulnerabilities-repository-report.tmp.json
 }
 
 function enrich-report() {
