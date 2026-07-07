@@ -33,34 +33,3 @@ else
   echo "  ✗ No vulnerability report found"
   exit 1
 fi
-
-# Display Critical and High vulnerabilities
-echo ""
-echo "Critical and High Vulnerabilities:"
-echo "=================================="
-
-# Find which report file exists
-REPORT_FILE=""
-if [[ -f vulnerabilities-repository-report.json ]]; then
-  REPORT_FILE="vulnerabilities-repository-report.json"
-elif [[ -f vulnerabilities-repository-report.tmp.json ]]; then
-  REPORT_FILE="vulnerabilities-repository-report.tmp.json"
-fi
-
-if [[ -n "$REPORT_FILE" ]]; then
-  # Create markdown table of Critical and High vulns
-  jq -r '
-    ["ID", "Package", "Language", "Version", "Fix", "Description"],
-    (.matches[] | select(.vulnerability.severity == "Critical" or .vulnerability.severity == "High") | [
-      .vulnerability.id,
-      .artifact.name,
-      (.artifact.language // "unknown"),
-      .artifact.version,
-      (if .vulnerability.fix.state then .vulnerability.fix.state else "no fix available" end),
-      .vulnerability.description
-    ]) |
-    @csv
-  ' "$REPORT_FILE" | column -t -s',' | sed 's/"//g'
-else
-  echo "No vulnerability report found"
-fi
