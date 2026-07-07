@@ -27,7 +27,6 @@ fi
 
 if [[ -n "$REPORT_FILE" ]]; then
   "${TOOLING_ROOT}/scripts/reports/parse-vulnerabilities.sh" "$REPORT_FILE" "true"
-  echo "  ✓ Vulnerabilities parsed"
 
   # Check if Critical or High vulnerabilities exist and fail
   CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' "$REPORT_FILE")

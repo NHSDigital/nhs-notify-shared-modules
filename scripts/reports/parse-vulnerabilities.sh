@@ -66,8 +66,8 @@ print_severity_section() {
 
     echo "### $severity ($count)"
     echo ""
-    echo "| ID | Package | Language | Version | File | Fix | Description |"
-    echo "|---|---|---|---|---|---|---|"
+    echo "| ID | Package | Language | Version | Fix | Description |"
+    echo "|---|---|---|---|---|---|"
 
     jq -r --arg sev "$severity" '
         [.matches[] | select(.vulnerability.severity == $sev) | {
@@ -75,14 +75,13 @@ print_severity_section() {
             package: .artifact.name,
             language: .artifact.language,
             version: .artifact.version,
-            file: (.artifact.locations[0].path // "N/A"),
             fix: (.vulnerability.fix.versions[0] // "N/A"),
             description: ((.vulnerability.description // "N/A") | .[0:70] + "...")
         }]
         | unique_by([.id, .package, .version])
         | sort_by(.id)
         | .[]
-        | "| \(.id) | \(.package) | \(.language) | \(.version) | \(.file) | \(.fix) | \(.description) |"
+        | "| \(.id) | \(.package) | \(.language) | \(.version) | \(.fix) | \(.description) |"
     ' "$REPORT_FILE"
 
     echo ""
