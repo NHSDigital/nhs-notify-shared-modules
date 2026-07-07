@@ -28,15 +28,12 @@ TOOLING_ROOT="${TOOLING_ROOT:-${DEFAULT_TOOLING_ROOT}}"
 function main() {
 
   cd "$(git rev-parse --show-toplevel)"
-  trap cleanup-generated-grype-config EXIT
 
   create-report
   enrich-report
 }
 
 function create-report() {
-
-  prepare-grype-config
 
   if command -v grype > /dev/null 2>&1 && ! is-arg-true "${FORCE_USE_DOCKER:-false}"; then
     run-grype-natively
@@ -56,10 +53,10 @@ function run-grype-natively() {
   # shellcheck disable=SC2086
   grype \
     sbom:"$PWD/sbom-repository-report.json" \
-    --config "$GRYPE_CONFIG_FILE" \
     --output json \
     $fail_on_opt \
-    --file "$PWD/vulnerabilities-repository-report.tmp.json"
+    --file "$PWD/vulnerabilities-repository-report.tmp.json" \
+    > /dev/null 2>&1
 }
 
 function run-grype-in-docker() {
@@ -83,10 +80,10 @@ function run-grype-in-docker() {
     --volume /tmp/grype/db:/.cache/grype/db \
     "$image" \
       sbom:/workdir/sbom-repository-report.json \
-      --config "/tooling${GRYPE_CONFIG_FILE#${TOOLING_ROOT}}" \
       --output json \
       $fail_on_opt \
-      --file /workdir/vulnerabilities-repository-report.tmp.json
+      --file /workdir/vulnerabilities-repository-report.tmp.json \
+      > /dev/null 2>&1
 }
 
 function enrich-report() {
@@ -112,48 +109,6 @@ function enrich-report() {
       > vulnerabilities-repository-report.json
   rm -f vulnerabilities-repository-report.tmp.json
 }
-
-function prepare-grype-config() {
-
-  GRYPE_CONFIG_FILE="$TOOLING_ROOT/scripts/config/grype.yaml"
-  GENERATED_GRYPE_CONFIG_FILE=""
-
-  local ignore_file="$PWD/.grypeignore"
-  if [[ ! -f "$ignore_file" ]]; then
-    return 0
-  fi
-
-  local has_ignores=false
-  while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
-    local vulnerability_id
-    vulnerability_id=$(echo "$raw_line" | sed 's/#.*//' | xargs)
-    [[ -z "$vulnerability_id" ]] && continue
-
-    if [[ "$has_ignores" == false ]]; then
-      GENERATED_GRYPE_CONFIG_FILE=$(mktemp)
-      cat "$GRYPE_CONFIG_FILE" > "$GENERATED_GRYPE_CONFIG_FILE"
-      printf '\nignore:\n' >> "$GENERATED_GRYPE_CONFIG_FILE"
-      has_ignores=true
-    fi
-
-    printf '  - vulnerability: %s\n' "$vulnerability_id" >> "$GENERATED_GRYPE_CONFIG_FILE"
-  done < "$ignore_file"
-
-  if [[ "$has_ignores" == false ]]; then
-    return 0
-  fi
-
-  GRYPE_CONFIG_FILE="$GENERATED_GRYPE_CONFIG_FILE"
-}
-
-function cleanup-generated-grype-config() {
-
-  if [[ -n "${GENERATED_GRYPE_CONFIG_FILE:-}" && -f "$GENERATED_GRYPE_CONFIG_FILE" ]]; then
-    rm -f "$GENERATED_GRYPE_CONFIG_FILE"
-  fi
-}
-
-# ==============================================================================
 
 function is-arg-true() {
 
