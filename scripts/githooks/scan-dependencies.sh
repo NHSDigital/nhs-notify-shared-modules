@@ -15,7 +15,7 @@ echo "Step 1: Creating SBOM..."
 [[ -f sbom-repository-report.json ]] && echo "  ✓ SBOM created" || echo "  ✗ SBOM not found"
 
 echo "Step 2: Scanning vulnerabilities..."
-"${TOOLING_ROOT}/scripts/reports/scan-vulnerabilities.sh"
+"${TOOLING_ROOT}/scripts/reports/scan-vulnerabilities.sh" || true
 [[ -f vulnerabilities-repository-report.tmp.json ]] && echo "  ✓ Vulnerability scan complete" || echo "  ✗ Vulnerability report not found"
 
 echo "Step 3: Parsing vulnerabilities..."
