@@ -51,3 +51,10 @@
   entry: .github/actions/check-todo-usage/check-todos.sh
   language: script
   pass_filenames: false
+
+- id: scan-dependencies
+  name: Scan dependencies
+  entry: scripts/githooks/scan-dependencies.sh
+  language: script
+  pass_filenames: false
+  stages: [manual]

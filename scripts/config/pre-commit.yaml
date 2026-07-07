@@ -70,3 +70,11 @@ repos:
         entry: /usr/bin/env check=branch ./.github/actions/check-todo-usage/check-todos.sh
         language: script
         pass_filenames: false
+  - repo: local
+    hooks:
+      - id: scan-dependencies
+        name: Scan dependencies
+        entry: ./scripts/githooks/scan-dependencies.sh
+        language: script
+        pass_filenames: false
+        stages: [manual]
