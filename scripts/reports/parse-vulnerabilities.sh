@@ -64,8 +64,8 @@ print_severity_section() {
 
     echo "### $severity ($count)"
     echo ""
-    echo "| Package | Language | Version | Fix | Description |"
-    echo "|---------|---------|---------|-----|-------------|"
+    echo "| ID | Package | Language | Version | Fix | Description |"
+    echo "|----|---------|---------|---------|-----|-------------|"
 
     jq -r --arg sev "$severity" '
         [.matches[] | select(.vulnerability.severity == $sev) | {
@@ -78,9 +78,9 @@ print_severity_section() {
             description: .vulnerability.description
         }]
         | unique_by([.id, .package, .version])
-        | sort_by(.package)
+        | sort_by(.id, .package)
         | .[]
-        | "| \(.package) | \(.language) | \(.version) | \(.fix) | \(.description[0:70])... |"
+        | "| \(.id) | \(.package) | \(.language) | \(.version) | \(.fix) | \(.description[0:70])... |"
     ' "$REPORT_FILE"
 
     echo ""
