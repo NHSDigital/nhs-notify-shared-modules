@@ -69,8 +69,34 @@ function get-cmd-to-run() {
 #   cmd=[command to run]
 function run-gitleaks-natively() {
 
-  # shellcheck disable=SC2086
-  gitleaks $cmd
+  local output_file
+  output_file="$(mktemp)"
+
+  # Prefer pseudo-terminal capture to preserve gitleaks' own colour output.
+  if command -v script > /dev/null 2>&1 && [ -t 1 ] && [ -z "${CI:-}" ]; then
+    # shellcheck disable=SC2086
+    if ! script -q "$output_file" gitleaks $cmd; then
+      if output-has-findings "$output_file"; then
+        show-secret-scan-help
+      fi
+      rm -f "$output_file"
+      return 1
+    fi
+  else
+    # shellcheck disable=SC2086
+    if ! gitleaks $cmd > "$output_file" 2>&1; then
+      cat "$output_file"
+      if output-has-findings "$output_file"; then
+        show-secret-scan-help
+      fi
+      rm -f "$output_file"
+      return 1
+    fi
+
+    cat "$output_file"
+  fi
+
+  rm -f "$output_file"
 }
 
 # Run Gitleaks in a Docker container.
@@ -84,12 +110,83 @@ function run-gitleaks-in-docker() {
 
   # shellcheck disable=SC2155
   local image=$(name=ghcr.io/gitleaks/gitleaks docker-get-image-version-and-pull)
-  # shellcheck disable=SC2086
-  docker run --rm --platform linux/amd64 \
-    --volume "$PWD:$dir" \
-    --workdir $dir \
-    "$image" \
-      $cmd
+  local output_file
+  output_file="$(mktemp)"
+  local docker_tty_args=()
+  if [ -t 1 ]; then
+    docker_tty_args+=(--tty)
+  fi
+
+  # Prefer pseudo-terminal capture to preserve gitleaks' own colour output.
+  if command -v script > /dev/null 2>&1 && [ -t 1 ] && [ -z "${CI:-}" ]; then
+    # shellcheck disable=SC2086
+    if ! script -q "$output_file" docker run --rm --platform linux/amd64 \
+      "${docker_tty_args[@]}" \
+      --volume "$PWD:$dir" \
+      --workdir $dir \
+      "$image" \
+        $cmd; then
+      if output-has-findings "$output_file"; then
+        show-secret-scan-help
+      fi
+      rm -f "$output_file"
+      return 1
+    fi
+  else
+    # shellcheck disable=SC2086
+    if ! docker run --rm --platform linux/amd64 \
+      "${docker_tty_args[@]}" \
+      --volume "$PWD:$dir" \
+      --workdir $dir \
+      "$image" \
+        $cmd > "$output_file" 2>&1; then
+      cat "$output_file"
+      if output-has-findings "$output_file"; then
+        show-secret-scan-help
+      fi
+      rm -f "$output_file"
+      return 1
+    fi
+
+    cat "$output_file"
+  fi
+
+  rm -f "$output_file"
+}
+
+# Return success when gitleaks output appears to contain findings.
+function output-has-findings() {
+
+  [ -s "$1" ] && grep -Eq '(^|[[:space:]])(RuleID|Finding|FingerPrint):|"RuleID"' "$1"
+}
+
+# Print clear remediation guidance when gitleaks reports findings.
+function show-secret-scan-help() {
+
+  local reset=""
+  local bold=""
+  local red=""
+  local yellow=""
+  local cyan=""
+
+  # Use colours in interactive terminals unless explicitly disabled.
+  if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    reset="\033[0m"
+    bold="\033[1m"
+    red="\033[31m"
+    yellow="\033[33m"
+    cyan="\033[36m"
+  fi
+
+  printf "\n${bold}${red}[!!!] Secret scan failed.${reset}\n\n"
+  printf '%b\n' "${bold}${yellow}If this is a real secret:${reset}"
+  printf '%s\n\n' '- Remove and rotate the secret immediately.'
+  printf '%b\n' "${bold}${yellow}If this is a false positive:${reset}"
+  printf '%s\n' '- For false positives introduced in your change, prefer an inline allow with a short justification.'
+  printf '%s\n' '- For findings that exist only in historical commits, add the fingerprint to .gitleaksignore.'
+  printf '%s\n' '- The gitleaks.toml allowlist is reserved for lock files and binaries; do not use it otherwise.'
+  printf '%s\n' '- Follow PLAT-KOP-020 for handling and safely ignoring gitleaks false positives:'
+  printf '%b\n\n' "  ${cyan}https://nhsd-confluence.digital.nhs.uk/spaces/RIS/pages/1429674058/PLAT-KOP-020+-+Handling+and+Safely+Ignoring+Gitleaks+False+Positives${reset}"
 }
 
 # ==============================================================================

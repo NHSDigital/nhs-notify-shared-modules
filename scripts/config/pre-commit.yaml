@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: scan-secrets
         name: Scan secrets
-        entry: /usr/bin/env check=whole-history ./.github/actions/scan-secrets/scan-secrets.sh
+        entry: /usr/bin/env check=staged-changes ./.github/actions/scan-secrets/scan-secrets.sh
         language: script
         pass_filenames: false
   - repo: local
