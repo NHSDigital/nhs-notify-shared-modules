@@ -1,12 +1,9 @@
 const { EventBridgeClient, PutEventsCommand } = require('@aws-sdk/client-eventbridge');
-const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 
 const eventBridge = new EventBridgeClient({});
-const sqs = new SQSClient({});
 
 const DATA_PLANE_EVENT_BUS_ARN = process.env.DATA_PLANE_EVENT_BUS_ARN;
 const CONTROL_PLANE_EVENT_BUS_ARN = process.env.CONTROL_PLANE_EVENT_BUS_ARN;
-const DLQ_URL = process.env.DLQ_URL;
 const THROTTLE_DELAY_MS = parseInt(process.env.THROTTLE_DELAY_MS || '0', 10);
 const MAX_RETRIES = 3;
 const EVENTBRIDGE_MAX_BATCH_SIZE = 10;
@@ -44,8 +41,8 @@ async function sendToEventBridge(events, eventBusArn) {
         const batch = events.slice(i, i + EVENTBRIDGE_MAX_BATCH_SIZE);
         const entries = batch.map(event => ({
             Source: 'custom.event',
-            DetailType: event.type,
-            Detail: JSON.stringify(event),
+            DetailType: event.message.type,
+            Detail: JSON.stringify(event.message),
             EventBusName: eventBusArn
         }));
 
@@ -70,29 +67,14 @@ async function sendToEventBridge(events, eventBusArn) {
                     await new Promise(res => setTimeout(res, 2 ** attempts * 100));
                     attempts++;
                 } else {
-                    console.error(`Non-retryable error encountered. Moving ${batch.length} events to DLQ`);
-                    failedEvents.push(...batch);
+                    console.error(`Non-retryable error encountered. Reporting ${batch.length} as batch item failures`);
+                    failedEvents.push(...batch.map(event => ({ itemIdentifier: event.itemIdentifier })));
                     break;
                 }
             }
         }
     }
     return failedEvents;
-}
-
-async function sendToDLQ(events) {
-  if (events.length === 0) return;
-
-  console.warn(`Sending ${events.length} failed event(s) to DLQ: ${DLQ_URL}`);
-
-  for (const event of events) {
-        try {
-            await sqs.send(new SendMessageCommand({ QueueUrl: DLQ_URL, MessageBody: JSON.stringify(event) }));
-            console.debug(`Successfully sent event ${event.id} to DLQ`);
-        } catch (error) {
-            console.error(`Failed to send event ${event.id} to DLQ - Name: ${error.name}, Message: ${error.message}, Code: ${error.$metadata?.httpStatusCode}, RequestId: ${error.$metadata?.requestId}`);
-        }
-    }
 }
 
 exports.handler = async (sqsEvent) => {
@@ -103,28 +85,36 @@ exports.handler = async (sqsEvent) => {
         await new Promise(res => setTimeout(res, THROTTLE_DELAY_MS));
     }
 
-    const records = sqsEvent.Records
-        .map(record => record.body)
-        .map(JSON.parse)
-        .map(record => record.Message)
-        .map(JSON.parse);
-    const validEvents = records.filter(validateEvent);
-    const invalidEvents = records.filter(event => !validateEvent(event));
+    const dataPlaneEvents = [];
+    const controlPlaneEvents = [];
+    const batchItemFailures = [];
 
-    console.debug(`Valid events: ${validEvents.length}, Invalid events: ${invalidEvents.length}`);
-    if (invalidEvents.length) {
-        console.warn(`${invalidEvents.length} event(s) failed validation and will be sent to DLQ`);
-        await sendToDLQ(invalidEvents);
+    for(const sqsRecord of sqsEvent.Records) {
+        const record = JSON.parse(sqsRecord.body);
+        const message = JSON.parse(record.Message);
+
+        if (!validateEvent(message)) {
+            console.error(`Invalid event received. EventID: ${message.id || 'unknown'}, EventType: ${message.type || 'unknown'}`);
+            batchItemFailures.push({ itemIdentifier: sqsRecord.messageId });
+        }
+        else if (message.plane === 'data') {
+            dataPlaneEvents.push({ itemIdentifier: sqsRecord.messageId, message: message });
+        }
+        else if (message.plane === 'control') {
+            controlPlaneEvents.push({ itemIdentifier: sqsRecord.messageId, message: message });
+        }
+        else {
+            console.error(`Unknown plane type received: ${message.plane}. EventID: ${message.id || 'unknown'}, EventType: ${message.type || 'unknown'}`);
+            batchItemFailures.push({ itemIdentifier: sqsRecord.messageId });
+        }
     }
 
-    const dataEvents = validEvents.filter(event => event.plane === 'data');
-    const controlEvents = validEvents.filter(event => event.plane === 'control');
-    const unknownEvents = validEvents.filter(event => event.plane !== 'data' && event.plane !== 'control');
+    console.debug(`Data events: ${dataPlaneEvents.length}, Control events: ${controlPlaneEvents.length}, Invalid/Unknown events: ${batchItemFailures.length}`);
 
-    console.debug(`Data events: ${dataEvents.length}, Control events: ${controlEvents.length}, Unknown events: ${unknownEvents.length}`);
+    batchItemFailures.push(...await sendToEventBridge(dataPlaneEvents, DATA_PLANE_EVENT_BUS_ARN));
+    batchItemFailures.push(...await sendToEventBridge(controlPlaneEvents, CONTROL_PLANE_EVENT_BUS_ARN));
 
-    const failedDataEvents = await sendToEventBridge(dataEvents, DATA_PLANE_EVENT_BUS_ARN);
-    const failedControlEvents = await sendToEventBridge(controlEvents, CONTROL_PLANE_EVENT_BUS_ARN);
-
-    await sendToDLQ([...failedDataEvents, ...failedControlEvents, ...unknownEvents]);
+    return {
+        batchItemFailures: batchItemFailures
+    };
 };
