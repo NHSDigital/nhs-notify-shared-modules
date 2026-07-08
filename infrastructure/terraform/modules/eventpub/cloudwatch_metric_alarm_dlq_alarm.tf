@@ -12,6 +12,6 @@ resource "aws_cloudwatch_metric_alarm" "dlq_alarm" {
   treat_missing_data  = "notBreaching"
 
   dimensions = {
-    QueueName = aws_sqs_queue.dlq.name
+    QueueName = module.sqs_queue.sqs_dlq_name
   }
 }
