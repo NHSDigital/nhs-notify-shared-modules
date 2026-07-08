@@ -6,8 +6,6 @@ exclude:
   - ./.git/**
   - ./**/terraform/**/.terraform/**
   - ./**/terraform/plugin-cache/**
-  - ./**/node_modules/**
-  - ./node_modules/**
 
 # maximum number of workers used to process the list of package catalogers in parallel
 parallelism: 3
