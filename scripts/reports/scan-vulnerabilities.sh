@@ -53,6 +53,7 @@ function run-grype-natively() {
   # shellcheck disable=SC2086
   grype \
     sbom:"$PWD/sbom-repository-report.json" \
+    --config "$PWD/scripts/config/grype.yaml" \
     --output json \
     $fail_on_opt \
     --file "$PWD/vulnerabilities-repository-report.tmp.json"
@@ -79,6 +80,7 @@ function run-grype-in-docker() {
     --volume /tmp/grype/db:/.cache/grype/db \
     "$image" \
       sbom:/workdir/sbom-repository-report.json \
+      --config /workdir/scripts/config/grype.yaml \
       --output json \
       $fail_on_opt \
       --file /workdir/vulnerabilities-repository-report.tmp.json
