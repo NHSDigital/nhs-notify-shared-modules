@@ -77,9 +77,9 @@ function run-with-script() {
   if script-supports-command-flag; then
     local command_string
     printf -v command_string '%q ' "$@"
-    script -q -c "$command_string" "$output_file"
+    script -q -e -c "$command_string" "$output_file"
   else
-    script -q "$output_file" "$@"
+    script -q -e "$output_file" "$@"
   fi
 }
 
