@@ -7,6 +7,8 @@ resource "aws_sqs_queue" "deadletter_queue" {
   visibility_timeout_seconds  = var.visibility_timeout_seconds
   fifo_queue                  = var.fifo_queue
   content_based_deduplication = var.content_based_deduplication
+  deduplication_scope         = var.fifo_queue && var.high_throughput_fifo ? "messageGroup" : null
+  fifo_throughput_limit       = var.fifo_queue && var.high_throughput_fifo ? "perMessageGroupId" : null
   max_message_size            = var.max_message_size
 
   kms_master_key_id                 = var.sqs_kms_key_arn
