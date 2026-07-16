@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "outDir": "dist",
+    "paths": {
+      "src/*": [
+        "./src/*"
+      ]
+    },
+    "rootDir": ".",
+    "types": [
+      "jest",
+      "node"
+    ]
+  },
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "include": [
+    "src/**/*",
+    "*.ts"
+  ]
+}
