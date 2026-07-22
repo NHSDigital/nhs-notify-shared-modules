@@ -38,7 +38,7 @@ jobs:
 ### Details
 
 - Scans: npm packages, Ruby gems, Python packages
-- Checks: Known vulnerabilities or CVE
+- Checks: Known vulnerabilities or CVE findings
 - Reports: SBOM JSON, Grype JSON, and markdown summary
 - Alerts: High and Critical vulnerabilities fail by default
 
