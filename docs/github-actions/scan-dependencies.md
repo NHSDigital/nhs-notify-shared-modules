@@ -44,14 +44,12 @@ jobs:
 
 ### Ignore File
 
-If a repository contains a root-level `.grypeignore`, each non-comment line is treated as a Grype vulnerability ID to suppress. For example:
+If a repository contains a file at `scripts/config/grype.yaml`, each non-comment line is treated as a Grype vulnerability ID to suppress. For example:
 
 ```text
 CVE-2026-25128 # Ticket to review: CCM-14317
 GHSA-xxxx-yyyy-zzzz
 ```
-
-The workflow summary now includes the vulnerability ID in each row so exemptions can be copied directly into `.grypeignore`.
 
 ### Skip Label
 
