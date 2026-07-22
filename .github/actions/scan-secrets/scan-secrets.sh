@@ -64,6 +64,25 @@ function get-cmd-to-run() {
   echo "$cmd"
 }
 
+function script-supports-command-flag() {
+
+  script -q -c "true" /dev/null > /dev/null 2>&1
+}
+
+function run-with-script() {
+
+  local output_file="$1"
+  shift
+
+  if script-supports-command-flag; then
+    local command_string
+    printf -v command_string '%q ' "$@"
+    script -q -e -c "$command_string" "$output_file"
+  else
+    script -q -e "$output_file" "$@"
+  fi
+}
+
 # Run Gitleaks natively.
 # Arguments (provided as environment variables):
 #   cmd=[command to run]
@@ -75,7 +94,7 @@ function run-gitleaks-natively() {
   # Prefer pseudo-terminal capture to preserve gitleaks' own colour output.
   if command -v script > /dev/null 2>&1 && [ -t 1 ] && [ -z "${CI:-}" ]; then
     # shellcheck disable=SC2086
-    if ! script -q "$output_file" gitleaks $cmd; then
+    if ! run-with-script "$output_file" gitleaks $cmd; then
       if output-has-findings "$output_file"; then
         show-secret-scan-help
       fi
@@ -120,7 +139,7 @@ function run-gitleaks-in-docker() {
   # Prefer pseudo-terminal capture to preserve gitleaks' own colour output.
   if command -v script > /dev/null 2>&1 && [ -t 1 ] && [ -z "${CI:-}" ]; then
     # shellcheck disable=SC2086
-    if ! script -q "$output_file" docker run --rm --platform linux/amd64 \
+    if ! run-with-script "$output_file" docker run --rm --platform linux/amd64 \
       "${docker_tty_args[@]}" \
       --volume "$PWD:$dir" \
       --workdir $dir \

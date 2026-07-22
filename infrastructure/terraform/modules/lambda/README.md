@@ -76,6 +76,7 @@ output "processor_lambda_error_rate_alarm_arn" {
 | <a name="input_permission_statements"></a> [permission\_statements](#input\_permission\_statements) | Statements giving an external source permission to invoke the Lambda function | <pre>list(object({<br/>    action         = optional(string)<br/>    principal      = string<br/>    source_arn     = optional(string)<br/>    source_account = optional(string)<br/>    statement_id   = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_project"></a> [project](#input\_project) | The name of the tfscaffold project | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
+| <a name="input_reserved_concurrent_executions"></a> [reserved\_concurrent\_executions](#input\_reserved\_concurrent\_executions) | The reserved concurrency for the Lambda function. Set to -1 to remove the concurrency limit, or 0 to prevent the Lambda from being invoked. | `number` | `-1` | no |
 | <a name="input_runtime"></a> [runtime](#input\_runtime) | The runtime to use for the lambda function | `string` | `null` | no |
 | <a name="input_schedule"></a> [schedule](#input\_schedule) | The fully qualified Cloudwatch Events schedule for when to run the lambda function, e.g. rate(1 day) or a cron() expression. Default disables all events resources | `string` | `""` | no |
 | <a name="input_send_to_firehose"></a> [send\_to\_firehose](#input\_send\_to\_firehose) | Enable sending logs to firehose | `bool` | `true` | no |
