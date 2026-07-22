@@ -4,6 +4,8 @@
 #   - "./out/**/*.json"
 exclude:
   - ./.git/**
+  - ./**/terraform/**/.terraform/**
+  - ./**/terraform/plugin-cache/**
 
 # maximum number of workers used to process the list of package catalogers in parallel
 parallelism: 3
