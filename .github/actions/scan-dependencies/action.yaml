@@ -91,7 +91,7 @@ runs:
         ACTION_ROOT="$(cd "${GITHUB_ACTION_PATH}/../../.." && pwd)"
         export TOOLING_ROOT="${ACTION_ROOT}"
         export BUILD_DATETIME=${{ inputs.build_datetime }}
-        export GRYPE_FAIL_ON_SEVERITY=none
+        export SCAN_FAIL_ON_SEVERITY=none
         "${ACTION_ROOT}/scripts/reports/scan-vulnerabilities.sh"
     - name: "Generate vulnerabilities summary"
       shell: bash

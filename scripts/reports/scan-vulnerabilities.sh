@@ -79,7 +79,7 @@ function run-grype-in-docker() {
     --volume /tmp/grype/db:/.cache/grype/db \
     "$image" \
       sbom:/workdir/sbom-repository-report.json \
-      --config /tooling/scripts/config/grype.yaml \
+      --config /workdir/scripts/config/grype.yaml \
       --output json \
       $fail_on_opt \
       --file /workdir/vulnerabilities-repository-report.tmp.json
