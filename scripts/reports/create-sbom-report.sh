@@ -5,8 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_TOOLING_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-TOOLING_ROOT="${TOOLING_ROOT:-${DEFAULT_TOOLING_ROOT}}"
+TOOLING_ROOT="${TOOLING_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 
 # Script to generate SBOM (Software Bill of Materials) for the repository
 # content and any artefact created by the CI/CD pipeline. This is a syft command

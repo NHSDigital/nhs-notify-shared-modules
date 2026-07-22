@@ -8,14 +8,14 @@ TOOLING_ROOT="${TOOLING_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 cd "$(git rev-parse --show-toplevel)"
 
 export BUILD_DATETIME="${BUILD_DATETIME:-$(date -u +'%Y-%m-%dT%H:%M:%S%z')}"
-export GRYPE_FAIL_ON_SEVERITY="${GRYPE_FAIL_ON_SEVERITY:-high}"
+export GRYPE_FAIL_ON_SEVERITY="${GRYPE_FAIL_ON_SEVERITY:-none}"
 
 echo "Step 1: Creating SBOM..."
 "${TOOLING_ROOT}/scripts/reports/create-sbom-report.sh" > /dev/null 2>&1
 [[ -f sbom-repository-report.json ]] && echo "  ✓ SBOM created" || echo "  ✗ SBOM not found"
 
 echo "Step 2: Scanning vulnerabilities..."
-"${TOOLING_ROOT}/scripts/reports/scan-vulnerabilities.sh" || true
+"${TOOLING_ROOT}/scripts/reports/scan-vulnerabilities.sh"
 
 echo "Step 3: Parsing vulnerabilities..."
 REPORT_FILE=""
@@ -37,4 +37,9 @@ if [[ -n "$REPORT_FILE" ]]; then
     echo "❌ Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities"
     exit 1
   fi
+else
+  echo ""
+  echo "❌ Error: No vulnerability report found"
+  echo "  Expected: vulnerabilities-repository-report.json or vulnerabilities-repository-report.tmp.json"
+  exit 1
 fi

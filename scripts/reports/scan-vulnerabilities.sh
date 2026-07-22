@@ -5,8 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_TOOLING_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-TOOLING_ROOT="${TOOLING_ROOT:-${DEFAULT_TOOLING_ROOT}}"
+TOOLING_ROOT="${TOOLING_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 
 # Script to scan an SBOM file for CVEs (Common Vulnerabilities and Exposures).
 # This is a grype command wrapper. It will run grype natively if it is
@@ -80,7 +79,7 @@ function run-grype-in-docker() {
     --volume /tmp/grype/db:/.cache/grype/db \
     "$image" \
       sbom:/workdir/sbom-repository-report.json \
-      --config /workdir/scripts/config/grype.yaml \
+      --config /tooling/scripts/config/grype.yaml \
       --output json \
       $fail_on_opt \
       --file /workdir/vulnerabilities-repository-report.tmp.json

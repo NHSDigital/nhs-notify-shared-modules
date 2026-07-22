@@ -90,7 +90,7 @@ print_severity_section() {
 print_severity_section "Critical" "$CRITICAL_COUNT"
 print_severity_section "High" "$HIGH_COUNT"
 
-if [[ "$FILTER_CRITICAL_HIGH_ONLY" != "true" ]]; then
+if [[ "$FILTER_CRITICAL_HIGH_ONLY" != "true" && "$FILTER_CRITICAL_HIGH_ONLY" != "critical-high-only" ]]; then
   print_severity_section "Medium" "$MEDIUM_COUNT"
   print_severity_section "Low" "$LOW_COUNT"
 fi
