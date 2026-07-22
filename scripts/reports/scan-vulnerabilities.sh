@@ -43,7 +43,7 @@ function create-report() {
 
 function run-grype-natively() {
 
-  local fail_on_severity=${GRYPE_FAIL_ON_SEVERITY:-}
+  local fail_on_severity=${SCAN_FAIL_ON_SEVERITY:-}
   local fail_on_opt=""
   if [[ -n "$fail_on_severity" && "$fail_on_severity" != "none" ]]; then
     fail_on_opt="--fail-on $fail_on_severity"
@@ -66,7 +66,7 @@ function run-grype-in-docker() {
   # shellcheck disable=SC2155
   local image=$(name=ghcr.io/anchore/grype docker-get-image-version-and-pull)
 
-  local fail_on_severity=${GRYPE_FAIL_ON_SEVERITY:-}
+  local fail_on_severity=${SCAN_FAIL_ON_SEVERITY:-}
   local fail_on_opt=""
   if [[ -n "$fail_on_severity" && "$fail_on_severity" != "none" ]]; then
     fail_on_opt="--fail-on $fail_on_severity"
