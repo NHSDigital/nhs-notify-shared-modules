@@ -115,6 +115,25 @@ Validates TODO comments follow the required format with Jira ticket IDs.
     - id: check-todo-usage
 ```
 
+#### scan-dependencies
+
+Runs the same SBOM and Grype dependency scan used in CI and prints the markdown vulnerability summary locally.
+
+**Usage:**
+
+```yaml
+- repo: https://github.com/NHSDigital/nhs-notify-shared-modules
+  rev: vX.Y.Z
+  hooks:
+    - id: scan-dependencies
+```
+
+Run it manually when needed:
+
+```bash
+pre-commit run --config scripts/config/pre-commit.yaml --hook-stage manual scan-dependencies
+```
+
 ## Setup in Your Repository
 
 Add to your `.pre-commit-config.yaml`:
@@ -128,6 +147,7 @@ repos:
       - id: check-file-format
       - id: check-markdown-format
       - id: lint-terraform
+      - id: scan-dependencies
       # Add other hooks as needed
 ```
 
@@ -142,3 +162,4 @@ pre-commit install
 - All hooks run with `pass_filenames: false` - they operate on the entire repository
 - The `scan-secrets` hook checks the entire Git history for security
 - Hooks reference scripts in either `scripts/githooks/` or `.github/actions/`
+- `scan-dependencies` uses the same Grype-based workflow as CI, respects `scripts/config/grype.yaml` when present, and is configured as a manual-only hook
