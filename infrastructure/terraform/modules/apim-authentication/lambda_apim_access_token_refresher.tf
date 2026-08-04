@@ -12,7 +12,7 @@ module "lambda_lambda_apim_refresh_token" {
   group          = var.group
 
   log_retention_in_days = var.log_retention_in_days
-  kms_key_arn           = var.kms.key_arn
+  kms_key_arn           = var.kms_key_arn
 
   iam_policy_document = {
     body = data.aws_iam_policy_document.apim_access_token_refresher.json

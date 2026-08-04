@@ -28,6 +28,11 @@ variable "group" {
   default     = null
 }
 
+variable "region" {
+  type        = string
+  description = "The AWS Region"
+}
+
 ##
 # Variable specific to the module
 ##
@@ -76,4 +81,25 @@ variable "lambda_timeout_seconds" {
 variable "apim_auth_token_url" {
   type        = string
   description = "URL to generate an APIM auth token"
+}
+
+variable "name" {
+  type        = string
+  description = "A unique name to distinguish this module invocation from others within the same CSI scope"
+}
+
+variable "shared_infra_account_id" {
+  type        = string
+  description = "The AWS Shared Infra Account ID (numeric)"
+}
+
+variable "force_destroy" {
+  type        = bool
+  description = "Flag to force deletion of S3 buckets"
+  default     = false
+
+  validation {
+    condition     = !(var.force_destroy && var.environment == "prod")
+    error_message = "force_destroy must not be set to true when environment is 'prod'."
+  }
 }
