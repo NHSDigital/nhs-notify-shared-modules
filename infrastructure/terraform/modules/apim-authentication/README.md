@@ -31,6 +31,8 @@
 | <a name="input_parent_acct_environment"></a> [parent\_acct\_environment](#input\_parent\_acct\_environment) | Name of the environment responsible for the acct resources used, affects things like DNS zone. Useful for named dev environments | `string` | `"main"` | no |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
+| <a name="input_root_domain_id"></a> [root\_domain\_id](#input\_root\_domain\_id) | Root domain ID to host the APIM public key | `string` | n/a | yes |
+| <a name="input_root_domain_name"></a> [root\_domain\_name](#input\_root\_domain\_name) | Root domain name to host the APIM public key | `string` | n/a | yes |
 | <a name="input_shared_infra_account_id"></a> [shared\_infra\_account\_id](#input\_shared\_infra\_account\_id) | The AWS Shared Infra Account ID (numeric) | `string` | n/a | yes |
 
 ## Outputs

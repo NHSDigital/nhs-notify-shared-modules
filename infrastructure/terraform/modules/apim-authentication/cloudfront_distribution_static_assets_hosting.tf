@@ -11,7 +11,7 @@ resource "aws_cloudfront_distribution" "static_assets_hosting" {
     }
   }
 
-  aliases = [local.root_domain_name]
+  aliases = [var.root_domain_name]
 
   viewer_certificate {
     cloudfront_default_certificate = false

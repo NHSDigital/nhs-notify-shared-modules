@@ -115,3 +115,13 @@ variable "parent_acct_environment" {
   description = "Name of the environment responsible for the acct resources used, affects things like DNS zone. Useful for named dev environments"
   default     = "main"
 }
+
+variable "root_domain_id" {
+  type        = string
+  description = "Root domain ID to host the APIM public key"
+}
+
+variable "root_domain_name" {
+  type        = string
+  description = "Root domain name to host the APIM public key"
+}
