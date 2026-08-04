@@ -33,6 +33,12 @@ variable "region" {
   description = "The AWS Region"
 }
 
+variable "default_tags" {
+  type        = map(string)
+  description = "A map of default tags to apply to all taggable resources within the component"
+  default     = {}
+}
+
 ##
 # Variable specific to the module
 ##
@@ -102,4 +108,10 @@ variable "force_destroy" {
     condition     = !(var.force_destroy && var.environment == "prod")
     error_message = "force_destroy must not be set to true when environment is 'prod'."
   }
+}
+
+variable "parent_acct_environment" {
+  type        = string
+  description = "Name of the environment responsible for the acct resources used, affects things like DNS zone. Useful for named dev environments"
+  default     = "main"
 }
