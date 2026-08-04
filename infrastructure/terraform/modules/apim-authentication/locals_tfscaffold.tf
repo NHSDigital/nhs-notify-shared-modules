@@ -8,17 +8,6 @@ locals {
     var.region,
   )
 
-  csi = replace(
-    format(
-      "%s-%s-%s",
-      var.project,
-      var.environment,
-      local.component,
-    ),
-    "_",
-    "",
-  )
-
   # CSI for use in resources with a global namespace, i.e. S3 Buckets
   csi_global = replace(
     format(
@@ -31,16 +20,5 @@ locals {
     ),
     "_",
     "",
-  )
-
-  default_tags = merge(
-    var.default_tags,
-    {
-      Project     = var.project
-      Environment = var.environment
-      Component   = local.component
-      Group       = var.group
-      Name        = local.csi
-    },
   )
 }
