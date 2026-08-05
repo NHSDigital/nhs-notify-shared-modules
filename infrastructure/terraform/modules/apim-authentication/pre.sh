@@ -7,8 +7,6 @@ echo "Running Pre.sh"
 
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 
-(cd "$ROOT_DIR" && pnpm install --frozen-lockfile)
-
 (cd "$ROOT_DIR" && pnpm -r --filter "./src/lambdas/apim*" run --if-present lambda-build)
 
 # move distribution files to the module directory so that they can be zipped as part of a release
