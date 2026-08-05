@@ -39,13 +39,9 @@
   "name": "nhs-notify-digital-letters",
   "packageManager": "pnpm@11.15.1",
   "scripts": {
-    "build-schemas": "make -C src/cloudevents/domains/digital-letters build-no-bundle publish-bundled-json",
     "clean": "pnpm -r run --if-present clean",
-    "generate-dependencies": "pnpm run build-schemas && turbo run generate-dependencies && pnpm run generate-python-dependencies",
-    "generate-python-dependencies": "make -C src/python-schema-generator generate",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "test:contract": "turbo run test:contract",
     "test:unit": "turbo run test:unit",
     "typecheck": "turbo run typecheck"
   },
