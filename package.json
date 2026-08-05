@@ -45,10 +45,5 @@
     "test:unit": "turbo run test:unit",
     "typecheck": "turbo run typecheck"
   },
-  "version": "0.0.1",
-  "workspaces": [
-    "src/lambdas/apim-access-token-refresher",
-    "src/lambdas/apim-key-generator",
-    "src/utils"
-  ]
+  "version": "0.0.1"
 }

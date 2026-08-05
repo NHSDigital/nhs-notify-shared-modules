@@ -20,7 +20,7 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "name": "refresh-apim-access-token",
+  "name": "apim-access-token-refresher",
   "private": true,
   "scripts": {
     "lambda-build": "rm -rf dist && npx esbuild --bundle --minify --sourcemap --target=es2020 --platform=node --loader:.node=file --entry-names=[name] --outdir=dist src/index.ts",
