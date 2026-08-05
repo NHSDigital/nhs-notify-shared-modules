@@ -27,6 +27,10 @@ jobs:
           cd infrastructure/terraform/modules
           for module in */; do
             module_name=${module%/}
+            if [ -f "$module_name/pre.sh" ]; then
+              echo "Running pre.sh for $module_name..."
+              (cd "$module_name" && bash pre.sh)
+            fi
             echo "Zipping contents of $module_name..."
             (cd "$module_name" && zip -r "$ARTIFACTS_DIR/terraform-${module_name}.zip" .)
             echo "Publishing $module_name module..."

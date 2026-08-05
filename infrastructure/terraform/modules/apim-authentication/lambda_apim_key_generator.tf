@@ -19,8 +19,8 @@ module "lambda_apim_key_generation" {
   }
 
   function_s3_bucket      = local.acct.s3_buckets["lambda_function_artefacts"]["id"]
-  function_code_base_path = "../../../../src/lambdas"
-  function_code_dir       = "apim-key-generator/dist"
+  function_code_base_path = ".dist/"
+  function_code_dir       = "apim-key-generator"
   function_include_common = true
   function_module_name    = "lambda"
   handler_function_name   = "handler"

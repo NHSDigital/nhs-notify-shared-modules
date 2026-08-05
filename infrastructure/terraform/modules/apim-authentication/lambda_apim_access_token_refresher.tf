@@ -19,8 +19,8 @@ module "lambda_lambda_apim_refresh_token" {
   }
 
   function_s3_bucket      = local.acct.s3_buckets["lambda_function_artefacts"]["id"]
-  function_code_base_path = "../../../../src/lambdas"
-  function_code_dir       = "apim-access-token-refresher/dist"
+  function_code_base_path = ".dist/"
+  function_code_dir       = "apim-access-token-refresher"
   function_include_common = true
   handler_function_name   = "handler"
   runtime                 = "nodejs22.x"

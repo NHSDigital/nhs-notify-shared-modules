@@ -1,20 +1,17 @@
 #!/bin/bash
 
-# This script is run before the Terraform apply command.
-# It ensures all Node.js dependencies are installed, generates any required dependencies,
-# and builds all Lambda functions in the workspace before Terraform provisions infrastructure.
+# This script is run before the module is packaged into a zip archive.
+# It builds the lambda functions and copies the distribution files to the module directory.
 
 echo "Running Pre.sh"
 
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 
-# Skip dependency installation and build steps when only reading Terraform output.
-# terraform output reads from S3 state backend and does not require built artefacts.
-if [[ "${ACTION:-}" == "output" ]]; then
-  echo "Skipping dependency installation and build steps for 'output' action."
-  return 0
-fi
-
 (cd "$ROOT_DIR" && pnpm install --frozen-lockfile)
 
 (cd "$ROOT_DIR" && pnpm -r --filter "./src/lambdas/apim*" run --if-present lambda-build)
+
+# move distribution files to the module directory so that they can be zipped as part of a release
+mkdir dist || true
+cp -r "$ROOT_DIR/src/lambdas/apim-access-token-refresher/dist" dist/apim-access-token-refresher
+cp -r "$ROOT_DIR/src/lambdas/apim-key-generator/dist" dist/apim-key-generator
