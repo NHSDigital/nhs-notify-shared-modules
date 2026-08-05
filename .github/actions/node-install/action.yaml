@@ -25,10 +25,3 @@ runs:
       with:
         node-version: '${{ inputs.node-version }}'
         cache: 'pnpm'
-
-    - name: "Configure pnpm for GitHub Packages"
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-      run: |
-        scripts/set-github-token.sh
