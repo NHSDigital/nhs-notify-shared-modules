@@ -49,10 +49,7 @@ module "s3bucket_static_assets" {
     restrict_public_buckets = true
   }
 
-
-  default_tags = {
-    Name = "Digital Letters static assets bucket"
-  }
+  default_tags = var.default_tags
 }
 
 data "aws_iam_policy_document" "static_assets_bucket_policy" {

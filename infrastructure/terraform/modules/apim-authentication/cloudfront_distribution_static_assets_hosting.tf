@@ -22,7 +22,7 @@ resource "aws_cloudfront_distribution" "static_assets_hosting" {
 
   logging_config {
     include_cookies = false
-    bucket          = "${local.acct.additional_s3_buckets_us["digital-letters_cdn-logs"].id}.s3.amazonaws.com"
+    bucket          = var.logging_config_s3_bucket
     prefix          = "${local.csi}/static-assets/"
   }
 

@@ -125,3 +125,8 @@ variable "root_domain_name" {
   type        = string
   description = "Root domain name to host the APIM public key"
 }
+
+variable "logging_config_s3_bucket" {
+  type        = string
+  description = "S3 bucket to be used for cloudfront logging"
+}
