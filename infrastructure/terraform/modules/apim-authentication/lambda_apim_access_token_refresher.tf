@@ -19,7 +19,7 @@ module "lambda_lambda_apim_refresh_token" {
   }
 
   function_s3_bucket      = local.acct.s3_buckets["lambda_function_artefacts"]["id"]
-  function_code_base_path = "./dist"
+  function_code_base_path = "${path.module}/dist"
   function_code_dir       = "apim-access-token-refresher"
   function_include_common = true
   handler_function_name   = "handler"
