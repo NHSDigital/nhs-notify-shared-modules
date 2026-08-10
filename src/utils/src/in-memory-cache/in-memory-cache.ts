@@ -50,19 +50,23 @@ export class InMemoryCache implements ICache {
     const found = this.cache.get(key);
 
     if (found) {
-      this.logger.debug(`In-memory cache hit for key "${key}"`);
+      this.logger.debug({
+        description: `In-memory cache hit for key "${key}"`,
+      });
 
       if (found.isExpired) {
         await this.delete(key);
-        this.logger.debug(
-          `Cached item expired. Deleted cached item for key "${key}"`,
-        );
+        this.logger.debug({
+          description: `Cached item expired. Deleted cached item for key "${key}"`,
+        });
       } else {
         return found.data as T;
       }
     }
 
-    this.logger.debug(`In-memory cache missed for key "${key}"`);
+    this.logger.debug({
+      description: `In-memory cache missed for key "${key}"`,
+    });
 
     return null;
   }
@@ -86,14 +90,16 @@ export class InMemoryCache implements ICache {
 
     await this.checkLock();
     this.cache.set(key, new CacheItem(value, this.getItemTtl(ttl)));
-    this.logger.debug(`Key "${key}" set in in-memory cache`);
+    this.logger.debug({ description: `Key "${key}" set in in-memory cache` });
   }
 
   async delete(key: string): Promise<void> {
     await this.checkLock();
 
     this.cache.delete(key);
-    this.logger.debug(`Key "${key}" deleted from in-memory cache`);
+    this.logger.debug({
+      description: `Key "${key}" deleted from in-memory cache`,
+    });
   }
 
   async setAll<T>(
@@ -125,7 +131,9 @@ export class InMemoryCache implements ICache {
       await new Promise((resolve) => {
         setTimeout(resolve, 1000);
       });
-      this.logger.warn(`Check ${attempts} of in-memory cache lock failed.`);
+      this.logger.warn({
+        description: `Check ${attempts} of in-memory cache lock failed.`,
+      });
       attempts += 1;
     }
 

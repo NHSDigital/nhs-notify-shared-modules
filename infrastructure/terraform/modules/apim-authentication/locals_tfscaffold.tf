@@ -1,6 +1,4 @@
 locals {
-  component = "dl"
-
   terraform_state_bucket = format(
     "%s-tfscaffold-%s-%s",
     var.project,
@@ -16,7 +14,7 @@ locals {
       var.aws_account_id,
       var.region,
       var.environment,
-      local.component,
+      var.component,
     ),
     "_",
     "",
