@@ -1,9 +1,9 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml } from 'yaml';
 
-const LOCKFILE = "pnpm-lock.yaml";
+const LOCKFILE = 'pnpm-lock.yaml';
 
 type Snapshot = {
   dependencies?: Record<string, string>;
@@ -18,20 +18,20 @@ export const lockfilePath = (projectDir: string): string =>
   path.join(projectDir, LOCKFILE);
 
 export const readLockfile = async (projectDir: string): Promise<Lockfile> => {
-  const content = await readFile(lockfilePath(projectDir), "utf8");
+  const content = await readFile(lockfilePath(projectDir), 'utf8');
   return parseYaml(content) as Lockfile;
 };
 
 const baseVersion = (raw: string): string => {
-  const parenIndex = raw.indexOf("(");
+  const parenIndex = raw.indexOf('(');
   return parenIndex === -1 ? raw : raw.slice(0, parenIndex);
 };
 
 const parseSnapshotKey = (
   key: string,
 ): { name: string; version: string } | undefined => {
-  const startSearch = key.startsWith("@") ? 1 : 0;
-  const atIndex = key.indexOf("@", startSearch);
+  const startSearch = key.startsWith('@') ? 1 : 0;
+  const atIndex = key.indexOf('@', startSearch);
   if (atIndex === -1) {
     return undefined;
   }
