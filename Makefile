@@ -24,7 +24,7 @@ clean:: # Clean-up project resources (main) @Operations
 	pnpm run clean
 	# TODO: Implement project resources clean-up step
 
-config:: _install-dependencies version # Configure development environment (main) @Configuration
+config:: _install-dependencies version dependencies # Configure development environment (main) @Configuration
 	(cd docs && make install)
 
 version:

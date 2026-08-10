@@ -1,8 +1,9 @@
-# PLEASE UPDATE THE PACKAGES LIST APPROPRIATELY.
 packages:
   - "src/lambdas/apim-access-token-refresher"
   - "src/lambdas/apim-key-generator"
   - "src/utils"
+  - "tools/check-overrides"
+  - "infrastructure/terraform/modules/eventpub/lambda/eventpub"
 
 allowBuilds:
   '@parcel/watcher': false
@@ -50,10 +51,6 @@ catalogs:
     lcov-result-merger: "^5.0.1"
     mock-fs: "^5.5.0"
     ts-jest: "^29.4.11"
-  test-legacy:
-    "@jest/globals": "^29.7.0"
-    "@types/jest": "^29.5.14"
-    jest: "^29.7.0"
   tools:
     "@tsconfig/node22": "^22.0.5"
     "@types/aws-lambda": "^8.10.161"
@@ -70,14 +67,10 @@ minimumReleaseAge: 2880
 nodeOptions: "${NODE_OPTIONS:- } --experimental-vm-modules"
 
 overrides:
-  '@auth/core@>=0.1.0 <0.41.3': ^0.41.3
   esbuild@>=0.27.3 <0.28.1: '>=0.28.1'
   minimatch@>=10.0.0 <10.2.3: '>=10.2.3'
-  prismjs@<1.30.0: '>=1.30.0'
-  uuid@<11.1.1: '>=11.1.1'
   yaml@>=2.0.0 <2.8.3: '>=2.8.3'
 resolutionMode: time-based
 trustPolicy: no-downgrade
 trustPolicyExclude:
-  - "semver@5.7.2"
   - "semver@6.3.1"

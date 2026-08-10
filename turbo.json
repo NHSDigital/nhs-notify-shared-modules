@@ -1,15 +1,6 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "tasks": {
-    "generate-dependencies": {
-      "dependsOn": [
-        "^generate-dependencies"
-      ],
-      "inputs": [
-        "src/utils/",
-        "src/utils/schemas/**"
-      ]
-    },
     "lint": {
       "dependsOn": [
         "^lint"
@@ -18,11 +9,6 @@
     "lint:fix": {
       "dependsOn": [
         "^lint:fix"
-      ]
-    },
-    "test:contract": {
-      "dependsOn": [
-        "^test:contract"
       ]
     },
     "test:unit": {
