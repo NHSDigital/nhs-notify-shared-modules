@@ -18,7 +18,7 @@ module "lambda_lambda_apim_refresh_token" {
     body = data.aws_iam_policy_document.apim_access_token_refresher.json
   }
 
-  function_s3_bucket      = local.acct.s3_buckets["lambda_function_artefacts"]["id"]
+  function_s3_bucket      = var.acct_s3_buckets["lambda_function_artefacts"]["id"]
   function_code_base_path = "${path.module}/dist"
   function_code_dir       = "apim-access-token-refresher"
   function_include_common = true
@@ -33,7 +33,7 @@ module "lambda_lambda_apim_refresh_token" {
   enable_lambda_insights   = false
 
   log_destination_arn       = local.log_destination_arn
-  log_subscription_role_arn = local.acct.log_subscription_role_arn
+  log_subscription_role_arn = var.log_subscription_role_arn
 
   lambda_env_vars = {
     APIM_AUTH_TOKEN_URL                  = var.apim_auth_token_url

@@ -18,7 +18,7 @@ module "lambda_apim_key_generation" {
     body = data.aws_iam_policy_document.lambda_apim_key_generator.json
   }
 
-  function_s3_bucket      = local.acct.s3_buckets["lambda_function_artefacts"]["id"]
+  function_s3_bucket      = var.acct_s3_buckets["lambda_function_artefacts"]["id"]
   function_code_base_path = "${path.module}/dist"
   function_code_dir       = "apim-key-generator"
   function_include_common = true
@@ -34,7 +34,7 @@ module "lambda_apim_key_generation" {
   enable_lambda_insights   = false
 
   log_destination_arn       = local.log_destination_arn
-  log_subscription_role_arn = local.acct.log_subscription_role_arn
+  log_subscription_role_arn = var.log_subscription_role_arn
 
   lambda_env_vars = {
     SSM_PRIVATE_KEY_PARAMETER_NAME = local.apim_private_key_ssm_parameter_name

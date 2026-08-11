@@ -13,6 +13,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_acct_s3_buckets"></a> [acct\_s3\_buckets](#input\_acct\_s3\_buckets) | Account S3 buckets | `map(any)` | n/a | yes |
 | <a name="input_apim_auth_token_schedule"></a> [apim\_auth\_token\_schedule](#input\_apim\_auth\_token\_schedule) | Schedule to renew the APIM auth token | `string` | `"rate(9 minutes)"` | no |
 | <a name="input_apim_auth_token_url"></a> [apim\_auth\_token\_url](#input\_apim\_auth\_token\_url) | URL to generate an APIM auth token | `string` | n/a | yes |
 | <a name="input_apim_keygen_schedule"></a> [apim\_keygen\_schedule](#input\_apim\_keygen\_schedule) | Schedule to refresh key pairs if necessary | `string` | `"cron(0 14 * * ? *)"` | no |
@@ -27,6 +28,7 @@
 | <a name="input_lambda_timeout_seconds"></a> [lambda\_timeout\_seconds](#input\_lambda\_timeout\_seconds) | The timeout of the lambdas that are triggered by SQS. | `string` | `"45"` | no |
 | <a name="input_log_level"></a> [log\_level](#input\_log\_level) | The log level to be used in lambda functions within the component. Any log with a lower severity than the configured value will not be logged: https://docs.python.org/3/library/logging.html#levels | `string` | `"INFO"` | no |
 | <a name="input_log_retention_in_days"></a> [log\_retention\_in\_days](#input\_log\_retention\_in\_days) | The retention period in days for the Cloudwatch Logs events to be retained, default of 0 is indefinite | `number` | `0` | no |
+| <a name="input_log_subscription_role_arn"></a> [log\_subscription\_role\_arn](#input\_log\_subscription\_role\_arn) | ARN for log subscription role | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | A unique name to distinguish this module invocation from others within the same CSI scope | `string` | n/a | yes |
 | <a name="input_parent_acct_environment"></a> [parent\_acct\_environment](#input\_parent\_acct\_environment) | Name of the environment responsible for the acct resources used, affects things like DNS zone. Useful for named dev environments | `string` | `"main"` | no |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |

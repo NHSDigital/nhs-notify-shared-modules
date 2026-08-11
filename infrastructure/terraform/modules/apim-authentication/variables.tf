@@ -39,6 +39,16 @@ variable "default_tags" {
   default     = {}
 }
 
+variable "acct_s3_buckets" {
+  type        = map(any)
+  description = "Account S3 buckets"
+}
+
+variable "log_subscription_role_arn" {
+  type        = string
+  description = "ARN for log subscription role"
+}
+
 ##
 # Variable specific to the module
 ##
