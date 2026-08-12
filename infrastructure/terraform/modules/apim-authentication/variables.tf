@@ -44,6 +44,11 @@ variable "acct_s3_buckets" {
   description = "Account S3 buckets"
 }
 
+variable "cdn_logs_bucket_id" {
+  type        = string
+  description = "Bucket for Cloudfront logging"
+}
+
 variable "log_subscription_role_arn" {
   type        = string
   description = "ARN for log subscription role"

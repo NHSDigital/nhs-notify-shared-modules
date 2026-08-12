@@ -20,6 +20,12 @@ resource "aws_cloudfront_distribution" "static_assets_hosting" {
     ssl_support_method             = "sni-only"
   }
 
+  logging_config {
+    include_cookies = false
+    bucket          = "${var.cdn_logs_bucket_id}.s3.amazonaws.com"
+    prefix          = "${local.csi}/static-assets/"
+  }
+
   origin {
     domain_name = module.s3bucket_static_assets.bucket_regional_domain_name
     origin_id   = "${local.csi}-origin-static-assets"
