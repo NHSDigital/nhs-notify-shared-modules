@@ -6,6 +6,13 @@ resource "aws_iam_policy" "sns_delivery_logging_cloudwatch" {
   policy      = data.aws_iam_policy_document.sns_delivery_logging_cloudwatch[0].json
 }
 
+resource "aws_iam_role_policy_attachment" "sns_delivery_logging_cloudwatch" {
+  count = var.enable_sns_delivery_logging ? 1 : 0
+
+  role       = aws_iam_role.sns_delivery_logging_role[0].name
+  policy_arn = aws_iam_policy.sns_delivery_logging_cloudwatch[0].arn
+}
+
 data "aws_iam_policy_document" "sns_delivery_logging_cloudwatch" {
   count = var.enable_sns_delivery_logging ? 1 : 0
 

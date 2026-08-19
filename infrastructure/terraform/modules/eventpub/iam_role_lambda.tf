@@ -69,19 +69,6 @@ data "aws_iam_policy_document" "lambda" {
   }
 
   statement {
-    sid    = "DLQPutMessage"
-    effect = "Allow"
-
-    actions = [
-      "sqs:SendMessage",
-    ]
-
-    resources = [
-      aws_sqs_queue.dlq.arn
-    ]
-  }
-
-  statement {
     sid    = "AllowSQSInput"
     effect = "Allow"
 

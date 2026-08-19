@@ -394,3 +394,9 @@ variable "permission_statements" {
   description = "Statements giving an external source permission to invoke the Lambda function"
   default     = []
 }
+
+variable "reserved_concurrent_executions" {
+  type        = number
+  description = "The reserved concurrency for the Lambda function. Set to -1 to remove the concurrency limit, or 0 to prevent the Lambda from being invoked."
+  default     = -1
+}

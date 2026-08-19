@@ -14,6 +14,9 @@ test-unit: # Run your unit tests from scripts/test/unit @Testing
 test-lint: # Lint your code from scripts/test/lint @Testing
 	make _test name="lint"
 
+test-typecheck: # Typecheck your code from scripts/test/typecheck @Testing
+	make _test name="typecheck"
+
 test-coverage: # Evaluate code coverage from scripts/test/coverage @Testing
 	make _test name="coverage"
 

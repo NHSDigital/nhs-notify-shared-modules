@@ -41,42 +41,78 @@ jobs:
     name: "Unit tests"
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: "Checkout code"
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Node install and setup
+        uses: ./.github/actions/node-install
+        with:
+          node-version: ${{ inputs.nodejs_version }}
+          pnpm-version: ${{ inputs.pnpm_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Install dependencies"
+        run: pnpm install --frozen-lockfile
       - name: "Run unit test suite"
         run: |
           make test-unit
       - name: "Save the result of fast test suite"
-        run: |
-          echo "Nothing to save"
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: unit-tests
+          path: |
+            src/**/.reports/unit/test-report.html
+            tools/check-overrides/.reports/unit/test-report.html
+            !**/node_modules/**
+          include-hidden-files: true
+        if: always()
+      - name: "Save the result of code coverage"
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: code-coverage-report
+          path: ".reports/lcov.info"
   test-lint:
     name: "Linting"
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: "Checkout code"
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Node install and setup
+        uses: ./.github/actions/node-install
+        with:
+          pnpm-version: ${{ inputs.pnpm_version }}
+          node-version: ${{ inputs.nodejs_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Run linting"
         run: |
           make test-lint
-      - name: "Save the linting result"
-        run: |
-          echo "Nothing to save"
-  test-coverage:
-    name: "Test coverage"
-    needs: [test-unit]
+  test-typecheck:
+    name: "Typecheck"
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
+    permissions:
+      contents: read
+      packages: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: "Checkout code"
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: "Run test coverage check"
+      - name: Node install and setup
+        uses: ./.github/actions/node-install
+        with:
+          pnpm-version: ${{ inputs.pnpm_version }}
+          node-version: ${{ inputs.nodejs_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Run typecheck"
         run: |
-          make test-coverage
-      - name: "Save the coverage check result"
-        run: |
-          echo "Nothing to save"
+          make test-typecheck
   perform-static-analysis:
     name: "Perform static analysis"
     needs: [test-unit]
@@ -84,12 +120,16 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    timeout-minutes: 5
+    timeout-minutes: 4
     steps:
       - name: "Checkout code"
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0 # Full history is needed to improving relevancy of reporting
+      - name: "Download coverage report for SONAR"
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: code-coverage-report
       - name: "Perform static analysis"
         uses: ./.github/actions/perform-static-analysis
         with:

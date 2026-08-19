@@ -48,4 +48,17 @@ data "aws_iam_policy_document" "firehose_delivery" {
       "${aws_kinesis_firehose_delivery_stream.main[0].arn}",
     ]
   }
+  statement {
+    sid    = "AllowKmsAccessForFirehoseDelivery"
+    effect = "Allow"
+
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Decrypt",
+    ]
+
+    resources = [
+      var.kms_key_arn,
+    ]
+  }
 }

@@ -9,6 +9,8 @@ resource "aws_lambda_function" "main" {
   memory_size   = var.memory
   timeout       = var.timeout
 
+  reserved_concurrent_executions = var.reserved_concurrent_executions
+
   s3_bucket         = local.package_type == "zip" ? aws_s3_object.lambda[0].bucket : null
   s3_key            = local.package_type == "zip" ? aws_s3_object.lambda[0].key : null
   s3_object_version = local.package_type == "zip" ? aws_s3_object.lambda[0].version_id : null

@@ -99,6 +99,12 @@ variable "content_based_deduplication" {
   default     = false
 }
 
+variable "high_throughput_fifo" {
+  description = "Enable high throughput mode for FIFO queues. Limits deduplication scope to message group."
+  type        = bool
+  default     = false
+}
+
 variable "kms_data_key_reuse_period_seconds" {
   description = "The length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt or decrypt messages before calling AWS KMS again. An integer representing seconds, between 60 seconds (1 minute) and 86,400 seconds (24 hours)"
   type        = number

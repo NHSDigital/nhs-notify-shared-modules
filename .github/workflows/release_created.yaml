@@ -1,6 +1,16 @@
 name: Github Release Created
 
 on:
+  workflow_call:
+    inputs:
+      nodejs_version:
+        description: "Node.js version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
+      pnpm_version:
+        description: "pnpm version, set by the CI/CD pipeline workflow"
+        required: true
+        type: string
   release:
     types: ["published"] # Inherits all input defaults
 
@@ -9,6 +19,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  metadata:
+    name: "Set CI/CD metadata"
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    permissions:
+      contents: read
+    outputs:
+      nodejs_version: ${{ steps.variables.outputs.nodejs_version }}
+      pnpm_version: ${{ steps.variables.outputs.pnpm_version }}
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: "Set CI/CD variables"
+        id: variables
+        run: |
+          echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
+          echo "pnpm_version=$(grep "^pnpm\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
   deploy-main:
     name: Package and Publish Terraform Modules to GitHub Releases assets
     runs-on: ubuntu-latest
@@ -20,6 +47,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Node install and setup
+        uses: ./.github/actions/node-install
+        with:
+          node-version: ${{ inputs.nodejs_version }}
+          pnpm-version: ${{ inputs.pnpm_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Install dependencies"
+        run: pnpm install --frozen-lockfile
       - name: "Package and Publish Terraform modules"
         run: |
           ARTIFACTS_DIR="$PWD/../../artifacts"
@@ -27,6 +62,10 @@ jobs:
           cd infrastructure/terraform/modules
           for module in */; do
             module_name=${module%/}
+            if [ -f "$module_name/pre.sh" ]; then
+              echo "Running pre.sh for $module_name..."
+              (cd "$module_name" && bash pre.sh)
+            fi
             echo "Zipping contents of $module_name..."
             (cd "$module_name" && zip -r "$ARTIFACTS_DIR/terraform-${module_name}.zip" .)
             echo "Publishing $module_name module..."
