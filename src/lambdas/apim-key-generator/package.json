@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "date-fns": "^4.1.0",
-    "esbuild": "^0.25.9",
+    "esbuild": "^0.28.2",
     "jose": "^5.10.0",
     "utils": "workspace:*"
   },
