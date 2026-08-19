@@ -1,24 +1,24 @@
-import { readFile } from "node:fs/promises";
+import { readFile } from 'node:fs/promises';
 
-import { gte } from "semver";
+import { gte } from 'semver';
 
 import {
   readResolvedVersion,
   regenerateLockfile,
   withOriginalFiles,
-} from "src/resolve";
+} from 'src/resolve';
 import {
   removeOverridesFromYaml,
   workspaceFilePath,
   writeWorkspaceFile,
-} from "src/workspace-file";
+} from 'src/workspace-file';
 
 import type {
   ChainCheckResult,
   Override,
   OverrideChain,
   ResolutionFailure,
-} from "src/types";
+} from 'src/types';
 
 type ScenarioOutcome = {
   satisfied: boolean;
@@ -33,7 +33,7 @@ const runScenario = async (
 ): Promise<ScenarioOutcome> =>
   withOriginalFiles(projectDir, async () => {
     const path = workspaceFilePath(projectDir);
-    const current = await readFile(path, "utf8");
+    const current = await readFile(path, 'utf8');
     const updated = removeOverridesFromYaml(
       current,
       overridesToRemove.map((o) => o.key),
@@ -41,7 +41,7 @@ const runScenario = async (
     await writeWorkspaceFile(projectDir, updated);
 
     const affectedPackages = [
-      ...new Set(overridesToRemove.flatMap((o) => [o.package, o.parent ?? ""])),
+      ...new Set(overridesToRemove.flatMap((o) => [o.package, o.parent ?? ''])),
     ].filter((name) => name.length > 0);
     await regenerateLockfile(projectDir, affectedPackages);
 
@@ -62,7 +62,7 @@ const runScenario = async (
       } else {
         failures.push({
           override,
-          reason: "package not resolved in lockfile",
+          reason: 'package not resolved in lockfile',
         });
       }
     }
@@ -85,7 +85,7 @@ export const checkChain = async (
   );
   if (fullOutcome.satisfied) {
     return {
-      status: "removable",
+      status: 'removable',
       chain,
       resolved: fullOutcome.resolved,
     };
@@ -97,7 +97,7 @@ export const checkChain = async (
     const leafOutcome = await runScenario(projectDir, leaves, chain.overrides);
     if (leafOutcome.satisfied) {
       return {
-        status: "simplifiable",
+        status: 'simplifiable',
         chain,
         remove: leaves,
         keep: [root],
@@ -108,7 +108,7 @@ export const checkChain = async (
     const rootOutcome = await runScenario(projectDir, [root], chain.overrides);
     if (rootOutcome.satisfied) {
       return {
-        status: "simplifiable",
+        status: 'simplifiable',
         chain,
         remove: [root],
         keep: leaves,
@@ -118,7 +118,7 @@ export const checkChain = async (
   }
 
   return {
-    status: "needed",
+    status: 'needed',
     chain,
     failures: fullOutcome.failures,
   };
