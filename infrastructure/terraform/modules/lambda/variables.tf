@@ -274,6 +274,85 @@ variable "enable_xray_tracing" {
   default     = false
 }
 
+variable "enable_error_rate_alarm" {
+  type        = bool
+  description = "Create a CloudWatch alarm when Lambda error rate exceeds the configured percentage threshold"
+  default     = true
+}
+
+variable "lambda_error_rate_alarm_config" {
+  description = "Object of optional CloudWatch alarm settings for the Lambda error rate alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    threshold           = optional(number, 1)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
+}
+
+variable "enable_throttles_alarm" {
+  type        = bool
+  description = "Create a CloudWatch alarm when Lambda throttles exceed the configured threshold"
+  default     = true
+}
+
+variable "lambda_throttles_alarm_config" {
+  description = "Object of optional CloudWatch alarm settings for the Lambda throttles alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    statistic           = optional(string, "Sum")
+    threshold           = optional(number, 0)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
+}
+
+variable "enable_duration_alarm" {
+  type        = bool
+  description = "Create a CloudWatch alarm when Lambda duration percentile exceeds the configured threshold"
+  default     = true
+}
+
+variable "lambda_duration_alarm_config" {
+  description = "Object of optional CloudWatch alarm settings for the Lambda duration percentile alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    percentile          = optional(string, "p95")
+    threshold_ms        = optional(number)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
+}
+
+variable "enable_dlq_messages_alarm" {
+  type        = bool
+  description = "Create a CloudWatch alarm when visible messages are present in the Lambda DLQ"
+  default     = true
+}
+
+variable "lambda_dlq_messages_alarm_config" {
+  description = "Object of optional CloudWatch alarm settings for the Lambda DLQ messages alarm"
+  type = object({
+    comparison_operator = optional(string, "GreaterThanThreshold")
+    evaluation_periods  = optional(number, 1)
+    period              = optional(number, 300)
+    statistic           = optional(string, "Sum")
+    threshold           = optional(number, 0)
+    actions_enabled     = optional(bool, true)
+    treat_missing_data  = optional(string, "notBreaching")
+  })
+  default = {}
+}
+
 variable "lambda_at_edge" {
   type        = bool
   description = "Whether this Lambda is a Lambda@Edge function"
@@ -314,4 +393,10 @@ variable "permission_statements" {
   }))
   description = "Statements giving an external source permission to invoke the Lambda function"
   default     = []
+}
+
+variable "reserved_concurrent_executions" {
+  type        = number
+  description = "The reserved concurrency for the Lambda function. Set to -1 to remove the concurrency limit, or 0 to prevent the Lambda from being invoked."
+  default     = -1
 }

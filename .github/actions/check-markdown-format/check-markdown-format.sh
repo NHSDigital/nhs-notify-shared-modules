@@ -42,13 +42,13 @@ function main() {
       files="$(git ls-files "*.md")"
       ;;
     "staged-changes")
-      files="$(git diff --diff-filter=ACMRT --name-only --cached "*.md")"
+      files="$(git diff --diff-filter=ACMRT --name-only --cached --ignore-submodules=all "*.md")"
       ;;
     "working-tree-changes")
-      files="$(git diff --diff-filter=ACMRT --name-only "*.md")"
+      files="$(git diff --diff-filter=ACMRT --name-only --ignore-submodules=all "*.md")"
       ;;
     "branch")
-      files="$( (git diff --diff-filter=ACMRT --name-only "${BRANCH_NAME:-origin/main}" "*.md"; git diff --name-only "*.md") | sort | uniq )"
+      files="$( (git diff --diff-filter=ACMRT --name-only --ignore-submodules=all "${BRANCH_NAME:-origin/main}" "*.md"; git diff --name-only --ignore-submodules=all "*.md") | sort | uniq )"
       ;;
   esac
 

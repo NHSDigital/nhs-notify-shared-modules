@@ -6,6 +6,16 @@ output "sns_topic" {
   }
 }
 
+output "sqs_queue" {
+  description = "EventPub SQS queue name, ARN, and DLQ details"
+  value = {
+    arn      = module.sqs_queue.sqs_queue_arn
+    name     = module.sqs_queue.sqs_queue_name
+    dlq_arn  = module.sqs_queue.sqs_dlq_arn
+    dlq_name = module.sqs_queue.sqs_dlq_name
+  }
+}
+
 output "s3_bucket_event_cache" {
   description = "S3 Bucket ARN and Name for event cache"
   value = var.enable_event_cache ? {

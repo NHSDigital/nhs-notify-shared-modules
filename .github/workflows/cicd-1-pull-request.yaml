@@ -5,17 +5,28 @@ name: "1. CI/CD pull request"
 on:
   push:
     branches:
-      - "**"
+      - "main"
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
     branches:
       - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: write
+  packages: write
 
 jobs:
   metadata:
     name: "Set CI/CD metadata"
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    permissions:
+      contents: read
     outputs:
       build_datetime_london: ${{ steps.variables.outputs.build_datetime_london }}
       build_datetime: ${{ steps.variables.outputs.build_datetime }}
@@ -30,7 +41,7 @@ jobs:
       does_pull_request_exist: ${{ steps.pr_exists.outputs.does_pull_request_exist }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: "Set CI/CD variables"
         id: variables
         run: |
@@ -133,4 +144,20 @@ jobs:
       python_version: "${{ needs.metadata.outputs.python_version }}"
       terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
       version: "${{ needs.metadata.outputs.version }}"
+    secrets: inherit
+  publish-stage: # Recommended maximum execution time is 10 minutes
+    name: "Publish stage"
+    needs: [metadata, build-stage]
+    uses: ./.github/workflows/stage-5-publish.yaml
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    with:
+      build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
+      build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
+      build_epoch: "${{ needs.metadata.outputs.build_epoch }}"
+      nodejs_version: "${{ needs.metadata.outputs.nodejs_version }}"
+      pnpm_version: "${{ needs.metadata.outputs.pnpm_version }}"
+      python_version: "${{ needs.metadata.outputs.python_version }}"
+      terraform_version: "${{ needs.metadata.outputs.terraform_version }}"
+      version: "${{ needs.metadata.outputs.version }}"
+      is_version_prerelease: "${{ needs.metadata.outputs.is_version_prerelease }}"
     secrets: inherit

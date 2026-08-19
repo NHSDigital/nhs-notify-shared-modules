@@ -1,0 +1,45 @@
+name: "Combine Dependabot PRs"
+description: "Combine open dependency PRs into a single branch and PR"
+inputs:
+  labels:
+    description: "Label used to select PRs"
+    required: false
+    default: "dependencies"
+  pr_title:
+    description: "Combined pull request title"
+    required: false
+    default: "CCM-9336: Combined Dependabot PRs"
+  combine_branch_name:
+    description: "Branch used for the combined pull request"
+    required: false
+    default: "dependabotCombined"
+  pr_body_header:
+    description: "Header text used at the top of the combined pull request body"
+    required: false
+    default: "CCM-9336: Combined Dependabot PRs"
+runs:
+  using: "composite"
+  steps:
+    - name: "Combine pull requests"
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        INPUT_LABEL: ${{ inputs.labels }}
+        INPUT_PR_TITLE: ${{ inputs.pr_title }}
+        INPUT_COMBINE_BRANCH: ${{ inputs.combine_branch_name }}
+        INPUT_PR_BODY_HEADER: ${{ inputs.pr_body_header }}
+      with:
+        script: |
+          const path = require("node:path");
+          const run = require(path.join(process.env.GITHUB_ACTION_PATH, "combine-dependabot-prs.js"));
+
+          await run({
+            github,
+            context,
+            core,
+            inputs: {
+              label: process.env.INPUT_LABEL,
+              prTitle: process.env.INPUT_PR_TITLE,
+              combineBranch: process.env.INPUT_COMBINE_BRANCH,
+              prBodyHeader: process.env.INPUT_PR_BODY_HEADER,
+            },
+          });

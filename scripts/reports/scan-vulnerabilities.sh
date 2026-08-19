@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOOLING_ROOT="${TOOLING_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
+
 # Script to scan an SBOM file for CVEs (Common Vulnerabilities and Exposures).
 # This is a grype command wrapper. It will run grype natively if it is
 # installed, otherwise it will run it in a Docker container.
@@ -40,31 +43,54 @@ function create-report() {
 
 function run-grype-natively() {
 
+  local fail_on_severity=${SCAN_FAIL_ON_SEVERITY:-}
+  local fail_on_opt=""
+  if [[ -n "$fail_on_severity" && "$fail_on_severity" != "none" ]]; then
+    fail_on_opt="--fail-on $fail_on_severity"
+  fi
+
+  # shellcheck disable=SC2086
   grype \
     sbom:"$PWD/sbom-repository-report.json" \
     --config "$PWD/scripts/config/grype.yaml" \
     --output json \
+    $fail_on_opt \
     --file "$PWD/vulnerabilities-repository-report.tmp.json"
 }
 
 function run-grype-in-docker() {
 
   # shellcheck disable=SC1091
-  source ./scripts/docker/docker.lib.sh
+  source "$TOOLING_ROOT/scripts/docker/docker.lib.sh"
 
   # shellcheck disable=SC2155
   local image=$(name=ghcr.io/anchore/grype docker-get-image-version-and-pull)
+
+  local fail_on_severity=${SCAN_FAIL_ON_SEVERITY:-}
+  local fail_on_opt=""
+  if [[ -n "$fail_on_severity" && "$fail_on_severity" != "none" ]]; then
+    fail_on_opt="--fail-on $fail_on_severity"
+  fi
+
+  # shellcheck disable=SC2086
   docker run --rm --platform linux/amd64 \
     --volume "$PWD":/workdir \
+    --volume "$TOOLING_ROOT":/tooling \
     --volume /tmp/grype/db:/.cache/grype/db \
     "$image" \
       sbom:/workdir/sbom-repository-report.json \
       --config /workdir/scripts/config/grype.yaml \
       --output json \
+      $fail_on_opt \
       --file /workdir/vulnerabilities-repository-report.tmp.json
 }
 
 function enrich-report() {
+
+  if [[ ! -f vulnerabilities-repository-report.tmp.json ]]; then
+    echo "Grype did not produce vulnerabilities-repository-report.tmp.json" >&2
+    return 1
+  fi
 
   build_datetime=${BUILD_DATETIME:-$(date -u +'%Y-%m-%dT%H:%M:%S%z')}
   git_url=$(git config --get remote.origin.url)
@@ -82,8 +108,6 @@ function enrich-report() {
       > vulnerabilities-repository-report.json
   rm -f vulnerabilities-repository-report.tmp.json
 }
-
-# ==============================================================================
 
 function is-arg-true() {
 

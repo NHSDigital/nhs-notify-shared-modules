@@ -97,6 +97,12 @@ variable "enable_event_cache" {
   default     = false
 }
 
+variable "event_cache_restrict_data_access" {
+  type        = bool
+  description = "Whether to restrict access to data in the event cache bucket"
+  default     = false
+}
+
 variable "enable_firehose_raw_message_delivery" {
   type        = bool
   description = "Enables raw message delivery on firehose subscription"

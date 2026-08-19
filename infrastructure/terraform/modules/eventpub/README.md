@@ -30,6 +30,7 @@
 | <a name="input_event_anomaly_period"></a> [event\_anomaly\_period](#input\_event\_anomaly\_period) | The period in seconds over which the specified statistic is applied for anomaly detection. Minimum 300 seconds (5 minutes). Recommended: 300-600. | `number` | `300` | no |
 | <a name="input_event_cache_buffer_interval"></a> [event\_cache\_buffer\_interval](#input\_event\_cache\_buffer\_interval) | The buffer interval for data firehose | `number` | `500` | no |
 | <a name="input_event_cache_expiry_days"></a> [event\_cache\_expiry\_days](#input\_event\_cache\_expiry\_days) | s3 archiving expiry in days | `number` | `30` | no |
+| <a name="input_event_cache_restrict_data_access"></a> [event\_cache\_restrict\_data\_access](#input\_event\_cache\_restrict\_data\_access) | Whether to restrict access to data in the event cache bucket | `bool` | `false` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | When enabled will force destroy event-cache S3 bucket | `bool` | `false` | no |
 | <a name="input_group"></a> [group](#input\_group) | The name of the tfscaffold group | `string` | `null` | no |
 | <a name="input_iam_permissions_boundary_arn"></a> [iam\_permissions\_boundary\_arn](#input\_iam\_permissions\_boundary\_arn) | The ARN of the permissions boundary to use for the IAM role | `string` | `null` | no |
@@ -48,6 +49,7 @@
 | <a name="output_publishing_anomaly_alarm"></a> [publishing\_anomaly\_alarm](#output\_publishing\_anomaly\_alarm) | CloudWatch anomaly detection alarm details for SNS publishing |
 | <a name="output_s3_bucket_event_cache"></a> [s3\_bucket\_event\_cache](#output\_s3\_bucket\_event\_cache) | S3 Bucket ARN and Name for event cache |
 | <a name="output_sns_topic"></a> [sns\_topic](#output\_sns\_topic) | SNS Topic ARN and Name |
+| <a name="output_sqs_queue"></a> [sqs\_queue](#output\_sqs\_queue) | EventPub SQS queue name, ARN, and DLQ details |
 
 <!-- vale on -->
 <!-- markdownlint-enable -->

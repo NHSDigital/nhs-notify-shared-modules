@@ -1,0 +1,42 @@
+name: "Check pnpm Overrides"
+description: "Discover and optionally remove stale pnpm overrides from pnpm-workspace.yaml. Requires Node.js and pnpm to be pre-installed by the calling workflow."
+
+inputs:
+  project-dir:
+    description: "Path to the project root containing pnpm-workspace.yaml"
+    required: false
+    default: "."
+  apply:
+    description: "Whether to apply removals and raise a PR (true/false)"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Run check-overrides"
+      shell: bash
+      env:
+        PROJECT_DIR: ${{ inputs.project-dir }}
+        APPLY: ${{ inputs.apply }}
+        TOOL_DIR: ${{ github.action_path }}/../../../tools/check-overrides
+      run: ${{ github.action_path }}/check-overrides.sh
+
+    - name: "Create or update pull request"
+      if: ${{ !env.ACT && inputs.apply == 'true' }}
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
+      with:
+        token: ${{ github.token }}
+        commit-message: "remove stale pnpm overrides"
+        branch: feature/remove-stale-pnpm-overrides
+        delete-branch: true
+        title: "remove stale pnpm overrides"
+        body-path: ${{ inputs.project-dir }}/.tmp/pr-body.md
+        add-paths: |
+          pnpm-workspace.yaml
+          pnpm-lock.yaml
+        sign-commits: true
+        labels: |
+          dependencies
+          automation
+        draft: false
