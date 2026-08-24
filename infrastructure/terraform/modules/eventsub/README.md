@@ -27,7 +27,7 @@
 | <a name="input_event_anomaly_period"></a> [event\_anomaly\_period](#input\_event\_anomaly\_period) | The period in seconds over which the specified statistic is applied for anomaly detection. Minimum 300 seconds (5 minutes). Recommended: 300-600. | `number` | `300` | no |
 | <a name="input_event_cache_buffer_interval"></a> [event\_cache\_buffer\_interval](#input\_event\_cache\_buffer\_interval) | The buffer interval for data firehose | `number` | `500` | no |
 | <a name="input_event_cache_expiry_days"></a> [event\_cache\_expiry\_days](#input\_event\_cache\_expiry\_days) | s3 archiving expiry in days | `number` | `30` | no |
-| <a name="input_eventsub_shared_account_ids"></a> [eventsub\_shared\_account\_ids](#input\_eventsub\_shared\_account\_ids) | List of shared infra account IDs allowed to publish to the SNS topic. Falls back to shared\_infra\_account\_id if not specified. | `list(string)` | `[]` | no |
+| <a name="input_eventsub_shared_account_ids"></a> [eventsub\_shared\_account\_ids](#input\_eventsub\_shared\_account\_ids) | List of shared infra account IDs allowed to publish to the SNS topic. | `list(string)` | `[]` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | When enabled will force destroy event-cache S3 bucket | `bool` | `false` | no |
 | <a name="input_glue_role_arn"></a> [glue\_role\_arn](#input\_glue\_role\_arn) | ARN of the Glue execution role from the parent | `string` | n/a | yes |
 | <a name="input_group"></a> [group](#input\_group) | The name of the tfscaffold group | `string` | `null` | no |

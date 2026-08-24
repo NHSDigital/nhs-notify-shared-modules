@@ -81,7 +81,7 @@ variable "sns_success_logging_sample_percent" {
 
 variable "eventsub_shared_account_ids" {
   type        = list(string)
-  description = "List of shared infra account IDs allowed to publish to the SNS topic. Falls back to shared_infra_account_id if not specified."
+  description = "List of shared infra account IDs allowed to publish to the SNS topic."
   default     = []
 }
 
