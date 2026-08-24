@@ -39,8 +39,8 @@ locals {
   lifecycle_rules = [for lifecycle_rule in var.lifecycle_rules : merge(local.lifecycle_rule_defaults, lifecycle_rule)]
 
   notification_event_defaults = {
-    eventbridge = false
-
+    # Check for value of tag in lower case, compare to string "true" and if true, enable eventbridge notifications
+    eventbridge     = lower(lookup(var.default_tags, "NHSE-Enable-S3-Backup-Acct", "")) == "true"
     lambda_function = {}
     queue           = {}
     topic           = {}
