@@ -148,12 +148,6 @@ variable "force_destroy" {
   default     = false
 }
 
-variable "shared_infra_account_id" {
-  type        = string
-  description = "The AWS Account ID of the shared infrastructure account"
-  default     = "000000000000"
-}
-
 variable "glue_role_arn" {
   type        = string
   description = "ARN of the Glue execution role from the parent"

@@ -37,7 +37,6 @@
 | <a name="input_name"></a> [name](#input\_name) | A unique name to distinguish this module invocation from others within the same CSI scope | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | The name of the terraformscaffold project calling the module | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS Region | `string` | n/a | yes |
-| <a name="input_shared_infra_account_id"></a> [shared\_infra\_account\_id](#input\_shared\_infra\_account\_id) | The AWS Account ID of the shared infrastructure account | `string` | `"000000000000"` | no |
 | <a name="input_sns_success_logging_sample_percent"></a> [sns\_success\_logging\_sample\_percent](#input\_sns\_success\_logging\_sample\_percent) | Enable SNS Delivery Successful Sample Percentage | `number` | `0` | no |
 
 ## Outputs
