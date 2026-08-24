@@ -79,6 +79,12 @@ variable "sns_success_logging_sample_percent" {
   default     = 0
 }
 
+variable "eventsub_shared_account_ids" {
+  type        = list(string)
+  description = "List of shared infra account IDs allowed to publish to the SNS topic. Falls back to shared_infra_account_id if not specified."
+  default     = []
+}
+
 ##
 # CloudWatch Anomaly Detection Variables
 ##

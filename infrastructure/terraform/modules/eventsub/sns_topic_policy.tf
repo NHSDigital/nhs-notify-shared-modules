@@ -52,7 +52,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::${var.shared_infra_account_id}:root"
+        for account_id in local.eventsub_shared_account_ids : "arn:aws:iam::${account_id}:root"
       ]
     }
 

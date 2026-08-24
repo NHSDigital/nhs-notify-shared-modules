@@ -31,4 +31,9 @@ locals {
       Name   = local.csi
     },
   )
+  eventsub_shared_account_ids = (
+    length(var.eventsub_shared_account_ids) > 0
+    ? var.eventsub_shared_account_ids
+    : [var.shared_infra_account_id]
+  )
 }
