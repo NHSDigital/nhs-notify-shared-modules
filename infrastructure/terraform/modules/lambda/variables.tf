@@ -403,8 +403,8 @@ variable "reserved_concurrent_executions" {
 
 variable "additional_assume_role_policy_statements" {
   type = list(object({
-    sid       = string
-    effect    = string
+    sid    = string
+    effect = string
     principal = object({
       type        = string
       identifiers = list(string)
