@@ -400,3 +400,14 @@ variable "reserved_concurrent_executions" {
   description = "The reserved concurrency for the Lambda function. Set to -1 to remove the concurrency limit, or 0 to prevent the Lambda from being invoked."
   default     = -1
 }
+
+variable "additional_assume_role_policy_statements" {
+  type        = list(object({
+    sid       = string
+    effect    = string
+    actions   = list(string)
+    resources = list(string)
+  }))
+  description = "Additional IAM policy statements to attach to the Lambda execution role"
+  default     = []
+}
