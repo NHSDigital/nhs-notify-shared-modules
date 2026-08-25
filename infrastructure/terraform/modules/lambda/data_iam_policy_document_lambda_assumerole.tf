@@ -32,6 +32,15 @@ data "aws_iam_policy_document" "lambda_assumerole" {
       actions = [
         "sts:AssumeRole",
       ]
+      dynamic "condition" {
+        for_each = statement.value.condition != null ? statement.value.condition : []
+
+        content {
+          test     = condition.value.test
+          variable = condition.value.variable
+          values   = condition.value.values
+        }
+      }
     }
   }
 }
