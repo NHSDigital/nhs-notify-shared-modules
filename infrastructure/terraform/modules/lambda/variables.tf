@@ -402,7 +402,7 @@ variable "reserved_concurrent_executions" {
 }
 
 variable "additional_assume_role_policy_statements" {
-  type        = list(object({
+  type = list(object({
     sid       = string
     effect    = string
     actions   = list(string)
