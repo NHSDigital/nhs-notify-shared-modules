@@ -405,8 +405,10 @@ variable "additional_assume_role_policy_statements" {
   type = list(object({
     sid       = string
     effect    = string
-    actions   = list(string)
-    resources = list(string)
+    principal = object({
+      type        = string
+      identifiers = list(string)
+    })
   }))
   description = "Additional IAM policy statements to attach to the Lambda execution role"
   default     = []

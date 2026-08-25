@@ -25,11 +25,13 @@ data "aws_iam_policy_document" "lambda_assumerole" {
       effect = statement.value.effect
 
       principals {
-        type        = statement.value.principal_type
-        identifiers = statement.value.principal_identifiers
+        type        = statement.value.principal.type
+        identifiers = statement.value.principal.identifiers
       }
 
-      actions = statement.value.actions
+      actions = [
+        "sts:AssumeRole",
+      ]
     }
   }
 }
