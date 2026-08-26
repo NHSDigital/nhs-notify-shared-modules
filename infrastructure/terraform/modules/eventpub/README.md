@@ -49,7 +49,9 @@
 | <a name="output_publishing_anomaly_alarm"></a> [publishing\_anomaly\_alarm](#output\_publishing\_anomaly\_alarm) | CloudWatch anomaly detection alarm details for SNS publishing |
 | <a name="output_s3_bucket_event_cache"></a> [s3\_bucket\_event\_cache](#output\_s3\_bucket\_event\_cache) | S3 Bucket ARN and Name for event cache |
 | <a name="output_sns_topic"></a> [sns\_topic](#output\_sns\_topic) | SNS Topic ARN and Name |
+| <a name="output_sqs_dlq_messages_alarm_name"></a> [sqs\_dlq\_messages\_alarm\_name](#output\_sqs\_dlq\_messages\_alarm\_name) | The name of the CloudWatch alarm for messages in the EventPub dead-letter queue |
 | <a name="output_sqs_queue"></a> [sqs\_queue](#output\_sqs\_queue) | EventPub SQS queue name, ARN, and DLQ details |
+| <a name="output_sqs_queue_oldest_message_alarm_name"></a> [sqs\_queue\_oldest\_message\_alarm\_name](#output\_sqs\_queue\_oldest\_message\_alarm\_name) | The name of the CloudWatch alarm for oldest visible message age in the EventPub queue |
 
 <!-- vale on -->
 <!-- markdownlint-enable -->
