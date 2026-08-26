@@ -23,13 +23,13 @@ output "processor_lambda_error_rate_alarm_arn" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_application_log_level"></a> [application\_log\_level](#input\_application\_log\_level) | The detail level of the logs the application sends to CloudWatch | `string` | `"INFO"` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
 | <a name="input_component"></a> [component](#input\_component) | The name of the tfscaffold component | `string` | n/a | yes |
@@ -89,7 +89,7 @@ output "processor_lambda_error_rate_alarm_arn" {
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | Name of the CloudWatch Log Group for the Lambda function |
 | <a name="output_function_arn"></a> [function\_arn](#output\_function\_arn) | ARN of the Lambda function |
 | <a name="output_function_env_vars"></a> [function\_env\_vars](#output\_function\_env\_vars) | Environment variables for the Lambda function |

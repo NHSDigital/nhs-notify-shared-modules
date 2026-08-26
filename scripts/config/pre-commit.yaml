@@ -8,6 +8,7 @@ repos:
       - id: check-added-large-files
       - id: check-symlinks
       - id: detect-private-key
+        exclude: 'src/utils/src/__tests__/key-generation-utils/(get-private-key|validate-private-key|jwk-key)\.test\.ts$'
       - id: end-of-file-fixer
       - id: forbid-new-submodules
       - id: mixed-line-ending

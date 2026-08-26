@@ -9,3 +9,6 @@ MD024:
 
 # https://github.com/DavidAnson/markdownlint/blob/main/doc/md033.md
 MD033: false
+
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/md060.md
+MD060: false
