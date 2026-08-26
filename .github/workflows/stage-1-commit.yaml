@@ -48,6 +48,15 @@ jobs:
           fetch-depth: 0 # Full history is needed to scan all commits
       - name: "Scan secrets"
         uses: ./.github/actions/scan-secrets
+  validate-action-pins:
+    name: "Validate action SHA pins"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: "Validate action SHA pins"
+        uses: ./.github/actions/validate-action-pins
   check-file-format:
     name: "Check file format"
     runs-on: ubuntu-latest

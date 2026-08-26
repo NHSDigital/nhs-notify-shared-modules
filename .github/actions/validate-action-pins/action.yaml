@@ -1,0 +1,11 @@
+name: "Validate action SHA pins"
+description: "Verify that SHA-pinned GitHub Actions reference commits from their canonical repositories, protecting against supply chain attacks"
+runs:
+  using: "composite"
+  steps:
+    - name: "Validate action SHA pins"
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        ${{ github.action_path }}/validate-action-pins.sh
