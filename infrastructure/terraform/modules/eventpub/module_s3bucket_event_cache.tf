@@ -1,5 +1,5 @@
 module "s3bucket_event_cache" {
-  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/4.0.5/terraform-s3bucket.zip"
+  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/5.1.1/terraform-s3bucket.zip"
 
   count = var.enable_event_cache ? 1 : 0
 

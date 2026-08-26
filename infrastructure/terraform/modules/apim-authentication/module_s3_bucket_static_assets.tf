@@ -1,5 +1,5 @@
 module "s3bucket_static_assets" {
-  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/5.0.7/terraform-s3bucket.zip"
+  source = "https://github.com/NHSDigital/nhs-notify-shared-modules/releases/download/5.1.1/terraform-s3bucket.zip"
 
   name = "static-assets"
 
