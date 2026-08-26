@@ -6,13 +6,13 @@
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_acl"></a> [acl](#input\_acl) | ACL to set on the bucket. Defaults to private | `string` | `"private"` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
 | <a name="input_bucket_key_enabled"></a> [bucket\_key\_enabled](#input\_bucket\_key\_enabled) | Boolean to toggle bucket key enablement | `bool` | `true` | no |
@@ -37,7 +37,7 @@
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_acl"></a> [acl](#output\_acl) | The ACL of the S3 bucket. If the object ownership is set to 'BucketOwnerEnforced', the ACL will be 'private'. Otherwise, it will reflect the ACL set in the aws\_s3\_bucket\_acl resource. |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the S3 bucket |
 | <a name="output_bucket"></a> [bucket](#output\_bucket) | The name of the S3 bucket |
