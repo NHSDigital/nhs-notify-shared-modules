@@ -30,6 +30,7 @@ output "processor_lambda_error_rate_alarm_arn" {
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_additional_assume_role_policy_statements"></a> [additional\_assume\_role\_policy\_statements](#input\_additional\_assume\_role\_policy\_statements) | Additional IAM policy statements to attach to the Lambda execution role | <pre>list(object({<br/>    sid    = string<br/>    effect = string<br/>    principal = object({<br/>      type        = string<br/>      identifiers = list(string)<br/>    })<br/>    condition = optional(list(object({<br/>      test     = string<br/>      variable = string<br/>      values   = list(string)<br/>    })))<br/>  }))</pre> | `[]` | no |
 | <a name="input_application_log_level"></a> [application\_log\_level](#input\_application\_log\_level) | The detail level of the logs the application sends to CloudWatch | `string` | `"INFO"` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
 | <a name="input_component"></a> [component](#input\_component) | The name of the tfscaffold component | `string` | n/a | yes |
