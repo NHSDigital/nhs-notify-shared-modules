@@ -19,6 +19,11 @@ set -euo pipefail
 #     - name: "Validate action SHA pins"
 #       uses: NHSDigital/nhs-notify-shared-modules/.github/actions/validate-action-pins@<tag>
 #
+# Exemptions:
+#   Add an inline comment containing "validate-action-pins:ignore" to skip a specific pin,
+#   e.g. a private repo accessed via a GitHub App token:
+#     uses: MyOrg/private-action@sha # validate-action-pins:ignore - private repo, app token
+#
 # Exit codes:
 #   0 - All SHA pins verified, or no SHA pins found
 #   1 - One or more SHA pins not found in their canonical repositories
@@ -183,7 +188,9 @@ fn_scan_file() {
     fn_verify_sha_in_canonical_repo "$owner_repo" "$sha" "$file"
 
   done < <(
-    grep -hEo 'uses:[[:space:]]+"?[^[:space:]"#@]+@[0-9a-f]{6,40}' "$file" 2>/dev/null \
+    grep -hE 'uses:[[:space:]]+"?[^[:space:]"#@]+@[0-9a-f]{6,40}' "$file" 2>/dev/null \
+      | grep -v 'validate-action-pins:ignore' \
+      | grep -oE 'uses:[[:space:]]+"?[^[:space:]"#@]+@[0-9a-f]{6,40}' \
       | sed 's/uses:[[:space:]]*"*//' \
       | grep -vE '^\./' \
       || true
