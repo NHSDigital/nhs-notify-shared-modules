@@ -6,13 +6,13 @@
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_allowed_arns"></a> [allowed\_arns](#input\_allowed\_arns) | A list of AWS account IDs allowed to access this resource | `list(any)` | `null` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
 | <a name="input_component"></a> [component](#input\_component) | The name of the tfscaffold component | `string` | n/a | yes |
@@ -42,7 +42,7 @@
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_sqs_dlq_arn"></a> [sqs\_dlq\_arn](#output\_sqs\_dlq\_arn) | The ARN of the SQS dead-letter queue |
 | <a name="output_sqs_dlq_messages_alarm_arn"></a> [sqs\_dlq\_messages\_alarm\_arn](#output\_sqs\_dlq\_messages\_alarm\_arn) | The ARN of the CloudWatch alarm for messages in the SQS dead-letter queue |
 | <a name="output_sqs_dlq_messages_alarm_name"></a> [sqs\_dlq\_messages\_alarm\_name](#output\_sqs\_dlq\_messages\_alarm\_name) | The name of the CloudWatch alarm for messages in the SQS dead-letter queue |

@@ -6,13 +6,13 @@
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_acct_s3_buckets"></a> [acct\_s3\_buckets](#input\_acct\_s3\_buckets) | Account S3 buckets | `map(any)` | n/a | yes |
 | <a name="input_apim_auth_token_schedule"></a> [apim\_auth\_token\_schedule](#input\_apim\_auth\_token\_schedule) | Schedule to renew the APIM auth token | `string` | `"rate(9 minutes)"` | no |
 | <a name="input_apim_auth_token_url"></a> [apim\_auth\_token\_url](#input\_apim\_auth\_token\_url) | URL to generate an APIM auth token | `string` | n/a | yes |
@@ -41,7 +41,7 @@
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_apim_access_token_ssm_parameter"></a> [apim\_access\_token\_ssm\_parameter](#output\_apim\_access\_token\_ssm\_parameter) | APIM Access Token SSM parameter details |
 
 <!-- vale on -->
