@@ -1,0 +1,51 @@
+name: "Bundle Size Analysis"
+description: "Analyses esbuild bundle sizes, compares with baseline, and posts a sticky PR comment with the results."
+
+inputs:
+  baseline-metafiles-dir:
+    description: "Path to directory containing baseline metafiles organised as <lambda-name>/meta.json"
+    required: true
+  current-metafiles-dir:
+    description: "Path to directory containing current metafiles organised as <lambda-name>/meta.json"
+    required: true
+  threshold:
+    description: "Variance threshold percentage — changes within ±threshold are marked as unchanged"
+    required: false
+    default: "5"
+  pr-number:
+    description: "The pull request number to post the comment on"
+    required: true
+  github-token:
+    description: "GitHub token with pull-requests: write scope"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Run bundle analysis"
+      shell: bash
+      env:
+        BASELINE_DIR: ${{ inputs.baseline-metafiles-dir }}
+        CURRENT_DIR: ${{ inputs.current-metafiles-dir }}
+        OUTPUT_DIR: /tmp/bundle-analysis-output
+        THRESHOLD: ${{ inputs.threshold }}
+        TOOL_DIR: ${{ github.action_path }}/../../../tools/bundle-analysis
+      run: ${{ github.action_path }}/bundle-analysis.sh
+
+    - name: "Write detailed report to job summary"
+      shell: bash
+      run: cat /tmp/bundle-analysis-output/detailed-report.md >> "$GITHUB_STEP_SUMMARY"
+
+    - name: "Substitute report link in summary"
+      shell: bash
+      run: |
+        report_link="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        sed -i "s|{{REPORT_LINK}}|${report_link}|g" /tmp/bundle-analysis-output/summary.md
+
+    - name: "Post or update PR comment"
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: bundle-analysis
+        number: ${{ inputs.pr-number }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        path: /tmp/bundle-analysis-output/summary.md
