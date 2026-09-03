@@ -7,21 +7,33 @@ Small, dependency-light helpers for Lambda handlers.
 ```ts
 import {
   CORRELATION_ID_ATTRIBUTE,
+  EnvValidationError,
   formatZodIssues,
-  MissingEnvironmentVariableError,
+  parseEnv,
   readSqsStringAttribute,
-  requireEnv,
 } from '@nhsdigital/nhs-notify-shared-utils/lambda-utils';
 ```
 
-## `requireEnv`
+## `parseEnv`
 
-Reads a required environment variable. Throws
-`MissingEnvironmentVariableError` when the variable is unset or empty.
+Parses `process.env` (or a supplied source) against a Zod object schema,
+returning a typed, coerced result. Throws `EnvValidationError` — with a
+formatted list of issues — when validation fails.
 
 ```ts
-const tableName = requireEnv('TABLE_NAME');
+import { z } from 'zod';
+
+const envSchema = z.object({
+  TABLE_NAME: z.string().min(1),
+  TTL_SECONDS: z.coerce.number().int().positive(),
+});
+
+const { TABLE_NAME: tableName, TTL_SECONDS: ttlSeconds } = parseEnv(envSchema);
 ```
+
+`EnvSchema<T>` declares the minimal `safeParse` shape required, so this
+package does not depend on Zod directly — any Zod object schema is
+structurally assignable to it.
 
 ## `readSqsStringAttribute`
 

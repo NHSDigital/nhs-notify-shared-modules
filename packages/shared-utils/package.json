@@ -1,7 +1,7 @@
 {
   "name": "@nhsdigital/nhs-notify-shared-utils",
   "version": "0.1.0",
-  "description": "Generic technical utilities (logging, lambda helpers, integration test support) shared across NHS Notify bounded contexts",
+  "description": "Generic technical utilities (logging, lambda helpers) shared across NHS Notify bounded contexts",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,36 +20,6 @@
       "types": "./dist/logger/index.d.ts",
       "source": "./src/logger/index.ts",
       "default": "./dist/logger/index.js"
-    },
-    "./test-support": {
-      "types": "./dist/test-support/index.d.ts",
-      "source": "./src/test-support/index.ts",
-      "default": "./dist/test-support/index.js"
-    },
-    "./test-support/cloudwatch": {
-      "types": "./dist/test-support/cloudwatch.d.ts",
-      "source": "./src/test-support/cloudwatch.ts",
-      "default": "./dist/test-support/cloudwatch.js"
-    },
-    "./test-support/dynamodb": {
-      "types": "./dist/test-support/dynamodb.d.ts",
-      "source": "./src/test-support/dynamodb.ts",
-      "default": "./dist/test-support/dynamodb.js"
-    },
-    "./test-support/eventbridge": {
-      "types": "./dist/test-support/eventbridge.d.ts",
-      "source": "./src/test-support/eventbridge.ts",
-      "default": "./dist/test-support/eventbridge.js"
-    },
-    "./test-support/s3": {
-      "types": "./dist/test-support/s3.d.ts",
-      "source": "./src/test-support/s3.ts",
-      "default": "./dist/test-support/s3.js"
-    },
-    "./test-support/sqs": {
-      "types": "./dist/test-support/sqs.d.ts",
-      "source": "./src/test-support/sqs.ts",
-      "default": "./dist/test-support/sqs.js"
     },
     "./s3-json": {
       "types": "./dist/s3-json/index.d.ts",
@@ -73,41 +43,16 @@
     "verify": "pnpm run lint && pnpm run typecheck && pnpm run test:unit"
   },
   "peerDependencies": {
-    "@aws-sdk/client-cloudwatch-logs": "catalog:aws",
-    "@aws-sdk/client-dynamodb": "catalog:aws",
-    "@aws-sdk/client-eventbridge": "catalog:aws",
     "@aws-sdk/client-s3": "catalog:aws",
-    "@aws-sdk/client-sqs": "catalog:aws",
-    "@aws-sdk/lib-dynamodb": "catalog:aws",
     "pino": "catalog:runtime"
   },
   "peerDependenciesMeta": {
-    "@aws-sdk/client-cloudwatch-logs": {
-      "optional": true
-    },
-    "@aws-sdk/client-dynamodb": {
-      "optional": true
-    },
-    "@aws-sdk/client-eventbridge": {
-      "optional": true
-    },
     "@aws-sdk/client-s3": {
-      "optional": true
-    },
-    "@aws-sdk/client-sqs": {
-      "optional": true
-    },
-    "@aws-sdk/lib-dynamodb": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@aws-sdk/client-cloudwatch-logs": "catalog:aws",
-    "@aws-sdk/client-dynamodb": "catalog:aws",
-    "@aws-sdk/client-eventbridge": "catalog:aws",
     "@aws-sdk/client-s3": "catalog:aws",
-    "@aws-sdk/client-sqs": "catalog:aws",
-    "@aws-sdk/lib-dynamodb": "catalog:aws",
     "@tsconfig/node22": "catalog:tools",
     "@types/jest": "catalog:test",
     "@types/node": "catalog:tools",

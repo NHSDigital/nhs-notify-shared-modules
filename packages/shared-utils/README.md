@@ -1,17 +1,18 @@
 # @nhsdigital/nhs-notify-shared-utils
 
 This package contains **generic** technical helpers (logging, Lambda
-helpers, integration test support) for use across bounded contexts.
+helpers) for use across bounded contexts. Test-only helpers (AWS client
+factories, polling, event-factory fixtures) are intentionally not included —
+they are boilerplate enough to copy into each repo's integration tests rather
+than maintain as a shared dependency.
 
 ## Exports
 
-| Subpath                                                   | Purpose                                                                                    | Docs                                       |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------ |
-| `./logger`                                                | Generic pino-backed `Logger` with redaction support                                        | [logger](src/logger/README.md)             |
-| `./lambda-utils`                                          | `requireEnv`, `MissingEnvironmentVariableError`, `formatZodIssues`, SQS attribute readers  | [lambda-utils](src/lambda-utils/README.md) |
-| `./test-support`                                          | Low level Integration test-support utilities - deployment/naming, polling, event factories | [test-support](src/test-support/README.md) |
-| `./test-support/{cloudwatch,sqs,s3,dynamodb,eventbridge}` | Per-service AWS client factories and helpers                                               | [test-support](src/test-support/README.md) |
-| `./s3-json`                                               | S3 get-JSON-and-validate helper                                                            | [s3-json](src/s3-json/README.md)           |
+| Subpath           | Purpose                                                            | Docs                                       |
+| ------------------ | ------------------------------------------------------------------ | ------------------------------------------- |
+| `./logger`         | Generic pino-backed `Logger` with redaction support                 | [logger](src/logger/README.md)             |
+| `./lambda-utils`   | `parseEnv`, `EnvValidationError`, `formatZodIssues`, SQS attribute readers | [lambda-utils](src/lambda-utils/README.md) |
+| `./s3-json`        | S3 get-JSON-and-validate helper                                     | [s3-json](src/s3-json/README.md)           |
 
 ## Scripts
 
@@ -25,6 +26,8 @@ pnpm run verify      # lint && typecheck && test:unit
 
 ## Release
 
-Publishing is tag-driven. Pushing a tag of the form `shared-utils-vX.Y.Z`
-triggers the publish workflow, which requires an equivalent version bump to
-`version` in `package.json`.
+Publishing is tag-driven: pushing a tag of the form `shared-utils-vX.Y.Z`
+triggers the publish workflow. Tags are created automatically by the
+"Tag shared-utils release" workflow once CI/CD completes successfully on
+`main`, from whatever `version` is set in `package.json` — so bumping the
+version in a merged PR is the only manual step required to release.
