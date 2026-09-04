@@ -261,8 +261,8 @@ importers:
         specifier: ^9.0.2
         version: 9.0.3
       qs:
-        specifier: ^6.14.1
-        version: 6.15.3
+        specifier: ^6.16.0
+        version: 6.16.0
       utils:
         specifier: workspace:*
         version: link:../../utils
@@ -2432,6 +2432,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -3564,8 +3565,8 @@ packages:
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
-  qs@6.15.3:
-    resolution: {integrity: sha512-O9gl3zCl5h5blw1KGUzQKhA5oUXSl8rwUIM5o0S3nCXMliSvy5Dzx7/DJcI+SwgICv+IneSZwhBh1oSyEHA71A==}
+  qs@6.16.0:
+    resolution: {integrity: sha512-h6fhOIaRrID2CbEY2fqs+7t+UXZo+MLAnU5gRIq85uFtdiUPCdsApMlHhXogKVM4HM2DVbIjGNTTYH2OcmP1vA==}
     engines: {node: '>=0.6'}
 
   querystringify@2.2.0:
@@ -8169,7 +8170,7 @@ snapshots:
 
   pure-rand@6.1.0: {}
 
-  qs@6.15.3:
+  qs@6.16.0:
     dependencies:
       es-define-property: 1.0.1
       side-channel: 1.1.1
@@ -8998,7 +8999,7 @@ time:
   jose@5.10.0: '2025-02-17T15:07:27.617Z'
   jsonwebtoken@9.0.3: '2025-12-04T10:27:57.257Z'
   lcov-result-merger@5.0.1: '2024-05-17T08:48:24.166Z'
-  qs@6.15.3: '2026-06-24T20:03:49.752Z'
+  qs@6.16.0: '2026-08-29T23:50:15.803Z'
   semver@7.8.5: '2026-06-19T18:32:48.972Z'
   ts-jest@29.4.12: '2026-07-22T07:47:19.343Z'
   ts-node@10.9.2: '2023-12-08T12:04:46.154Z'
