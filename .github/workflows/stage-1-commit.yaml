@@ -166,6 +166,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      pull-requests: read
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
@@ -185,6 +186,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      pull-requests: read
     timeout-minutes: 2
     steps:
       - name: "Checkout code"
