@@ -226,6 +226,23 @@ variable "vpc_config" {
   default     = null
 }
 
+variable "replace_security_groups_on_destroy" {
+  type        = bool
+  description = "Whether to swap Lambda security groups before destroy to reduce ENI-related SG deletion delays"
+  default     = false
+}
+
+variable "replacement_security_group_ids" {
+  type        = list(string)
+  description = "Security group IDs to use for replacement when replace_security_groups_on_destroy is enabled"
+  default     = []
+
+  validation {
+    condition     = !var.replace_security_groups_on_destroy || length(var.replacement_security_group_ids) > 0
+    error_message = "replacement_security_group_ids must be set when replace_security_groups_on_destroy is true."
+  }
+}
+
 variable "enable_dlq_and_notifications" {
   type        = bool
   description = "Create an SQS Queue and on-failure destination to be used as the Lambda's Dead Letter Queue and notifications"

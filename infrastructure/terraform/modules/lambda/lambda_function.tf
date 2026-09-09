@@ -67,6 +67,9 @@ resource "aws_lambda_function" "main" {
     }
   }
 
+  replace_security_groups_on_destroy = var.replace_security_groups_on_destroy
+  replacement_security_group_ids     = var.replace_security_groups_on_destroy ? var.replacement_security_group_ids : null
+
   tags = merge(
     local.default_tags,
     {
