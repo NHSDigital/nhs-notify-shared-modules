@@ -27,13 +27,13 @@ export type ResolutionFailure = {
 };
 
 export type RemovableResult = {
-  status: "removable";
+  status: 'removable';
   chain: OverrideChain;
   resolved: Record<string, string>;
 };
 
 export type SimplifiableResult = {
-  status: "simplifiable";
+  status: 'simplifiable';
   chain: OverrideChain;
   remove: Override[];
   keep: Override[];
@@ -41,15 +41,13 @@ export type SimplifiableResult = {
 };
 
 export type NeededResult = {
-  status: "needed";
+  status: 'needed';
   chain: OverrideChain;
   failures: ResolutionFailure[];
 };
 
 export type ChainCheckResult =
-  | RemovableResult
-  | SimplifiableResult
-  | NeededResult;
+  RemovableResult | SimplifiableResult | NeededResult;
 
 export type OverrideReport = {
   generatedAt: string;

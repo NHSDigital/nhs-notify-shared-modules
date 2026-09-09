@@ -79,6 +79,12 @@ variable "sns_success_logging_sample_percent" {
   default     = 0
 }
 
+variable "eventsub_shared_account_ids" {
+  type        = list(string)
+  description = "List of shared infra account IDs allowed to publish to the SNS topic."
+  default     = []
+}
+
 ##
 # CloudWatch Anomaly Detection Variables
 ##
@@ -140,12 +146,6 @@ variable "force_destroy" {
   type        = bool
   description = "When enabled will force destroy event-cache S3 bucket"
   default     = false
-}
-
-variable "shared_infra_account_id" {
-  type        = string
-  description = "The AWS Account ID of the shared infrastructure account"
-  default     = "000000000000"
 }
 
 variable "glue_role_arn" {

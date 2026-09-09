@@ -1,12 +1,12 @@
-import { minVersion } from "semver";
+import { minVersion } from 'semver';
 
-import type { Override, OverrideChain } from "src/types";
+import type { Override, OverrideChain } from 'src/types';
 
 const stripVersionSelector = (
   raw: string,
 ): { name: string; versionSelector?: string } => {
-  const startSearch = raw.startsWith("@") ? 1 : 0;
-  const atIndex = raw.indexOf("@", startSearch);
+  const startSearch = raw.startsWith('@') ? 1 : 0;
+  const atIndex = raw.indexOf('@', startSearch);
   if (atIndex === -1) {
     return { name: raw };
   }
@@ -19,7 +19,7 @@ const stripVersionSelector = (
 const parseKey = (
   key: string,
 ): { parent?: string; package: string; versionSelector?: string } => {
-  const separatorIndex = key.lastIndexOf(">");
+  const separatorIndex = key.lastIndexOf('>');
   if (separatorIndex === -1) {
     const { name, versionSelector } = stripVersionSelector(key);
     return { package: name, versionSelector };
@@ -36,15 +36,15 @@ const parseKey = (
 };
 
 const NON_EVALUABLE_PREFIXES = [
-  "npm:",
-  "link:",
-  "file:",
-  "workspace:",
-  "catalog:",
+  'npm:',
+  'link:',
+  'file:',
+  'workspace:',
+  'catalog:',
 ];
 
 const isEvaluableSpec = (versionSpec: string): boolean => {
-  if (versionSpec === "-" || versionSpec.startsWith("$")) {
+  if (versionSpec === '-' || versionSpec.startsWith('$')) {
     return false;
   }
   return !NON_EVALUABLE_PREFIXES.some((prefix) =>
@@ -96,11 +96,7 @@ export const buildChains = (overrides: Override[]): OverrideChain[] => {
   const visited = new Set<string>();
   const chains: OverrideChain[] = [];
 
-  for (const override of overrides) {
-    if (visited.has(override.key)) {
-      continue;
-    }
-
+  for (const override of overrides.filter((o) => !visited.has(o.key))) {
     let root = override;
     const findParentOf = (child: Override): Override | undefined =>
       overrides.find((o) => o.package === child.parent);
@@ -119,7 +115,7 @@ export const buildChains = (overrides: Override[]): OverrideChain[] => {
     }
 
     chains.push({
-      id: chainOverrides.map((o) => o.key).join(" → "),
+      id: chainOverrides.map((o) => o.key).join(' → '),
       overrides: chainOverrides,
     });
   }

@@ -16,6 +16,16 @@ output "sqs_queue" {
   }
 }
 
+output "sqs_dlq_messages_alarm_name" {
+  description = "The name of the CloudWatch alarm for messages in the EventPub dead-letter queue"
+  value       = module.sqs_queue.sqs_dlq_messages_alarm_name
+}
+
+output "sqs_queue_oldest_message_alarm_name" {
+  description = "The name of the CloudWatch alarm for oldest visible message age in the EventPub queue"
+  value       = module.sqs_queue.sqs_queue_oldest_message_alarm_name
+}
+
 output "s3_bucket_event_cache" {
   description = "S3 Bucket ARN and Name for event cache"
   value = var.enable_event_cache ? {

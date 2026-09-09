@@ -8,7 +8,7 @@ include scripts/init.mk
 # Example CI/CD targets are: dependencies, build, publish, deploy, clean, etc.
 
 dependencies: # Install dependencies needed to build and test the project @Pipeline
-	# TODO: Implement installation of your project dependencies
+	pnpm install
 
 build: # Build the project artefact @Pipeline
 	(cd docs && make build)
@@ -21,15 +21,17 @@ deploy: # Deploy the project artefact to the target environment @Pipeline
 
 clean:: # Clean-up project resources (main) @Operations
 	rm -f .version
+	pnpm run clean
 	# TODO: Implement project resources clean-up step
 
-config:: _install-dependencies version # Configure development environment (main) @Configuration
+config:: _install-dependencies version dependencies # Configure development environment (main) @Configuration
 	(cd docs && make install)
 
 version:
 	rm -f .version
 	make version-create-effective-file dir=.
 	echo "{ \"schemaVersion\": 1, \"label\": \"version\", \"message\": \"$$(head -n 1 .version 2> /dev/null || echo unknown)\", \"color\": \"orange\" }" > version.json
+
 # ==============================================================================
 
 ${VERBOSE}.SILENT: \

@@ -1,97 +1,97 @@
-import path from "node:path";
+import path from 'node:path';
 
-import type { ChainCheckResult, Override, OverrideReport } from "src/types";
+import type { ChainCheckResult, Override, OverrideReport } from 'src/types';
 
 const summariseResult = (result: ChainCheckResult): string => {
   const header = `Chain: ${result.chain.id}`;
 
-  if (result.status === "removable") {
+  if (result.status === 'removable') {
     const resolved = Object.entries(result.resolved)
       .map(([key, version]) => `  - ${key}: resolves to ${version}`)
-      .join("\n");
+      .join('\n');
     return `${header}\n  Status: REMOVABLE — entire chain can be deleted\n${resolved}`;
   }
 
-  if (result.status === "simplifiable") {
-    const remove = result.remove.map((o) => `    - ${o.key}`).join("\n");
-    const keep = result.keep.map((o) => `    - ${o.key}`).join("\n");
+  if (result.status === 'simplifiable') {
+    const remove = result.remove.map((o) => `    - ${o.key}`).join('\n');
+    const keep = result.keep.map((o) => `    - ${o.key}`).join('\n');
     return `${header}\n  Status: SIMPLIFIABLE\n  Remove:\n${remove}\n  Keep:\n${keep}`;
   }
 
   const failures = result.failures
     .map((f) => `    - ${f.override.key}: ${f.reason}`)
-    .join("\n");
+    .join('\n');
   return `${header}\n  Status: STILL NEEDED\n${failures}`;
 };
 
 export const renderHumanSummary = (report: OverrideReport): string => {
   if (report.results.length === 0) {
-    return "No overrides found in pnpm-workspace.yaml.";
+    return 'No overrides found in pnpm-workspace.yaml.';
   }
-  const sections = report.results.map((r) => summariseResult(r)).join("\n\n");
+  const sections = report.results.map((r) => summariseResult(r)).join('\n\n');
   const footer = report.hasChanges
-    ? "\nActionable findings present — see results above."
-    : "\nNo actionable findings — all overrides are still required.";
+    ? '\nActionable findings present — see results above.'
+    : '\nNo actionable findings — all overrides are still required.';
   return `${sections}\n${footer}`;
 };
 
 const renderResultMarkdown = (result: ChainCheckResult): string => {
-  if (result.status === "removable") {
+  if (result.status === 'removable') {
     const lines = result.chain.overrides.map(
       (o) =>
-        `- \`${o.key}\` — resolves to \`${result.resolved[o.key] ?? "?"}\` (required \`${o.versionSpec}\`)`,
+        `- \`${o.key}\` — resolves to \`${result.resolved[o.key] ?? '?'}\` (required \`${o.versionSpec}\`)`,
     );
-    return `### Removable: ${result.chain.id}\n\nThe entire chain is no longer required. Remove:\n\n${lines.join("\n")}`;
+    return `### Removable: ${result.chain.id}\n\nThe entire chain is no longer required. Remove:\n\n${lines.join('\n')}`;
   }
 
-  if (result.status === "simplifiable") {
-    const removeLines = result.remove.map((o) => `- \`${o.key}\``).join("\n");
-    const keepLines = result.keep.map((o) => `- \`${o.key}\``).join("\n");
+  if (result.status === 'simplifiable') {
+    const removeLines = result.remove.map((o) => `- \`${o.key}\``).join('\n');
+    const keepLines = result.keep.map((o) => `- \`${o.key}\``).join('\n');
     return `### Simplifiable: ${result.chain.id}\n\nRemove:\n\n${removeLines}\n\nKeep:\n\n${keepLines}`;
   }
 
   const failures = result.failures
     .map((f) => `- \`${f.override.key}\` — ${f.reason}`)
-    .join("\n");
+    .join('\n');
   return `### Still needed: ${result.chain.id}\n\n${failures}`;
 };
 
 export const renderPrBody = (report: OverrideReport): string => {
-  const actionable = report.results.filter((r) => r.status !== "needed");
-  const stillNeeded = report.results.filter((r) => r.status === "needed");
+  const actionable = report.results.filter((r) => r.status !== 'needed');
+  const stillNeeded = report.results.filter((r) => r.status === 'needed');
 
   const summary = [
-    "## Automated pnpm override review",
-    "",
-    "This PR removes or simplifies `pnpm.overrides` entries in `pnpm-workspace.yaml` that are no longer required to mitigate transitive vulnerabilities. Each change has been verified by removing the override and confirming the dependency still resolves to a safe version via `pnpm update --lockfile-only`.",
-    "",
+    '## Automated pnpm override review',
+    '',
+    'This PR removes or simplifies `pnpm.overrides` entries in `pnpm-workspace.yaml` that are no longer required to mitigate transitive vulnerabilities. Each change has been verified by removing the override and confirming the dependency still resolves to a safe version via `pnpm update --lockfile-only`.',
+    '',
   ];
 
   if (actionable.length > 0) {
-    summary.push("## Changes", "");
+    summary.push('## Changes', '');
     for (const result of actionable) {
-      summary.push(renderResultMarkdown(result), "");
+      summary.push(renderResultMarkdown(result), '');
     }
   }
 
   if (stillNeeded.length > 0) {
-    summary.push("## Overrides still required", "");
+    summary.push('## Overrides still required', '');
     for (const result of stillNeeded) {
-      summary.push(renderResultMarkdown(result), "");
+      summary.push(renderResultMarkdown(result), '');
     }
   }
 
-  summary.push("---", "_Generated by `tools/check-overrides`._");
+  summary.push('---', '_Generated by `tools/check-overrides`._');
 
-  return summary.join("\n");
+  return summary.join('\n');
 };
 
 export const overridesToRemove = (results: ChainCheckResult[]): Override[] => {
   const removals: Override[] = [];
   for (const result of results) {
-    if (result.status === "removable") {
+    if (result.status === 'removable') {
       removals.push(...result.chain.overrides);
-    } else if (result.status === "simplifiable") {
+    } else if (result.status === 'simplifiable') {
       removals.push(...result.remove);
     }
   }
@@ -99,4 +99,4 @@ export const overridesToRemove = (results: ChainCheckResult[]): Override[] => {
 };
 
 export const reportPath = (projectDir: string): string =>
-  path.join(projectDir, ".tmp", "override-report.json");
+  path.join(projectDir, '.tmp', 'override-report.json');

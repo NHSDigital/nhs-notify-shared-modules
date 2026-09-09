@@ -4,7 +4,7 @@
   "description": "AWS Lambda function responsibile for validating and publishing events.",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest"
+    "test:unit": "jest"
   },
   "devDependencies": {
     "jest": "^29.7.0"

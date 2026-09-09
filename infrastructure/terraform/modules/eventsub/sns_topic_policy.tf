@@ -42,22 +42,24 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     }
   }
 
-  statement {
-    sid    = "AllowAllSNSActionsFromSharedAccount"
-    effect = "Allow"
-    actions = [
-      "SNS:Publish",
-    ]
+  dynamic "statement" {
+    for_each = length(var.eventsub_shared_account_ids) > 0 ? [1] : []
 
-    principals {
-      type = "AWS"
-      identifiers = [
-        "arn:aws:iam::${var.shared_infra_account_id}:root"
+    content {
+      sid    = "AllowAllSNSActionsFromSharedAccount"
+      effect = "Allow"
+      actions = [
+        "SNS:Publish",
+      ]
+
+      principals {
+        type        = "AWS"
+        identifiers = [for account_id in var.eventsub_shared_account_ids : "arn:aws:iam::${account_id}:root"]
+      }
+
+      resources = [
+        aws_sns_topic.main.arn,
       ]
     }
-
-    resources = [
-      aws_sns_topic.main.arn,
-    ]
   }
 }

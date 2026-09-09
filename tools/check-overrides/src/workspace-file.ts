@@ -1,9 +1,9 @@
-import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
-import { parseDocument } from "yaml";
+import { parseDocument } from 'yaml';
 
-const WORKSPACE_FILE = "pnpm-workspace.yaml";
+const WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
 export const workspaceFilePath = (projectDir: string): string =>
   path.join(projectDir, WORKSPACE_FILE);
@@ -11,14 +11,14 @@ export const workspaceFilePath = (projectDir: string): string =>
 export const readWorkspaceOverrides = async (
   projectDir: string,
 ): Promise<Record<string, string>> => {
-  const content = await readFile(workspaceFilePath(projectDir), "utf8");
+  const content = await readFile(workspaceFilePath(projectDir), 'utf8');
   const doc = parseDocument(content);
-  const overrides = doc.get("overrides");
+  const overrides = doc.get('overrides');
   if (!overrides) {
     return {};
   }
   const overridesJs = (overrides as { toJSON: () => unknown }).toJSON();
-  if (!overridesJs || typeof overridesJs !== "object") {
+  if (!overridesJs || typeof overridesJs !== 'object') {
     return {};
   }
   return overridesJs as Record<string, string>;
@@ -29,7 +29,7 @@ export const removeOverridesFromYaml = (
   keysToRemove: string[],
 ): string => {
   const doc = parseDocument(yamlContent);
-  const overrides = doc.get("overrides");
+  const overrides = doc.get('overrides');
   if (!overrides) {
     return yamlContent;
   }
@@ -39,9 +39,9 @@ export const removeOverridesFromYaml = (
   const remaining = (overrides as { toJSON: () => unknown }).toJSON();
   if (
     !remaining ||
-    (typeof remaining === "object" && Object.keys(remaining).length === 0)
+    (typeof remaining === 'object' && Object.keys(remaining).length === 0)
   ) {
-    doc.delete("overrides");
+    doc.delete('overrides');
   }
   return doc.toString();
 };
@@ -50,5 +50,5 @@ export const writeWorkspaceFile = async (
   projectDir: string,
   content: string,
 ): Promise<void> => {
-  await writeFile(workspaceFilePath(projectDir), content, "utf8");
+  await writeFile(workspaceFilePath(projectDir), content, 'utf8');
 };
