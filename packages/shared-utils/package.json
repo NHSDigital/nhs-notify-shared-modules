@@ -1,0 +1,69 @@
+{
+  "name": "@nhsdigital/nhs-notify-shared-utils",
+  "version": "0.1.0",
+  "description": "Generic technical utilities (logging, lambda helpers) shared across NHS Notify bounded contexts",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./lambda-utils": {
+      "types": "./dist/lambda-utils/index.d.ts",
+      "source": "./src/lambda-utils/index.ts",
+      "default": "./dist/lambda-utils/index.js"
+    },
+    "./logger": {
+      "types": "./dist/logger/index.d.ts",
+      "source": "./src/logger/index.ts",
+      "default": "./dist/logger/index.js"
+    },
+    "./s3-json": {
+      "types": "./dist/s3-json/index.d.ts",
+      "source": "./src/s3-json/index.ts",
+      "default": "./dist/s3-json/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test:unit": "jest",
+    "typecheck": "tsc --noEmit",
+    "verify": "pnpm run lint && pnpm run typecheck && pnpm run test:unit"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-s3": "catalog:aws",
+    "pino": "catalog:runtime"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "catalog:aws",
+    "@tsconfig/node22": "catalog:tools",
+    "@types/jest": "catalog:test",
+    "@types/node": "catalog:tools",
+    "eslint": "catalog:lint",
+    "jest": "catalog:test",
+    "pino": "catalog:runtime",
+    "ts-jest": "catalog:test",
+    "typescript": "catalog:tools"
+  },
+  "engines": {
+    "node": ">=22.15.1"
+  },
+  "private": false
+}
