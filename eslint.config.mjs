@@ -68,6 +68,7 @@ export default defineConfig([
           project: [
             'src/lambdas/*/tsconfig.json',
             'src/utils/tsconfig.json',
+            'packages/*/tsconfig.json',
           ],
         }),
       ],
@@ -217,7 +218,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/utils/**', '**/jest.config.ts'],
+    files: ['src/utils/**', '**/jest.config.ts', 'packages/**'],
     rules: {
       'no-relative-import-paths/no-relative-import-paths': 0,
       'import-x/no-relative-packages': 0,

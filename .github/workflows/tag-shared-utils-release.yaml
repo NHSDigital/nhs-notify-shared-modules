@@ -1,0 +1,51 @@
+name: "Tag shared-utils release"
+
+on:
+  workflow_run:
+    workflows: ["1. CI/CD pull request"]
+    types: ["completed"]
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  tag-release:
+    name: "Tag @nhsdigital/nhs-notify-shared-utils release"
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: "Set CI/CD variables"
+        id: variables
+        run: |
+          echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> "$GITHUB_OUTPUT"
+
+      - name: "Use Node.js"
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: ${{ steps.variables.outputs.nodejs_version }}
+
+      - name: "Tag release if not already tagged"
+        run: |
+          PKG_VERSION="$(node -p "require('./packages/shared-utils/package.json').version")"
+          TAG="shared-utils-v${PKG_VERSION}"
+
+          if git rev-parse -q --verify "refs/tags/${TAG}" > /dev/null; then
+            echo "Tag ${TAG} already exists, skipping."
+            exit 0
+          fi
+
+          echo "Creating tag ${TAG} at ${{ github.event.workflow_run.head_sha }}"
+          git tag "${TAG}" "${{ github.event.workflow_run.head_sha }}"
+          git push origin "${TAG}"

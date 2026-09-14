@@ -1,4 +1,5 @@
 packages:
+  - "packages/*"
   - "src/lambdas/apim-access-token-refresher"
   - "src/lambdas/apim-key-generator"
   - "src/utils"
@@ -15,6 +16,13 @@ allowBuilds:
 blockExoticSubdeps: true
 
 catalogs:
+  aws:
+    "@aws-sdk/client-cloudwatch-logs": "^3.1113.0"
+    "@aws-sdk/client-dynamodb": "^3.1113.0"
+    "@aws-sdk/client-eventbridge": "^3.1113.0"
+    "@aws-sdk/client-s3": "^3.1113.0"
+    "@aws-sdk/client-sqs": "^3.1113.0"
+    "@aws-sdk/lib-dynamodb": "^3.1113.0"
   build:
     turbo: "^2.9.6"
   lint:
@@ -41,6 +49,8 @@ catalogs:
     eslint-plugin-sort-destructure-keys: "^2.0.0"
     eslint-plugin-unicorn: "^61.0.2"
     typescript-eslint: "^8.46.1"
+  runtime:
+    pino: "^10.3.1"
   test:
     "@types/jest": "^29.5.0"
     "@types/mock-fs": "^4.13.4"
@@ -64,6 +74,13 @@ catalogs:
 
 engineStrict: true
 minimumReleaseAge: 2880
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-cloudwatch-logs@3.1113.0'
+  - '@aws-sdk/client-dynamodb@3.1113.0'
+  - '@aws-sdk/client-eventbridge@3.1113.0'
+  - '@aws-sdk/client-s3@3.1113.0'
+  - '@aws-sdk/client-sqs@3.1113.0'
+  - '@aws-sdk/lib-dynamodb@3.1113.0'
 nodeOptions: "${NODE_OPTIONS:- } --experimental-vm-modules"
 
 overrides:

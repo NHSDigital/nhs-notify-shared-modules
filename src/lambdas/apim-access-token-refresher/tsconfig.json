@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src/",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "*": ["./src/*"]
+    },
+    "types": ["jest", "node"]
   },
   "exclude": [
     "node_modules"

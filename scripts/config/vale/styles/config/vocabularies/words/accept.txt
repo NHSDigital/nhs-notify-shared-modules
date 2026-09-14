@@ -1,3 +1,4 @@
+[Aa]sync
 [Bb]undler
 Bitwarden
 bot
@@ -19,6 +20,7 @@ GitHub
 Gitleaks
 Grype
 idempotence
+[Ii]njectable
 Jira
 lockfile
 markdownlint
@@ -26,16 +28,21 @@ npm
 OAuth
 Octokit
 onboarding
+[Pp]ino
 Podman
 [Pp]npm
 Python
 rawContent
 relative_url
 [Rr]epo
+[Rr]ethrown
 sed
 simplifiable
+[Ss]ubpath
 Syft
 toolchain
 Trivy
 Trufflehog
 [Tt]erraform
+[Vv]alidator
+[Zz]od
