@@ -6,13 +6,13 @@
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_logging_bucket"></a> [access\_logging\_bucket](#input\_access\_logging\_bucket) | S3 Access logging bucket name. | `string` | `""` | no |
 | <a name="input_additional_policies_for_event_cache_bucket"></a> [additional\_policies\_for\_event\_cache\_bucket](#input\_additional\_policies\_for\_event\_cache\_bucket) | A list of JSON policies to use to build the bucket policy | `list(string)` | `[]` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The AWS Account ID (numeric) | `string` | n/a | yes |
@@ -45,7 +45,7 @@
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_publishing_anomaly_alarm"></a> [publishing\_anomaly\_alarm](#output\_publishing\_anomaly\_alarm) | CloudWatch anomaly detection alarm details for SNS publishing |
 | <a name="output_s3_bucket_event_cache"></a> [s3\_bucket\_event\_cache](#output\_s3\_bucket\_event\_cache) | S3 Bucket ARN and Name for event cache |
 | <a name="output_sns_topic"></a> [sns\_topic](#output\_sns\_topic) | SNS Topic ARN and Name |

@@ -4,4 +4,6 @@ resource "aws_iam_policy" "main" {
   name        = local.csi
   description = "Policy created from the data object supplied through the modules attributes"
   policy      = var.iam_policy_document.body
+
+  tags = local.default_tags
 }
