@@ -19,6 +19,7 @@ permissions:
   id-token: write
   contents: write
   packages: write
+  pull-requests: read
 
 jobs:
   metadata:
@@ -91,8 +92,6 @@ jobs:
     name: "Commit stage"
     needs: [metadata]
     uses: ./.github/workflows/stage-1-commit.yaml
-    permissions:
-      pull-requests: read
     with:
       build_datetime: "${{ needs.metadata.outputs.build_datetime }}"
       build_timestamp: "${{ needs.metadata.outputs.build_timestamp }}"
