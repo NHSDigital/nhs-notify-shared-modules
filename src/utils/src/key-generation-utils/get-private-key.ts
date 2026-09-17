@@ -10,7 +10,7 @@ import {
 const PRIVATE_KEY_REGEX = /privatekey_(\d{8})_(.+)\.pem/;
 
 const getPrivateKeyDate = (name: string) =>
-  name.match(PRIVATE_KEY_REGEX)?.[1] ?? '';
+  PRIVATE_KEY_REGEX.exec(name)?.[1] ?? '';
 
 const validateParamName = (name: string) => {
   // eslint-disable-next-line sonarjs/prefer-regexp-exec
