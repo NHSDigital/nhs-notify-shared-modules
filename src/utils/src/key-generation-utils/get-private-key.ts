@@ -9,9 +9,11 @@ import {
 
 const PRIVATE_KEY_REGEX = /privatekey_(\d{8})_(.+)\.pem/;
 
+const getPrivateKeyDate = (name: string) =>
+  PRIVATE_KEY_REGEX.exec(name)?.[1] ?? '';
+
 const validateParamName = (name: string) => {
-  // eslint-disable-next-line sonarjs/prefer-regexp-exec
-  const nameComponents = name?.match(PRIVATE_KEY_REGEX);
+  const nameComponents = PRIVATE_KEY_REGEX.exec(name);
   logger.info({ description: 'validating parameter name', parameter: name });
   // return true if regex matches and <date> component parses as a yyyyMMdd format
   return (
@@ -37,19 +39,19 @@ const getValidPrivateKey = async (ssmPath: string) => {
   // generated private key may not be valid if APIM's cache has not
   // been refreshed
   const [youngestKey, secondYoungestKey] = keyList.toSorted((a, b) => {
-    const aCreatedDate = Number(a.Name.split('_')[1]);
-    const bCreatedDate = Number(b.Name.split('_')[1]);
+    const aCreatedDate = Number(getPrivateKeyDate(a.Name));
+    const bCreatedDate = Number(getPrivateKeyDate(b.Name));
     return bCreatedDate - aCreatedDate;
   });
 
   if (!secondYoungestKey) {
     logger.info({
-      description: `Selecting youngest private key: ${youngestKey.Name}`,
+      description: `Only one private key found: ${youngestKey.Name}`,
     });
     return youngestKey;
   }
 
-  const youngestKeyCreatedDate = youngestKey.Name.split('_')[1];
+  const youngestKeyCreatedDate = getPrivateKeyDate(youngestKey.Name);
 
   const todaysDateUnformatted = new Date();
   const todaysDate = format(todaysDateUnformatted, 'yyyyMMdd');
