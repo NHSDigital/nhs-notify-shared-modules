@@ -13,8 +13,7 @@ const getPrivateKeyDate = (name: string) =>
   PRIVATE_KEY_REGEX.exec(name)?.[1] ?? '';
 
 const validateParamName = (name: string) => {
-  // eslint-disable-next-line sonarjs/prefer-regexp-exec
-  const nameComponents = name?.match(PRIVATE_KEY_REGEX);
+  const nameComponents = PRIVATE_KEY_REGEX.exec(name);
   logger.info({ description: 'validating parameter name', parameter: name });
   // return true if regex matches and <date> component parses as a yyyyMMdd format
   return (
