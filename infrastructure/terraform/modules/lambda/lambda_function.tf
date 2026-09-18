@@ -1,4 +1,6 @@
 resource "aws_lambda_function" "main" {
+  depends_on = [aws_iam_role_policy_attachment.main]
+
   description   = var.description
   function_name = local.csi
   role          = aws_iam_role.main.arn
