@@ -72,7 +72,7 @@ describe('getPrivateKey', () => {
   it('gets private key from ssm', async () => {
     (parameterStore.getAllParameters as jest.Mock).mockReturnValue([
       {
-        Name: `privatekey_20201105_${testKeyId1}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20201105_${testKeyId1}.pem`,
         Value: testPrivateKey1,
       },
     ]);
@@ -93,15 +93,15 @@ describe('getPrivateKey', () => {
 
     (parameterStore.getAllParameters as jest.Mock).mockReturnValue([
       {
-        Name: `privatekey_${todaysDate}_${testKeyId1}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_${todaysDate}_${testKeyId1}.pem`,
         Value: testPrivateKey1,
       },
       {
-        Name: `privatekey_20201203_${testKeyId2}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20201203_${testKeyId2}.pem`,
         Value: testPrivateKey2,
       },
       {
-        Name: `privatekey_20211103_${testKeyId3}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20211103_${testKeyId3}.pem`,
         Value: testPrivateKey3,
       },
     ]);
@@ -124,15 +124,15 @@ describe('getPrivateKey', () => {
 
     (parameterStore.getAllParameters as jest.Mock).mockReturnValue([
       {
-        Name: `privatekey_${yesterdaysDate}_${testKeyId1}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_${yesterdaysDate}_${testKeyId1}.pem`,
         Value: testPrivateKey1,
       },
       {
-        Name: `privatekey_20201103_${testKeyId2}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20201103_${testKeyId2}.pem`,
         Value: testPrivateKey2,
       },
       {
-        Name: `privatekey_20211103_${testKeyId3}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20211103_${testKeyId3}.pem`,
         Value: testPrivateKey3,
       },
     ]);
@@ -150,15 +150,15 @@ describe('getPrivateKey', () => {
   it('selects youngest key when more than one key exists and the youngest key wasnt generated today or yesterday', async () => {
     (parameterStore.getAllParameters as jest.Mock).mockReturnValue([
       {
-        Name: `privatekey_20221103_${testKeyId1}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20221103_${testKeyId1}.pem`,
         Value: testPrivateKey1,
       },
       {
-        Name: `privatekey_20201103_${testKeyId2}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20201103_${testKeyId2}.pem`,
         Value: testPrivateKey2,
       },
       {
-        Name: `privatekey_20211103_${testKeyId3}.pem`,
+        Name: `/test_component/main/apim/private_key/privatekey_20211103_${testKeyId3}.pem`,
         Value: testPrivateKey3,
       },
     ]);
