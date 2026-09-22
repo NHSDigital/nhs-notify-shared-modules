@@ -17,7 +17,7 @@ pnpm release-check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-
 Or directly:
 
 ```bash
-pnpm --filter @nhsdigital/release-check run check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
+pnpm --filter @nhsdigital/nhs-notify-release-check run check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
 ```
 
 ## Required environment
@@ -36,11 +36,11 @@ pnpm --filter @nhsdigital/release-check run check -- --repo ../nhs-notify-client
 
 ## Publishing
 
-The package is configured for GitHub Packages as `@nhsdigital/release-check`.
+The package is configured for GitHub Packages as `@nhsdigital/nhs-notify-release-check`.
 
 ```bash
-pnpm --filter @nhsdigital/release-check pack
-pnpm --filter @nhsdigital/release-check publish --no-git-checks
+pnpm --filter @nhsdigital/nhs-notify-release-check pack
+pnpm --filter @nhsdigital/nhs-notify-release-check publish --no-git-checks
 ```
 
 ## Consuming from another repository
@@ -54,6 +54,6 @@ Add this to the consuming repository's `.npmrc`:
 Then install and use the CLI:
 
 ```bash
-pnpm add -D @nhsdigital/release-check
+pnpm add -D @nhsdigital/nhs-notify-release-check
 pnpm release-check --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
 ```

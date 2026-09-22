@@ -13,7 +13,7 @@
     "#src/*": "./dist/*.js"
   },
   "main": "./dist/index.js",
-  "name": "@nhsdigital/release-check",
+  "name": "@nhsdigital/nhs-notify-release-check",
   "publishConfig": {
     "access": "restricted",
     "registry": "https://npm.pkg.github.com"

@@ -34,7 +34,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          published_version=$(npm view @nhsdigital/release-check --json 2>/dev/null | jq -r '.["dist-tags"].latest // "null"')
+          published_version=$(npm view @nhsdigital/nhs-notify-release-check --json 2>/dev/null | jq -r '.["dist-tags"].latest // "null"')
           echo "Published version: $published_version"
 
           local_version=$(jq -r '.version' tools/release-check/package.json)
@@ -77,9 +77,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate package
-        run: pnpm --filter @nhsdigital/release-check run typecheck && pnpm --filter @nhsdigital/release-check run test:unit
+        run: pnpm --filter @nhsdigital/nhs-notify-release-check run typecheck && pnpm --filter @nhsdigital/nhs-notify-release-check run test:unit
 
       - name: Publish package
-        run: pnpm --filter @nhsdigital/release-check publish --no-git-checks
+        run: pnpm --filter @nhsdigital/nhs-notify-release-check publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
