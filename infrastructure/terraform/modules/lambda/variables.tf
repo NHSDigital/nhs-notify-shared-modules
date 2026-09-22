@@ -390,7 +390,13 @@ variable "filter_pattern" {
 
 variable "log_destination_arn" {
   type        = string
-  description = "Destination ARN to use for the log subscription filter"
+  description = "Destination ARN to use for the log subscription filter to send logs to Splunk"
+  default     = ""
+}
+
+variable "odin_log_destination_arn" {
+  type        = string
+  description = "Destination ARN to use for the log subscription filter to send logs to Odin"
   default     = ""
 }
 
