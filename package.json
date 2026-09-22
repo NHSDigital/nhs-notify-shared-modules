@@ -42,6 +42,7 @@
     "clean": "pnpm -r run --if-present clean",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "release-check": "pnpm --filter @nhsdigital/release-check run check",
     "test:unit": "turbo run test:unit",
     "typecheck": "turbo run typecheck"
   },
