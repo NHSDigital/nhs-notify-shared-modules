@@ -8,6 +8,7 @@ resource "aws_lambda_function" "main" {
   publish       = true
   memory_size   = var.memory
   timeout       = var.timeout
+  architectures = [var.architecture]
 
   reserved_concurrent_executions = var.reserved_concurrent_executions
 

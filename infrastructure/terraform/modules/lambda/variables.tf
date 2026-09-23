@@ -100,6 +100,12 @@ variable "runtime" {
   }
 }
 
+variable "architecture" {
+  type        = string
+  description = "The architecture of the Lambda function (e.g., x86_64 or arm64 Graviton)"
+  default     = "arm64"
+}
+
 variable "package_type" {
   type        = string
   description = "Lambda package type: Zip or Image"
@@ -390,7 +396,13 @@ variable "filter_pattern" {
 
 variable "log_destination_arn" {
   type        = string
-  description = "Destination ARN to use for the log subscription filter"
+  description = "Destination ARN to use for the log subscription filter to send logs to Splunk"
+  default     = ""
+}
+
+variable "odin_log_destination_arn" {
+  type        = string
+  description = "Destination ARN to use for the log subscription filter to send logs to Odin"
   default     = ""
 }
 
