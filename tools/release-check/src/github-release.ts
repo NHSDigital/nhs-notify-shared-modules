@@ -1,6 +1,10 @@
 import { getOriginRemoteUrl, readTagAnnotation } from './git';
 
-import type { ReleaseNotes, ReleaseNotesSource } from './types';
+import type {
+  ReleaseNotes,
+  ReleaseNotesLookupSource,
+  ReleaseNotesSource,
+} from './types';
 
 const GITHUB_REMOTE_SSH_PATTERN = /^git@github\.com:([^/]+)\/(.+?)(?:\.git)?$/;
 const GITHUB_REMOTE_HTTPS_PATTERN =
@@ -130,6 +134,16 @@ const readTagReleaseNotes = (
   return null;
 };
 
+const mergeReleaseNoteSources = (
+  sources: ReleaseNotesLookupSource[],
+): ReleaseNotesLookupSource => {
+  const uniqueSources = [...new Set(sources)];
+  if (uniqueSources.length === 1) {
+    return uniqueSources[0];
+  }
+  return 'mixed';
+};
+
 export const readReleaseNotes = async (
   repoRoot: string,
   gitTag: string,
@@ -184,6 +198,38 @@ export const readReleaseNotes = async (
     source: 'none',
     text: null,
     warnings,
+  };
+};
+
+export const readReleaseNotesForTags = async (
+  repoRoot: string,
+  gitTags: string[],
+  source: ReleaseNotesSource,
+): Promise<ReleaseNotes> => {
+  if (gitTags.length === 1) {
+    return readReleaseNotes(repoRoot, gitTags[0], source);
+  }
+
+  const notesByTag = await Promise.all(
+    gitTags.map(async (gitTag) => ({
+      gitTag,
+      releaseNotes: await readReleaseNotes(repoRoot, gitTag, source),
+    })),
+  );
+
+  return {
+    issueKeys: [
+      ...new Set(
+        notesByTag.flatMap(({ releaseNotes }) => releaseNotes.issueKeys),
+      ),
+    ],
+    source: mergeReleaseNoteSources(
+      notesByTag.map(({ releaseNotes }) => releaseNotes.source),
+    ),
+    text: null,
+    warnings: notesByTag.flatMap(({ gitTag, releaseNotes }) =>
+      releaseNotes.warnings.map((warning) => `[${gitTag}] ${warning}`),
+    ),
   };
 };
 

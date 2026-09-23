@@ -1,4 +1,8 @@
-import { fetchJiraIssues, resolveJiraVersion } from '../jira';
+import {
+  fetchJiraIssues,
+  resolveJiraVersion,
+  resolveJiraVersions,
+} from '../jira';
 
 const mockFetch = jest.fn();
 
@@ -93,6 +97,52 @@ describe('resolveJiraVersion', () => {
     });
   });
 
+  it('resolves multiple versions from exact and wildcard selectors', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          id: 1,
+          name: 'client-config-0.1.0',
+          releaseDate: '2026-07-08',
+          released: true,
+        },
+        {
+          id: 2,
+          name: 'client-config-0.2.0',
+          releaseDate: '2026-08-08',
+          released: false,
+        },
+        {
+          id: 3,
+          name: 'other-release',
+          releaseDate: '2026-09-01',
+          released: false,
+        },
+      ],
+    });
+
+    await expect(
+      resolveJiraVersions('https://jira.example.com', 'CCM', [
+        'client-config-0.1.0',
+        'client-config-*',
+      ]),
+    ).resolves.toEqual([
+      {
+        id: '1',
+        name: 'client-config-0.1.0',
+        releaseDate: '2026-07-08',
+        released: true,
+      },
+      {
+        id: '2',
+        name: 'client-config-0.2.0',
+        releaseDate: '2026-08-08',
+        released: false,
+      },
+    ]);
+  });
+
   it('defaults missing release metadata from the version response', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
@@ -121,6 +171,21 @@ describe('resolveJiraVersion', () => {
     await expect(
       resolveJiraVersion('https://jira.example.com', 'CCM', 'missing'),
     ).rejects.toThrow('Could not find Jira version "missing" in project CCM.');
+  });
+
+  it('throws when the wildcard version selector matches nothing', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => [{ id: 1, name: 'older' }],
+    });
+
+    await expect(
+      resolveJiraVersions('https://jira.example.com', 'CCM', [
+        'client-config-*',
+      ]),
+    ).rejects.toThrow(
+      'Could not find Jira versions matching "client-config-*" in project CCM.',
+    );
   });
 
   it('throws when no Jira token is configured', async () => {
