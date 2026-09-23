@@ -23,13 +23,35 @@ describe('parseCliArgs', () => {
       ]),
     ).toEqual({
       repo: '../repo',
-      gitTag: '0.1.0',
-      jiraVersion: '71260',
+      gitTagSelectors: ['0.1.0'],
+      jiraVersionSelectors: ['71260'],
       jiraProject: 'ABC',
       jiraBaseUrl: 'https://jira.example.com',
       previousTag: '0.0.9',
       output: 'out.txt',
       releaseNotesSource: 'tag',
+    });
+  });
+
+  it('parses comma-separated multi-release selectors', () => {
+    expect(
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tags',
+        '0.1.0, v0.2.0 , v0.3.*',
+        '--jira-versions',
+        '71260, client-config-0.2.0 , client-config-*',
+      ]),
+    ).toEqual({
+      repo: '../repo',
+      gitTagSelectors: ['0.1.0', 'v0.2.0', 'v0.3.*'],
+      jiraVersionSelectors: ['71260', 'client-config-0.2.0', 'client-config-*'],
+      jiraProject: 'CCM',
+      jiraBaseUrl: 'https://nhsd-jira.digital.nhs.uk',
+      previousTag: undefined,
+      output: undefined,
+      releaseNotesSource: 'auto',
     });
   });
 
@@ -45,8 +67,8 @@ describe('parseCliArgs', () => {
       ]),
     ).toEqual({
       repo: '../repo',
-      gitTag: '0.1.0',
-      jiraVersion: '71260',
+      gitTagSelectors: ['0.1.0'],
+      jiraVersionSelectors: ['71260'],
       jiraProject: 'CCM',
       jiraBaseUrl: 'https://nhsd-jira.digital.nhs.uk',
       previousTag: undefined,
@@ -69,8 +91,8 @@ describe('parseCliArgs', () => {
       ]),
     ).toEqual({
       repo: '../repo',
-      gitTag: '0.1.0',
-      jiraVersion: '71260',
+      gitTagSelectors: ['0.1.0'],
+      jiraVersionSelectors: ['71260'],
       jiraProject: 'CCM',
       jiraBaseUrl: 'https://nhsd-jira.digital.nhs.uk',
       previousTag: undefined,
@@ -83,16 +105,61 @@ describe('parseCliArgs', () => {
     expect(() => parseCliArgs([])).toThrow('Missing required option --repo');
   });
 
-  it('throws when the git tag is missing', () => {
+  it('throws when the git selector is missing', () => {
     expect(() =>
       parseCliArgs(['--repo', '../repo', '--jira-version', '71260']),
-    ).toThrow('Missing required option --git-tag');
+    ).toThrow('Missing required option --git-tag or --git-tags');
   });
 
-  it('throws when the Jira version is missing', () => {
+  it('throws when the Jira selector is missing', () => {
     expect(() =>
       parseCliArgs(['--repo', '../repo', '--git-tag', '0.1.0']),
-    ).toThrow('Missing required option --jira-version');
+    ).toThrow('Missing required option --jira-version or --jira-versions');
+  });
+
+  it('throws when both single and multiple git selectors are provided', () => {
+    expect(() =>
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--git-tags',
+        '0.2.0',
+        '--jira-version',
+        '71260',
+      ]),
+    ).toThrow('Options --git-tag and --git-tags are mutually exclusive');
+  });
+
+  it('throws when both single and multiple Jira selectors are provided', () => {
+    expect(() =>
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--jira-versions',
+        '71261',
+      ]),
+    ).toThrow(
+      'Options --jira-version and --jira-versions are mutually exclusive',
+    );
+  });
+
+  it('throws when a selector list is empty after trimming', () => {
+    expect(() =>
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tags',
+        ' , ',
+        '--jira-version',
+        '71260',
+      ]),
+    ).toThrow('Selector list must not be empty.');
   });
 
   it('throws for an invalid release notes source', () => {
