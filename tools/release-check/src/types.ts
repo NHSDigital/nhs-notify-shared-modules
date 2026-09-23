@@ -2,6 +2,7 @@ export type JiraIssue = {
   clinicalLead: string;
   clinicalReviewStatus: string;
   components: string[];
+  issueType: string;
   key: string;
   medicalClinicalSafetyCategory: string;
   status: string;

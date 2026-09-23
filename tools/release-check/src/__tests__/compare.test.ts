@@ -8,6 +8,7 @@ const issues: JiraIssue[] = [
     clinicalReviewStatus: 'Review required',
     key: 'CCM-100',
     medicalClinicalSafetyCategory: '',
+    issueType: 'Story',
     summary: 'First ticket',
     status: 'Done',
     components: ['Platform'],
@@ -17,6 +18,7 @@ const issues: JiraIssue[] = [
     clinicalReviewStatus: 'In review',
     key: 'CCM-101',
     medicalClinicalSafetyCategory: 'Cat 1',
+    issueType: 'Story',
     summary: 'Exact summary fallback',
     status: 'In Progress',
     components: ['Platform'],
@@ -26,6 +28,7 @@ const issues: JiraIssue[] = [
     clinicalReviewStatus: 'Review not needed',
     key: 'CCM-102',
     medicalClinicalSafetyCategory: '',
+    issueType: 'Story',
     summary: 'Release only ticket',
     status: 'Done',
     components: ['Platform'],
@@ -97,6 +100,33 @@ describe('compareRelease', () => {
     expect(
       result.commitsWithoutMatches.map((commit) => commit.shortHash),
     ).toEqual(['cccccccc']);
+  });
+
+  it('excludes bugs from clinical review checks', () => {
+    const result = compareRelease(
+      commits,
+      [
+        ...issues,
+        {
+          clinicalLead: '',
+          clinicalReviewStatus: 'Review required',
+          components: ['Platform'],
+          issueType: 'Bug',
+          key: 'CCM-103',
+          medicalClinicalSafetyCategory: '',
+          status: 'Done',
+          summary: 'Bug fix',
+        },
+      ],
+      [],
+    );
+
+    expect(
+      result.jiraIssuesMissingClinicalSafetyCategory.map((issue) => issue.key),
+    ).not.toContain('CCM-103');
+    expect(
+      result.jiraIssuesMissingClinicalLead.map((issue) => issue.key),
+    ).not.toContain('CCM-103');
   });
 
   it('treats punctuation-only subjects as unmatched when no Jira key is present', () => {

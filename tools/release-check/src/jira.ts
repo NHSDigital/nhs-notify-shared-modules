@@ -213,13 +213,14 @@ export const fetchJiraIssues = async (
           customfield_15200?: unknown;
           customfield_16657?: unknown;
           components: { name: string }[];
+          issuetype: { name: string };
           status: { name: string };
           summary: string;
         };
       }[];
       total: number;
     }>(
-      `${jiraBaseUrl}/rest/api/2/search?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,status,components,${CLINICAL_LEAD_FIELD_ID},${MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID},${CLINICAL_REVIEW_STATUS_FIELD_ID}`,
+      `${jiraBaseUrl}/rest/api/2/search?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,status,issuetype,components,${CLINICAL_LEAD_FIELD_ID},${MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID},${CLINICAL_REVIEW_STATUS_FIELD_ID}`,
     );
 
     for (const issue of search.issues) {
@@ -228,6 +229,7 @@ export const fetchJiraIssues = async (
         customfield_10523: clinicalLeadField,
         customfield_15200: medicalClinicalSafetyCategoryField,
         customfield_16657: clinicalReviewStatusField,
+        issuetype,
         status,
         summary,
       } = issue.fields;
@@ -236,6 +238,7 @@ export const fetchJiraIssues = async (
         clinicalLead: getJiraFieldString(clinicalLeadField),
         clinicalReviewStatus: getJiraFieldString(clinicalReviewStatusField),
         components: components.map((component) => component.name),
+        issueType: issuetype.name,
         key: issue.key,
         medicalClinicalSafetyCategory: getJiraFieldString(
           medicalClinicalSafetyCategoryField,

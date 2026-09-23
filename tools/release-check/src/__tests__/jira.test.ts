@@ -224,6 +224,7 @@ describe('fetchJiraIssues', () => {
                 customfield_10523: { name: 'Dr Test' },
                 customfield_15200: { value: 'Cat 1' },
                 customfield_16657: { value: 'Review required' },
+                issuetype: { name: 'Story' },
                 summary: 'First',
                 status: { name: 'Done' },
                 components: [{ name: 'Platform' }],
@@ -243,6 +244,7 @@ describe('fetchJiraIssues', () => {
                 customfield_10523: null,
                 customfield_15200: ['Cat 2', { value: 'Cat 3' }],
                 customfield_16657: 'Review not needed',
+                issuetype: { name: 'Bug' },
                 summary: 'Second',
                 status: { name: 'In Progress' },
                 components: [],
@@ -261,6 +263,7 @@ describe('fetchJiraIssues', () => {
       }),
     ).resolves.toEqual([
       {
+        issueType: 'Story',
         key: 'CCM-1',
         clinicalLead: 'Dr Test',
         clinicalReviewStatus: 'Review required',
@@ -270,6 +273,7 @@ describe('fetchJiraIssues', () => {
         components: ['Platform'],
       },
       {
+        issueType: 'Bug',
         key: 'CCM-2',
         clinicalLead: '',
         clinicalReviewStatus: 'Review not needed',
