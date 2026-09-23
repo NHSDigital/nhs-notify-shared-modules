@@ -3,12 +3,15 @@ import { spawnSync } from 'node:child_process';
 
 import {
   collectCommits,
+  collectCommitsForTags,
   ensureCommitishExists,
   getOriginRemoteUrl,
   getPreviousTag,
   getRepoName,
   getRepoRoot,
+  listTags,
   readTagAnnotation,
+  resolveGitTags,
   resolveRepoPath,
 } from '../git';
 
@@ -112,6 +115,62 @@ describe('git command helpers', () => {
   });
 });
 
+describe('listTags and resolveGitTags', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('lists tags in git sort order', () => {
+    mockedSpawnSync.mockReturnValue({
+      status: 0,
+      stdout: '0.1.0\nv0.2.0\nv0.3.0\n',
+      stderr: '',
+    } as never);
+
+    expect(listTags('/repos/client-config')).toEqual([
+      '0.1.0',
+      'v0.2.0',
+      'v0.3.0',
+    ]);
+  });
+
+  it('resolves exact and wildcard tag selectors in tag order', () => {
+    mockedSpawnSync.mockReturnValue({
+      status: 0,
+      stdout: '0.1.0\nv0.2.0\nv0.3.0\nv0.3.1\n',
+      stderr: '',
+    } as never);
+
+    expect(resolveGitTags('/repos/client-config', ['v0.?.0', '0.1.0'])).toEqual(
+      ['0.1.0', 'v0.2.0', 'v0.3.0'],
+    );
+  });
+
+  it('throws when an exact selector is missing', () => {
+    mockedSpawnSync.mockReturnValue({
+      status: 0,
+      stdout: '0.1.0\n',
+      stderr: '',
+    } as never);
+
+    expect(() => resolveGitTags('/repos/client-config', ['0.2.0'])).toThrow(
+      'Could not find git tag "0.2.0".',
+    );
+  });
+
+  it('throws when a wildcard selector matches no tags', () => {
+    mockedSpawnSync.mockReturnValue({
+      status: 0,
+      stdout: '0.1.0\n',
+      stderr: '',
+    } as never);
+
+    expect(() => resolveGitTags('/repos/client-config', ['v9.*'])).toThrow(
+      'Could not find git tags matching "v9.*".',
+    );
+  });
+});
+
 describe('getPreviousTag', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -188,6 +247,53 @@ describe('collectCommits', () => {
         subject: 'No key commit',
         body: '',
         explicitIssueKeys: [],
+      },
+    ]);
+  });
+
+  it('deduplicates commits across multiple selected tags', () => {
+    mockedSpawnSync
+      .mockReturnValueOnce({
+        status: 0,
+        stdout:
+          `hash1\u001Fshort1\u001FCCM-100: Add feature\u001F\u001E` +
+          `hash2\u001Fshort2\u001FCCM-101: Add feature\u001F\u001E`,
+        stderr: '',
+      } as never)
+      .mockReturnValueOnce({
+        status: 0,
+        stdout:
+          `hash2\u001Fshort2\u001FCCM-101: Add feature\u001F\u001E` +
+          `hash3\u001Fshort3\u001FCCM-102: Add feature\u001F\u001E`,
+        stderr: '',
+      } as never);
+
+    expect(
+      collectCommitsForTags('/repos/client-config', [
+        { gitTag: '0.2.0', previousTag: '0.1.0' },
+        { gitTag: '0.3.0', previousTag: '0.2.0' },
+      ]),
+    ).toEqual([
+      {
+        hash: 'hash1',
+        shortHash: 'short1',
+        subject: 'CCM-100: Add feature',
+        body: '',
+        explicitIssueKeys: ['CCM-100'],
+      },
+      {
+        hash: 'hash2',
+        shortHash: 'short2',
+        subject: 'CCM-101: Add feature',
+        body: '',
+        explicitIssueKeys: ['CCM-101'],
+      },
+      {
+        hash: 'hash3',
+        shortHash: 'short3',
+        subject: 'CCM-102: Add feature',
+        body: '',
+        explicitIssueKeys: ['CCM-102'],
       },
     ]);
   });

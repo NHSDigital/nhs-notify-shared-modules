@@ -6,21 +6,21 @@ jest.mock('node:fs/promises', () => ({
 }));
 
 jest.mock('../git', () => ({
-  collectCommits: jest.fn(),
-  ensureCommitishExists: jest.fn(),
+  collectCommitsForTags: jest.fn(),
   getPreviousTag: jest.fn(),
   getRepoName: jest.fn(),
   getRepoRoot: jest.fn(),
+  resolveGitTags: jest.fn(),
   resolveRepoPath: jest.fn(),
 }));
 
 jest.mock('../jira', () => ({
   fetchJiraIssues: jest.fn(),
-  resolveJiraVersion: jest.fn(),
+  resolveJiraVersions: jest.fn(),
 }));
 
 jest.mock('../github-release', () => ({
-  readReleaseNotes: jest.fn(),
+  readReleaseNotesForTags: jest.fn(),
 }));
 
 jest.mock('../compare', () => ({
@@ -49,21 +49,27 @@ const mockedGetRepoRoot = git.getRepoRoot as jest.MockedFunction<
 const mockedGetRepoName = git.getRepoName as jest.MockedFunction<
   typeof git.getRepoName
 >;
+const mockedResolveGitTags = git.resolveGitTags as jest.MockedFunction<
+  typeof git.resolveGitTags
+>;
 const mockedGetPreviousTag = git.getPreviousTag as jest.MockedFunction<
   typeof git.getPreviousTag
 >;
-const mockedCollectCommits = git.collectCommits as jest.MockedFunction<
-  typeof git.collectCommits
->;
-const mockedResolveJiraVersion = jira.resolveJiraVersion as jest.MockedFunction<
-  typeof jira.resolveJiraVersion
->;
+const mockedCollectCommitsForTags =
+  git.collectCommitsForTags as jest.MockedFunction<
+    typeof git.collectCommitsForTags
+  >;
+const mockedResolveJiraVersions =
+  jira.resolveJiraVersions as jest.MockedFunction<
+    typeof jira.resolveJiraVersions
+  >;
 const mockedFetchJiraIssues = jira.fetchJiraIssues as jest.MockedFunction<
   typeof jira.fetchJiraIssues
 >;
-const mockedReadReleaseNotes = notes.readReleaseNotes as jest.MockedFunction<
-  typeof notes.readReleaseNotes
->;
+const mockedReadReleaseNotesForTags =
+  notes.readReleaseNotesForTags as jest.MockedFunction<
+    typeof notes.readReleaseNotesForTags
+  >;
 const mockedCompareRelease = compare.compareRelease as jest.MockedFunction<
   typeof compare.compareRelease
 >;
@@ -85,16 +91,19 @@ describe('run', () => {
     mockedResolveRepoPath.mockReturnValue('/repo');
     mockedGetRepoRoot.mockReturnValue('/repo');
     mockedGetRepoName.mockReturnValue('repo');
+    mockedResolveGitTags.mockReturnValue(['0.1.0']);
     mockedGetPreviousTag.mockReturnValue('0.0.9');
-    mockedCollectCommits.mockReturnValue([]);
-    mockedResolveJiraVersion.mockResolvedValue({
-      id: '71260',
-      name: 'release',
-      releaseDate: '2026-07-08',
-      released: true,
-    });
+    mockedCollectCommitsForTags.mockReturnValue([]);
+    mockedResolveJiraVersions.mockResolvedValue([
+      {
+        id: '71260',
+        name: 'release',
+        releaseDate: '2026-07-08',
+        released: true,
+      },
+    ]);
     mockedFetchJiraIssues.mockResolvedValue([]);
-    mockedReadReleaseNotes.mockResolvedValue({
+    mockedReadReleaseNotesForTags.mockResolvedValue({
       issueKeys: [],
       source: 'none',
       text: null,
@@ -166,10 +175,15 @@ describe('run', () => {
     ]);
 
     expect(mockedResolveRepoPath).toHaveBeenCalledWith('../repo');
-    expect(git.ensureCommitishExists).toHaveBeenCalledWith('/repo', '0.1.0');
-    expect(mockedReadReleaseNotes).toHaveBeenCalledWith(
+    expect(mockedResolveGitTags).toHaveBeenCalledWith('/repo', ['0.1.0']);
+    expect(mockedResolveJiraVersions).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM',
+      ['71260'],
+    );
+    expect(mockedReadReleaseNotesForTags).toHaveBeenCalledWith(
       '/repo',
-      '0.1.0',
+      ['0.1.0'],
       'auto',
     );
     expect(fsPromises.mkdir).toHaveBeenCalledWith('/workspace', {
@@ -190,6 +204,108 @@ describe('run', () => {
     );
     expect(stdoutWrite).toHaveBeenCalledWith(
       expect.stringContaining('Report written to /workspace/report.txt\n'),
+    );
+  });
+
+  it('aggregates multiple selected releases into one run', async () => {
+    mockedResolveGitTags.mockReturnValue(['0.1.0', 'v0.2.0']);
+    mockedGetPreviousTag.mockReturnValueOnce(null).mockReturnValueOnce('0.1.0');
+    mockedCollectCommitsForTags.mockReturnValue([
+      {
+        hash: 'a'.repeat(40),
+        shortHash: 'aaaaaaaa',
+        subject: 'CCM-100: ship it',
+        body: '',
+        explicitIssueKeys: ['CCM-100'],
+      },
+    ]);
+    mockedResolveJiraVersions.mockResolvedValue([
+      {
+        id: '71260',
+        name: 'release-a',
+        releaseDate: '2026-07-08',
+        released: true,
+      },
+      {
+        id: '71261',
+        name: 'release-b',
+        releaseDate: null,
+        released: false,
+      },
+    ]);
+    mockedFetchJiraIssues
+      .mockResolvedValueOnce([
+        {
+          key: 'CCM-1',
+          clinicalLead: '',
+          clinicalReviewStatus: '',
+          components: [],
+          medicalClinicalSafetyCategory: '',
+          status: 'Done',
+          summary: 'one',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          key: 'CCM-1',
+          clinicalLead: '',
+          clinicalReviewStatus: '',
+          components: [],
+          medicalClinicalSafetyCategory: '',
+          status: 'Done',
+          summary: 'duplicate one',
+        },
+      ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tags',
+      '0.1.0,v0.2.0',
+      '--jira-versions',
+      'release-a,release-b',
+    ]);
+
+    expect(mockedDefaultReportPath).toHaveBeenCalledWith('repo', [
+      '0.1.0',
+      'v0.2.0',
+    ]);
+    expect(mockedFetchJiraIssues).toHaveBeenCalledTimes(2);
+    expect(mockedRenderReport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gitTags: [
+          { gitTag: '0.1.0', previousTag: null },
+          { gitTag: 'v0.2.0', previousTag: '0.1.0' },
+        ],
+        jiraVersions: [
+          {
+            id: '71260',
+            name: 'release-a',
+            releaseDate: '2026-07-08',
+            released: true,
+          },
+          {
+            id: '71261',
+            name: 'release-b',
+            releaseDate: null,
+            released: false,
+          },
+        ],
+        totalJiraIssues: 1,
+      }),
+    );
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining('Git tags selected (2): 0.1.0, v0.2.0\n'),
+    );
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Comparison bases: 0.1.0 <- repository start; v0.2.0 <- 0.1.0\n',
+      ),
+    );
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Jira versions selected (2): release-a (71260), release-b (71261)\n',
+      ),
     );
   });
 

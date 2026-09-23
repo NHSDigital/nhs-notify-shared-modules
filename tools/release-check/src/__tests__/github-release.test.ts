@@ -1,6 +1,7 @@
 import {
   parseGitHubRepositoryFromRemote,
   readReleaseNotes,
+  readReleaseNotesForTags,
 } from '../github-release';
 
 jest.mock('../git', () => ({
@@ -210,5 +211,75 @@ describe('readReleaseNotes', () => {
     await expect(readReleaseNotes('/repo', '0.1.0', 'tag')).rejects.toThrow(
       'Tag 0.1.0 is not annotated, so no tag release notes are available.',
     );
+  });
+
+  it('reuses single-tag release note lookup through the multi-tag helper', async () => {
+    await expect(
+      readReleaseNotesForTags('/repo', ['0.1.0'], 'none'),
+    ).resolves.toEqual({
+      issueKeys: [],
+      source: 'none',
+      text: null,
+      warnings: [],
+    });
+  });
+
+  it('keeps a single release-note source when all selected tags use the same one', async () => {
+    mockedGetOriginRemoteUrl.mockReturnValue(
+      'https://github.com/NHSDigital/nhs-notify-client-config.git',
+    );
+    mockFetch
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        statusText: 'OK',
+        json: async () => ({ body: 'CCM-100 first' }),
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        statusText: 'OK',
+        json: async () => ({ body: 'CCM-101 second' }),
+      });
+
+    await expect(
+      readReleaseNotesForTags('/repo', ['0.1.0', '0.2.0'], 'github'),
+    ).resolves.toEqual({
+      issueKeys: ['CCM-100', 'CCM-101'],
+      source: 'github-release',
+      text: null,
+      warnings: [],
+    });
+  });
+
+  it('aggregates release notes across multiple selected tags', async () => {
+    mockedGetOriginRemoteUrl.mockReturnValue(
+      'https://github.com/NHSDigital/nhs-notify-client-config.git',
+    );
+    mockFetch
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        statusText: 'OK',
+        json: async () => ({ body: 'CCM-100 first' }),
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        statusText: 'OK',
+        json: async () => ({ body: '' }),
+      });
+    mockedReadTagAnnotation.mockReturnValue('CCM-200 fallback note');
+
+    await expect(
+      readReleaseNotesForTags('/repo', ['0.1.0', '0.2.0'], 'auto'),
+    ).resolves.toEqual({
+      issueKeys: ['CCM-100', 'CCM-200'],
+      source: 'mixed',
+      text: null,
+      warnings: [
+        '[0.2.0] No GitHub release body found for tag 0.2.0; falling back.',
+      ],
+    });
   });
 });

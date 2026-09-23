@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-import type { GitCommit } from './types';
+import { hasGlobPattern, matchesGlobPattern } from './selectors';
+import type { GitCommit, SelectedGitTag } from './types';
 
 const GIT_EXECUTABLE = '/usr/bin/git';
 const ISSUE_KEY_PATTERN = /\b[A-Z][A-Z0-9]+-\d+\b/g;
@@ -46,11 +47,48 @@ export const getRepoRoot = (repoPath: string): string =>
 export const getRepoName = (repoRoot: string): string =>
   path.basename(repoRoot);
 
+export const listTags = (repoRoot: string): string[] => {
+  const raw = runGit(repoRoot, ['tag', '--list', '--sort=version:refname']);
+  return raw
+    .split('\n')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+};
+
 export const ensureCommitishExists = (
   repoRoot: string,
   commitish: string,
 ): void => {
   runGit(repoRoot, ['rev-parse', '--verify', `${commitish}^{commit}`]);
+};
+
+export const resolveGitTags = (
+  repoRoot: string,
+  selectors: string[],
+): string[] => {
+  const availableTags = listTags(repoRoot);
+  const selectedTags = new Set<string>();
+
+  for (const selector of selectors) {
+    if (hasGlobPattern(selector)) {
+      const matches = availableTags.filter((tag) =>
+        matchesGlobPattern(tag, selector),
+      );
+      if (matches.length === 0) {
+        throw new Error(`Could not find git tags matching "${selector}".`);
+      }
+      for (const match of matches) {
+        selectedTags.add(match);
+      }
+    } else {
+      if (!availableTags.includes(selector)) {
+        throw new Error(`Could not find git tag "${selector}".`);
+      }
+      selectedTags.add(selector);
+    }
+  }
+
+  return availableTags.filter((tag) => selectedTags.has(tag));
 };
 
 export const getPreviousTag = (
@@ -118,6 +156,23 @@ export const collectCommits = (
         subject,
       };
     });
+};
+
+export const collectCommitsForTags = (
+  repoRoot: string,
+  gitTags: SelectedGitTag[],
+): GitCommit[] => {
+  const commitsByHash = new Map<string, GitCommit>();
+
+  for (const { gitTag, previousTag } of gitTags) {
+    for (const commit of collectCommits(repoRoot, gitTag, previousTag)) {
+      if (!commitsByHash.has(commit.hash)) {
+        commitsByHash.set(commit.hash, commit);
+      }
+    }
+  }
+
+  return [...commitsByHash.values()];
 };
 
 export const getOriginRemoteUrl = (repoRoot: string): string =>
