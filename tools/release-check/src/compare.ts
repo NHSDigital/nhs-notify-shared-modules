@@ -38,6 +38,10 @@ const normalise = (text: string): string =>
     .replaceAll(/[^a-z0-9]+/g, ' ')
     .trim();
 
+const shouldCheckClinicalReview = (issue: JiraIssue): boolean =>
+  issue.issueType !== 'Bug' &&
+  issue.clinicalReviewStatus !== 'Review not needed';
+
 const findSummaryMatches = (subject: string, issues: JiraIssue[]): string[] => {
   const normalisedSubject = normalise(subject);
   if (!normalisedSubject) {
@@ -108,12 +112,10 @@ export const compareRelease = (
   const jiraIssuesMissingClinicalSafetyCategory = issues.filter(
     (issue) =>
       issue.medicalClinicalSafetyCategory === '' &&
-      issue.clinicalReviewStatus !== 'Review not needed',
+      shouldCheckClinicalReview(issue),
   );
   const jiraIssuesMissingClinicalLead = issues.filter(
-    (issue) =>
-      issue.clinicalLead === '' &&
-      issue.clinicalReviewStatus !== 'Review not needed',
+    (issue) => issue.clinicalLead === '' && shouldCheckClinicalReview(issue),
   );
   const releaseNotesIssueKeysOutsideRelease = notesReferencedIssueKeys.filter(
     (key) => !issueMap.has(key),
