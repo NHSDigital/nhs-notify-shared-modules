@@ -103,7 +103,7 @@ variable "runtime" {
 variable "architecture" {
   type        = string
   description = "The architecture of the Lambda function (e.g., x86_64 or arm64 Graviton)"
-  default     = "x86_64"
+  default     = "arm64"
 }
 
 variable "package_type" {
