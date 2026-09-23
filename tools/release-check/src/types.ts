@@ -19,9 +19,12 @@ export type GitCommit = {
 
 export type ReleaseNotesSource = 'auto' | 'github' | 'tag' | 'none';
 
+export type ReleaseNotesLookupSource =
+  'github-release' | 'mixed' | 'none' | 'tag-annotation';
+
 export type ReleaseNotes = {
   issueKeys: string[];
-  source: 'github-release' | 'tag-annotation' | 'none';
+  source: ReleaseNotesLookupSource;
   text: string | null;
   warnings: string[];
 };
@@ -55,12 +58,17 @@ export type ComparisonResult = {
 };
 
 export type CliOptions = {
-  gitTag: string;
+  gitTagSelectors: string[];
   jiraBaseUrl: string;
   jiraProject: string;
-  jiraVersion: string;
+  jiraVersionSelectors: string[];
   output?: string;
   previousTag?: string;
   releaseNotesSource: ReleaseNotesSource;
   repo: string;
+};
+
+export type SelectedGitTag = {
+  gitTag: string;
+  previousTag: string | null;
 };
