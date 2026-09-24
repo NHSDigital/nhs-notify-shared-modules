@@ -2,14 +2,17 @@ import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 import {
+  applyCommitIssueKeyMappings,
   collectCommits,
   collectCommitsForTags,
   ensureCommitishExists,
+  findDefaultCommitIssueMappingFile,
   getOriginRemoteUrl,
   getPreviousTag,
   getRepoName,
   getRepoRoot,
   listTags,
+  readCommitIssueKeyMappings,
   readTagAnnotation,
   resolveGitTags,
   resolveRepoPath,
@@ -22,9 +25,17 @@ jest.mock('node:child_process', () => ({
 jest.mock('node:fs', () => ({
   existsSync: jest.fn(),
 }));
+jest.mock('node:fs/promises', () => ({
+  readFile: jest.fn(),
+}));
 
 const mockedSpawnSync = spawnSync as jest.MockedFunction<typeof spawnSync>;
 const mockedExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
+const fsPromises =
+  jest.requireMock<typeof import('node:fs/promises')>('node:fs/promises');
+const mockedReadFile = fsPromises.readFile as jest.MockedFunction<
+  typeof fsPromises.readFile
+>;
 
 describe('resolveRepoPath', () => {
   beforeEach(() => {
@@ -54,6 +65,30 @@ describe('resolveRepoPath', () => {
     expect(() => resolveRepoPath('missing-repo')).toThrow(
       'Could not resolve repository path for "missing-repo".',
     );
+  });
+});
+
+describe('findDefaultCommitIssueMappingFile', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns the repo-root .jira-commits path when it exists', () => {
+    mockedExistsSync.mockImplementation(
+      (candidate) => candidate === '/repos/client-config/.jira-commits',
+    );
+
+    expect(findDefaultCommitIssueMappingFile('/repos/client-config')).toBe(
+      '/repos/client-config/.jira-commits',
+    );
+  });
+
+  it('returns undefined when the repo-root .jira-commits file does not exist', () => {
+    mockedExistsSync.mockReturnValue(false);
+
+    expect(
+      findDefaultCommitIssueMappingFile('/repos/client-config'),
+    ).toBeUndefined();
   });
 });
 
@@ -385,6 +420,189 @@ describe('collectCommits', () => {
         releaseRange: '0.2.0..0.3.0 (+ patches through v0.3.1)',
       },
     ]);
+  });
+});
+
+describe('commit ticket mappings', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('reads whitespace-delimited commit-to-ticket mappings', async () => {
+    mockedReadFile.mockResolvedValue(
+      '# comment\n2f6c9d1 CCM-12081\n4ab12cd ccm-22822\n',
+    );
+
+    await expect(
+      readCommitIssueKeyMappings(
+        '/repos/client-config',
+        '.release-check/map.txt',
+      ),
+    ).resolves.toEqual(
+      new Map([
+        ['2f6c9d1', 'CCM-12081'],
+        ['4ab12cd', 'CCM-22822'],
+      ]),
+    );
+  });
+
+  it('rejects malformed mapping lines', async () => {
+    mockedReadFile.mockResolvedValue('2f6c9d1 only-one-column extra\n');
+
+    await expect(
+      readCommitIssueKeyMappings(
+        '/repos/client-config',
+        '.release-check/map.txt',
+      ),
+    ).rejects.toThrow('expected "<commit-hash> <JIRA-KEY>"');
+  });
+
+  it('ignores blank and comment-only mapping files', async () => {
+    mockedReadFile.mockResolvedValue('\n# comment\n   \n');
+
+    await expect(
+      readCommitIssueKeyMappings(
+        '/repos/client-config',
+        '.release-check/map.txt',
+      ),
+    ).resolves.toEqual(new Map());
+  });
+
+  it('rejects invalid commit hashes in mapping files', async () => {
+    mockedReadFile.mockResolvedValue('not-a-hash CCM-12081\n');
+
+    await expect(
+      readCommitIssueKeyMappings(
+        '/repos/client-config',
+        '.release-check/map.txt',
+      ),
+    ).rejects.toThrow('Expected 7-40 hexadecimal characters');
+  });
+
+  it('rejects invalid Jira issue keys in mapping files', async () => {
+    mockedReadFile.mockResolvedValue('2f6c9d1 NOT_A_KEY\n');
+
+    await expect(
+      readCommitIssueKeyMappings(
+        '/repos/client-config',
+        '.release-check/map.txt',
+      ),
+    ).rejects.toThrow('Invalid Jira issue key');
+  });
+
+  it('rejects duplicate commit hashes in mapping files', async () => {
+    mockedReadFile.mockResolvedValue('2f6c9d1 CCM-12081\n2f6c9d1 CCM-22822\n');
+
+    await expect(
+      readCommitIssueKeyMappings(
+        '/repos/client-config',
+        '.release-check/map.txt',
+      ),
+    ).rejects.toThrow('Duplicate commit mapping');
+  });
+
+  it('applies matching ticket overrides to selected commits', () => {
+    expect(
+      applyCommitIssueKeyMappings(
+        [
+          {
+            hash: '2f6c9d1abcdef00000000000000000000000000',
+            shortHash: '2f6c9d1',
+            subject: 'CCM-999: wrong ticket',
+            body: '',
+            explicitIssueKeys: ['CCM-999'],
+          },
+        ],
+        new Map([['2f6c9d1', 'CCM-12081']]),
+      ),
+    ).toEqual([
+      {
+        hash: '2f6c9d1abcdef00000000000000000000000000',
+        shortHash: '2f6c9d1',
+        subject: 'CCM-999: wrong ticket',
+        body: '',
+        explicitIssueKeys: ['CCM-999'],
+        issueKeyOverride: {
+          commitHash: '2f6c9d1',
+          issueKey: 'CCM-12081',
+        },
+      },
+    ]);
+  });
+
+  it('returns the original commits when there are no mappings', () => {
+    const commits = [
+      {
+        hash: '2f6c9d1abcdef00000000000000000000000000',
+        shortHash: '2f6c9d1',
+        subject: 'CCM-999: wrong ticket',
+        body: '',
+        explicitIssueKeys: ['CCM-999'],
+      },
+    ];
+
+    expect(applyCommitIssueKeyMappings(commits, new Map())).toBe(commits);
+  });
+
+  it('rejects mappings that do not match a selected commit', () => {
+    expect(() =>
+      applyCommitIssueKeyMappings(
+        [
+          {
+            hash: '2f6c9d1abcdef00000000000000000000000000',
+            shortHash: '2f6c9d1',
+            subject: 'CCM-999: wrong ticket',
+            body: '',
+            explicitIssueKeys: ['CCM-999'],
+          },
+        ],
+        new Map([['deadbee', 'CCM-12081']]),
+      ),
+    ).toThrow('did not match any selected commits');
+  });
+
+  it('rejects ambiguous commit hash prefixes', () => {
+    expect(() =>
+      applyCommitIssueKeyMappings(
+        [
+          {
+            hash: '2f6c9d1abcdef00000000000000000000000000',
+            shortHash: '2f6c9d1',
+            subject: 'CCM-999: wrong ticket',
+            body: '',
+            explicitIssueKeys: ['CCM-999'],
+          },
+          {
+            hash: '2f6c9d1bbbbbb00000000000000000000000000',
+            shortHash: '2f6c9d1',
+            subject: 'CCM-998: another wrong ticket',
+            body: '',
+            explicitIssueKeys: ['CCM-998'],
+          },
+        ],
+        new Map([['2f6c9d1', 'CCM-12081']]),
+      ),
+    ).toThrow('matched multiple selected commits');
+  });
+
+  it('rejects multiple mapping entries that resolve to the same commit', () => {
+    expect(() =>
+      applyCommitIssueKeyMappings(
+        [
+          {
+            hash: '2f6c9d1abcdef00000000000000000000000000',
+            shortHash: '2f6c9d1',
+            subject: 'CCM-999: wrong ticket',
+            body: '',
+            explicitIssueKeys: ['CCM-999'],
+          },
+        ],
+        new Map([
+          ['2f6c9d1', 'CCM-12081'],
+          ['2f6c9d1abc', 'CCM-22822'],
+        ]),
+      ),
+    ).toThrow('Multiple commit mappings matched commit');
   });
 });
 

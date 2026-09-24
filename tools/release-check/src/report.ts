@@ -13,8 +13,20 @@ import type {
 
 const DEFAULT_JIRA_BASE_URL = 'https://nhsd-jira.digital.nhs.uk';
 
+const formatCommitMappingNote = (commit: MatchedCommit): string => {
+  if (commit.issueKeySource !== 'mapped' || !commit.issueKeyOverride) {
+    return '';
+  }
+
+  const detectedKeys =
+    commit.detectedIssueKeys && commit.detectedIssueKeys.length > 0
+      ? commit.detectedIssueKeys.join(', ')
+      : 'no detected ticket';
+  return ` [ticket mapping: ${detectedKeys} -> ${commit.issueKeyOverride.issueKey}]`;
+};
+
 const formatCommit = (commit: MatchedCommit): string =>
-  `${commit.shortHash} ${commit.subject}`;
+  `${commit.shortHash} ${commit.subject}${formatCommitMappingNote(commit)}`;
 
 const escapeMarkdownCell = (value: string): string =>
   value.replaceAll('|', String.raw`\|`).replaceAll('\n', '<br>');
@@ -162,6 +174,33 @@ const formatIssueFixVersions = (issue?: JiraIssue): string =>
 
 const compareStrings = (left: string, right: string): number =>
   left.localeCompare(right);
+
+const getAllComparedCommits = (
+  comparison: ComparisonResult,
+): MatchedCommit[] => {
+  const commitsByHash = new Map<string, MatchedCommit>();
+
+  for (const commits of comparison.commitsByIssueKey.values()) {
+    for (const commit of commits) {
+      commitsByHash.set(commit.hash, commit);
+    }
+  }
+
+  for (const commit of comparison.commitsWithoutMatches) {
+    commitsByHash.set(commit.hash, commit);
+  }
+
+  for (const { commit } of comparison.commitsWithIssueKeysOutsideRelease) {
+    commitsByHash.set(commit.hash, commit);
+  }
+
+  return [...commitsByHash.values()];
+};
+
+const getMappedCommits = (comparison: ComparisonResult): MatchedCommit[] =>
+  getAllComparedCommits(comparison)
+    .filter((commit) => commit.issueKeySource === 'mapped')
+    .toSorted((left, right) => left.hash.localeCompare(right.hash));
 
 const formatSelectedGitTagLabel = ({
   gitTag,
@@ -719,6 +758,7 @@ export const renderReport = ({
   const outsideReleaseIssueKeys = groupOutsideReleaseReferences(
     comparison.commitsWithIssueKeysOutsideRelease,
   );
+  const mappedCommits = getMappedCommits(comparison);
   const showReleaseRangeComparison = gitTags.length > 1;
   const sections = [
     '# Release check report',
@@ -759,6 +799,7 @@ export const renderReport = ({
     `- Jira issues missing clinical safety category: ${comparison.jiraIssuesMissingClinicalSafetyCategory.length}`,
     `- Jira issues missing clinical lead: ${comparison.jiraIssuesMissingClinicalLead.length}`,
     `- Commits without Jira matches: ${comparison.commitsWithoutMatches.length}`,
+    `- Commit ticket mappings applied: ${mappedCommits.length}`,
     ...renderGitRangeMappings(gitTags, jiraVersions),
     '',
   ];
@@ -866,6 +907,14 @@ export const renderReport = ({
       'Commits without a Jira key or exact Jira-summary match',
       comparison.commitsWithoutMatches.map((commit) => formatCommit(commit)),
     ),
+    ...(mappedCommits.length > 0
+      ? [
+          renderSimpleSection(
+            'Commits with Jira ticket mappings applied',
+            mappedCommits.map((commit) => formatCommit(commit)),
+          ),
+        ]
+      : []),
   );
 
   return sections.join('\n').replaceAll(/\n{3,}/g, '\n\n');

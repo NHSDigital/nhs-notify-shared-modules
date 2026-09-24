@@ -148,4 +148,34 @@ describe('compareRelease', () => {
       result.commitsWithoutMatches.map((commit) => commit.shortHash),
     ).toEqual(['eeeeeeee']);
   });
+
+  it('uses a commit ticket mapping instead of the detected key', () => {
+    const result = compareRelease(
+      [
+        {
+          hash: 'f'.repeat(40),
+          shortHash: 'ffffffff',
+          subject: 'CCM-999: wrong ticket on PR',
+          body: '',
+          explicitIssueKeys: ['CCM-999'],
+          issueKeyOverride: {
+            commitHash: 'fffffff',
+            issueKey: 'CCM-100',
+          },
+        },
+      ],
+      issues,
+      [],
+    );
+
+    expect(result.gitReferencedIssueKeys).toEqual(['CCM-100']);
+    expect(result.commitsByIssueKey.get('CCM-100')).toEqual([
+      expect.objectContaining({
+        detectedIssueKeys: ['CCM-999'],
+        issueKeySource: 'mapped',
+        matchedIssueKeys: ['CCM-100'],
+      }),
+    ]);
+    expect(result.commitsWithIssueKeysOutsideRelease).toEqual([]);
+  });
 });

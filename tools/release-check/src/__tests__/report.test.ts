@@ -185,6 +185,25 @@ describe('renderReport', () => {
               },
             ],
           ],
+          [
+            'CCM-12081',
+            [
+              {
+                hash: 'f'.repeat(40),
+                shortHash: 'ffffffff',
+                subject: 'CCM-999: mapped ticket',
+                body: '',
+                explicitIssueKeys: ['CCM-999'],
+                detectedIssueKeys: ['CCM-999'],
+                issueKeyOverride: {
+                  commitHash: 'fffffff',
+                  issueKey: 'CCM-12081',
+                },
+                issueKeySource: 'mapped',
+                matchedIssueKeys: ['CCM-12081'],
+              },
+            ],
+          ],
         ]),
         commitsWithIssueKeysOutsideRelease: [
           {
@@ -250,6 +269,16 @@ describe('renderReport', () => {
             issueType: 'Story',
             key: 'CCM-101',
             summary: 'Missing from git',
+            status: 'Done',
+            components: ['Platform'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+          },
+          {
+            issueType: 'Story',
+            key: 'CCM-12081',
+            summary: 'Mapped from commit override',
             status: 'Done',
             components: ['Platform'],
             clinicalLead: '',
@@ -339,6 +368,9 @@ describe('renderReport', () => {
       '| [CCM-101](https://nhsd-jira.digital.nhs.uk/browse/CCM-101): [Platform] Missing from git (Done) | No matching commit |',
     );
     expect(populatedReport).toContain(
+      '| [CCM-12081](https://nhsd-jira.digital.nhs.uk/browse/CCM-12081): [Platform] Mapped from commit override (Done) | `ffffffff CCM-999: mapped ticket [ticket mapping: CCM-999 -> CCM-12081]` _(1 commit total)_ |',
+    );
+    expect(populatedReport).toContain(
       '| [CCM-100](https://nhsd-jira.digital.nhs.uk/browse/CCM-100): [Platform] Referenced and not done (In Progress) | `aaaaaaaa CCM-100: ship it` _(1 commit total)_ |',
     );
     expect(populatedReport).toContain(
@@ -361,6 +393,13 @@ describe('renderReport', () => {
       '## Commits without a Jira key or exact Jira-summary match',
     );
     expect(populatedReport).toContain('- eeeeeeee maintenance');
+    expect(populatedReport).toContain('- Commit ticket mappings applied: 1');
+    expect(populatedReport).toContain(
+      '## Commits with Jira ticket mappings applied',
+    );
+    expect(populatedReport).toContain(
+      '- ffffffff CCM-999: mapped ticket [ticket mapping: CCM-999 -> CCM-12081]',
+    );
   });
 
   it('renders multi-release metadata when multiple tags and Jira versions are selected', () => {
