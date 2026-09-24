@@ -479,6 +479,7 @@ const maybeWriteComparisonReport = async ({
   jiraVersions,
   output,
   outsideReleaseIssuesByKey,
+  selectedReleaseIssuesByKey,
   releaseNotes,
   repoName,
   repoRoot,
@@ -494,6 +495,7 @@ const maybeWriteComparisonReport = async ({
   jiraVersions: JiraVersion[];
   output?: string;
   outsideReleaseIssuesByKey: Map<string, JiraIssue>;
+  selectedReleaseIssuesByKey: Map<string, JiraIssue>;
   releaseNotes: Awaited<ReturnType<typeof readReleaseNotesForTags>>;
   repoName: string;
   repoRoot: string;
@@ -523,6 +525,7 @@ const maybeWriteComparisonReport = async ({
     repoName,
     repoRoot,
     outsideReleaseIssuesByKey,
+    selectedReleaseIssuesByKey,
     totalJiraIssues,
   });
 
@@ -670,6 +673,9 @@ export const run = async (argv: string[]): Promise<void> => {
     jiraVersions,
     output: options.output,
     outsideReleaseIssuesByKey,
+    selectedReleaseIssuesByKey: new Map(
+      jiraIssues.map((issue) => [issue.key, issue]),
+    ),
     releaseNotes,
     repoName,
     repoRoot,
