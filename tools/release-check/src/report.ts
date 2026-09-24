@@ -419,6 +419,43 @@ const renderIssueSection = (
   return `## ${title}\n\n${renderTable(headers, rows)}\n`;
 };
 
+const renderMappedCommitSection = ({
+  commits,
+  issueByKey,
+  jiraBaseUrl,
+}: {
+  commits: MatchedCommit[];
+  issueByKey: Map<string, JiraIssue>;
+  jiraBaseUrl: string;
+}): string => {
+  const title = 'Commits with Jira ticket mappings applied';
+  if (commits.length === 0) {
+    return `## ${title}\n\n- none\n`;
+  }
+
+  const rows = commits.map((commit) => {
+    const mappedIssueKey = commit.issueKeyOverride?.issueKey ?? '';
+    const mappedIssue = issueByKey.get(mappedIssueKey);
+    const detectedTicketLabel =
+      commit.detectedIssueKeys && commit.detectedIssueKeys.length > 0
+        ? commit.detectedIssueKeys.join(', ')
+        : 'no detected ticket';
+
+    return [
+      escapeMarkdownCell(`\`${commit.shortHash} ${commit.subject}\``),
+      escapeMarkdownCell(
+        formatIssueHeading(jiraBaseUrl, mappedIssueKey, mappedIssue),
+      ),
+      escapeMarkdownCell(detectedTicketLabel),
+    ];
+  });
+
+  return `## ${title}\n\n${renderTable(
+    ['Commit', 'Mapped ticket', 'Detected ticket'],
+    rows,
+  )}\n`;
+};
+
 const renderFixProposalSection = (
   fixAction: string,
   fixComponent: string,
@@ -727,6 +764,7 @@ export const renderReport = ({
   jiraProject,
   jiraVersions,
   outsideReleaseIssuesByKey,
+  selectedReleaseIssuesByKey = new Map<string, JiraIssue>(),
   releaseNotes,
   repoName,
   repoRoot,
@@ -741,6 +779,7 @@ export const renderReport = ({
   jiraProject: string;
   jiraVersions: JiraVersion[];
   outsideReleaseIssuesByKey: Map<string, JiraIssue>;
+  selectedReleaseIssuesByKey?: Map<string, JiraIssue>;
   releaseNotes: ReleaseNotes;
   repoName: string;
   repoRoot: string;
@@ -817,6 +856,11 @@ export const renderReport = ({
       ...comparison.jiraIssuesMissingClinicalLead,
     ].map((issue) => [issue.key, issue]),
   );
+  const mappedIssuesByKey = new Map([
+    ...selectedReleaseIssuesByKey,
+    ...outsideReleaseIssuesByKey,
+    ...selectedIssuesByKey,
+  ]);
 
   sections.push(
     renderIssueSection(
@@ -909,10 +953,11 @@ export const renderReport = ({
     ),
     ...(mappedCommits.length > 0
       ? [
-          renderSimpleSection(
-            'Commits with Jira ticket mappings applied',
-            mappedCommits.map((commit) => formatCommit(commit)),
-          ),
+          renderMappedCommitSection({
+            commits: mappedCommits,
+            issueByKey: mappedIssuesByKey,
+            jiraBaseUrl,
+          }),
         ]
       : []),
   );

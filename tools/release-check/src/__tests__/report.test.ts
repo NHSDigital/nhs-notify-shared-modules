@@ -398,7 +398,10 @@ describe('renderReport', () => {
       '## Commits with Jira ticket mappings applied',
     );
     expect(populatedReport).toContain(
-      '- ffffffff CCM-999: mapped ticket [ticket mapping: CCM-999 -> CCM-12081]',
+      '| Commit | Mapped ticket | Detected ticket |',
+    );
+    expect(populatedReport).toContain(
+      '| `ffffffff CCM-999: mapped ticket` | [CCM-12081](https://nhsd-jira.digital.nhs.uk/browse/CCM-12081): [Platform] Mapped from commit override (Done) | CCM-999 |',
     );
   });
 
