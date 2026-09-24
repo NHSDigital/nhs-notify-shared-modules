@@ -1,5 +1,9 @@
 import { run } from '..';
 
+jest.mock('node:readline/promises', () => ({
+  createInterface: jest.fn(),
+}));
+
 jest.mock('node:fs/promises', () => ({
   mkdir: jest.fn().mockResolvedValue(undefined),
   writeFile: jest.fn().mockResolvedValue(undefined),
@@ -44,6 +48,10 @@ const notes =
   jest.requireMock<typeof import('../github-release')>('../github-release');
 const compare = jest.requireMock<typeof import('../compare')>('../compare');
 const report = jest.requireMock<typeof import('../report')>('../report');
+const readlinePromises =
+  jest.requireMock<typeof import('node:readline/promises')>(
+    'node:readline/promises',
+  );
 
 const mockedResolveRepoPath = git.resolveRepoPath as jest.MockedFunction<
   typeof git.resolveRepoPath
@@ -100,6 +108,26 @@ const mockedRenderFixProposalSection =
 const mockedRenderReport = report.renderReport as jest.MockedFunction<
   typeof report.renderReport
 >;
+const mockedCreateInterface =
+  readlinePromises.createInterface as jest.MockedFunction<
+    typeof readlinePromises.createInterface
+  >;
+
+const originalStdinIsTTY = Object.getOwnPropertyDescriptor(
+  process.stdin,
+  'isTTY',
+);
+const originalStdoutIsTTY = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY',
+);
+
+const setStreamTty = (stream: NodeJS.ReadStream | NodeJS.WriteStream, value: boolean): void => {
+  Object.defineProperty(stream, 'isTTY', {
+    configurable: true,
+    value,
+  });
+};
 
 describe('run', () => {
   const originalStdoutWrite = process.stdout.write;
@@ -108,6 +136,8 @@ describe('run', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.stdout.write = stdoutWrite as typeof process.stdout.write;
+    setStreamTty(process.stdin, false);
+    setStreamTty(process.stdout, false);
 
     mockedResolveRepoPath.mockReturnValue('/repo');
     mockedGetRepoRoot.mockReturnValue('/repo');
@@ -153,6 +183,15 @@ describe('run', () => {
 
   afterEach(() => {
     process.stdout.write = originalStdoutWrite;
+  });
+
+  afterAll(() => {
+    if (originalStdinIsTTY) {
+      Object.defineProperty(process.stdin, 'isTTY', originalStdinIsTTY);
+    }
+    if (originalStdoutIsTTY) {
+      Object.defineProperty(process.stdout, 'isTTY', originalStdoutIsTTY);
+    }
   });
 
   it('runs the end-to-end comparison and writes the report', async () => {
@@ -443,6 +482,169 @@ describe('run', () => {
       expect.stringContaining(
         'Applied clinical review status updates to 1 issue(s).\n',
       ),
+    );
+  });
+
+  it('requires an interactive terminal for fix mode without --yes', async () => {
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map(),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-100: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-100'],
+            matchedIssueKeys: ['CCM-100'],
+          },
+          missingKeys: ['CCM-100'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-100'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-100',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Platform'],
+        fixVersions: [],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
+
+    await expect(
+      run([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--fix',
+        'fix-version',
+        '--fix-component',
+        'Platform',
+      ]),
+    ).rejects.toThrow(
+      'Applying fixVersion updates requires an interactive terminal unless --yes is provided.',
+    );
+  });
+
+  it('aborts fix mode when the user declines confirmation', async () => {
+    const close = jest.fn();
+
+    setStreamTty(process.stdin, true);
+    setStreamTty(process.stdout, true);
+    mockedCreateInterface.mockReturnValue({
+      close,
+      question: jest.fn().mockResolvedValue('n'),
+    } as never);
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map(),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-100: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-100'],
+            matchedIssueKeys: ['CCM-100'],
+          },
+          missingKeys: ['CCM-100'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-100'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-100',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Platform'],
+        fixVersions: [],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'fix-version',
+      '--fix-component',
+      'Platform',
+    ]);
+
+    expect(close).toHaveBeenCalled();
+    expect(mockedUpdateJiraIssueFixVersions).not.toHaveBeenCalled();
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining('Aborted without applying fixVersion updates.\n'),
+    );
+  });
+
+  it('rejects fix mode when multiple tags or Jira versions are resolved', async () => {
+    mockedResolveGitTags.mockReturnValue(['0.1.0', 'v0.2.0']);
+    mockedGetPreviousTag.mockReturnValueOnce(null).mockReturnValueOnce('0.1.0');
+    mockedResolveJiraVersions.mockResolvedValue([
+      {
+        id: '71260',
+        name: 'release-a',
+        releaseDate: '2026-07-08',
+        released: true,
+      },
+      {
+        id: '71261',
+        name: 'release-b',
+        releaseDate: null,
+        released: false,
+      },
+    ]);
+
+    await expect(
+      run([
+        '--repo',
+        '../repo',
+        '--git-tags',
+        '0.1.0,v0.2.0',
+        '--jira-versions',
+        'release-a,release-b',
+        '--fix',
+        'fix-version',
+        '--fix-component',
+        'Platform',
+        '--yes',
+      ]),
+    ).rejects.toThrow(
+      'Option --fix currently requires exactly one resolved git tag and one resolved Jira version.',
     );
   });
 });
