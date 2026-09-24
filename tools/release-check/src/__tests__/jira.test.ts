@@ -87,6 +87,76 @@ describe('resolveJiraVersion', () => {
     ]);
   });
 
+  it('resolves a Jira version from a version URL', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 71_260,
+        name: 'client-config-0.1.0',
+        releaseDate: '2026-07-08',
+        released: true,
+      }),
+    });
+
+    await expect(
+      resolveJiraVersions('https://jira.example.com', 'CCM', [
+        'https://jira.example.com/projects/CCM/versions/71260',
+      ]),
+    ).resolves.toEqual([
+      {
+        id: '71260',
+        name: 'client-config-0.1.0',
+        releaseDate: '2026-07-08',
+        released: true,
+      },
+    ]);
+  });
+
+  it('surfaces Jira version lookup failures', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Server Error',
+      text: async () => 'broken',
+    });
+
+    await expect(
+      resolveJiraVersion('https://jira.example.com', 'CCM', '71260'),
+    ).rejects.toThrow(
+      'Jira request failed (500 Server Error) for https://jira.example.com/rest/api/2/version/71260: broken',
+    );
+  });
+
+  it('throws when an exact Jira version name is missing', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    });
+
+    await expect(
+      resolveJiraVersions('https://jira.example.com', 'CCM', [
+        'client-config-9.9.9',
+      ]),
+    ).rejects.toThrow(
+      'Could not find Jira version "client-config-9.9.9" in project CCM.',
+    );
+  });
+
+  it('throws when a wildcard Jira version selector matches nothing', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    });
+
+    await expect(
+      resolveJiraVersions('https://jira.example.com', 'CCM', [
+        'client-config-*',
+      ]),
+    ).rejects.toThrow(
+      'Could not find Jira versions matching "client-config-*" in project CCM.',
+    );
+  });
+
   it('throws when no Jira token is configured', async () => {
     delete process.env.JIRA_API_TOKEN;
 
@@ -228,6 +298,34 @@ describe('jira issue operations', () => {
     ]);
   });
 
+  it('returns no issues when fetch by keys is given an empty list', async () => {
+    await expect(
+      fetchJiraIssuesByKeys('https://jira.example.com', 'CCM', []),
+    ).resolves.toEqual([]);
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('surfaces Jira search failures', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      text: async () => 'bad jql',
+    });
+
+    await expect(
+      fetchJiraIssues('https://jira.example.com', 'CCM', {
+        id: '71260',
+        name: 'release',
+        releaseDate: null,
+        released: true,
+      }),
+    ).rejects.toThrow(
+      'Jira request failed (400 Bad Request) for https://jira.example.com/rest/api/2/search: bad jql',
+    );
+  });
+
   it('updates issue fix versions', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
@@ -253,6 +351,23 @@ describe('jira issue operations', () => {
     );
   });
 
+  it('surfaces fix version update failures', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 409,
+      statusText: 'Conflict',
+      text: async () => 'cannot update',
+    });
+
+    await expect(
+      updateJiraIssueFixVersions('https://jira.example.com', 'CCM-42', [
+        { id: '71260', name: 'client-config-0.1.0' },
+      ]),
+    ).rejects.toThrow(
+      'Jira request failed (409 Conflict) for https://jira.example.com/rest/api/2/issue/CCM-42: cannot update',
+    );
+  });
+
   it('updates clinical review status', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
@@ -273,6 +388,21 @@ describe('jira issue operations', () => {
         }),
         method: 'PUT',
       }),
+    );
+  });
+
+  it('surfaces clinical review update failures', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: async () => 'not allowed',
+    });
+
+    await expect(
+      updateJiraIssueClinicalReviewStatus('https://jira.example.com', 'CCM-42'),
+    ).rejects.toThrow(
+      'Jira request failed (403 Forbidden) for https://jira.example.com/rest/api/2/issue/CCM-42: not allowed',
     );
   });
 });
