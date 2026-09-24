@@ -8,13 +8,13 @@ Compares a local repository release tag, or a selected set of release tags, agai
 
 ## Usage
 
-From the shared-modules repository root:
+From the shared-modules repository root, using the workspace script:
 
 ```bash
 pnpm release-check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
 ```
 
-Or directly:
+Or directly from the package, using its local `check` script:
 
 ```bash
 pnpm --filter @nhsdigital/nhs-notify-release-check run check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
@@ -117,9 +117,9 @@ Add this to the consuming repository's `.npmrc`:
 @nhsdigital:registry=https://npm.pkg.github.com
 ```
 
-Then install and use the CLI:
+Then install and use the published CLI binary:
 
 ```bash
 pnpm add -D @nhsdigital/nhs-notify-release-check
-pnpm release-check --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
+pnpm exec release-check --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
 ```

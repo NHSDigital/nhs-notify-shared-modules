@@ -284,27 +284,67 @@ describe('jira issue operations', () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        total: 1,
-        issues: [
-          {
-            key: 'CCM-42',
-            fields: {
-              customfield_10523: { name: 'Dr Test' },
-              customfield_15200: { value: 'Cat 1' },
-              customfield_16657: { value: 'Review required' },
-              fixVersions: [],
-              issuetype: { name: 'Story' },
-              summary: 'Outside selected versions',
-              status: { name: 'Done' },
-              components: [{ name: 'Platform' }],
-            },
-          },
-        ],
+        key: 'CCM-42',
+        fields: {
+          customfield_10523: { name: 'Dr Test' },
+          customfield_15200: { value: 'Cat 1' },
+          customfield_16657: { value: 'Review required' },
+          fixVersions: [],
+          issuetype: { name: 'Story' },
+          summary: 'Outside selected versions',
+          status: { name: 'Done' },
+          components: [{ name: 'Platform' }],
+        },
       }),
     });
 
     await expect(
       fetchJiraIssuesByKeys('https://jira.example.com', 'CCM', ['CCM-42']),
+    ).resolves.toEqual([
+      {
+        issueType: 'Story',
+        key: 'CCM-42',
+        clinicalLead: 'Dr Test',
+        clinicalReviewStatus: 'Review required',
+        fixVersions: [],
+        summary: 'Outside selected versions',
+        medicalClinicalSafetyCategory: 'Cat 1',
+        status: 'Done',
+        components: ['Platform'],
+      },
+    ]);
+  });
+
+  it('skips missing Jira issues when fetching by key', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'missing',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          key: 'CCM-42',
+          fields: {
+            customfield_10523: { name: 'Dr Test' },
+            customfield_15200: { value: 'Cat 1' },
+            customfield_16657: { value: 'Review required' },
+            fixVersions: [],
+            issuetype: { name: 'Story' },
+            summary: 'Outside selected versions',
+            status: { name: 'Done' },
+            components: [{ name: 'Platform' }],
+          },
+        }),
+      });
+
+    await expect(
+      fetchJiraIssuesByKeys('https://jira.example.com', 'CCM', [
+        'CCM-404',
+        'CCM-42',
+      ]),
     ).resolves.toEqual([
       {
         issueType: 'Story',
