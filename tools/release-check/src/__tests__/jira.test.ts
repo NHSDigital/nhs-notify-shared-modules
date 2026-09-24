@@ -186,6 +186,27 @@ describe('jira issue operations', () => {
         components: [],
       },
     ]);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://jira.example.com/rest/api/2/search',
+      expect.objectContaining({
+        body: JSON.stringify({
+          fields: [
+            'summary',
+            'status',
+            'issuetype',
+            'components',
+            'fixVersions',
+            'customfield_10523',
+            'customfield_15200',
+            'customfield_16657',
+          ],
+          jql: 'project = CCM AND fixVersion = 71260 AND issuetype not in (Epic) AND status != "Not Required" ORDER BY key ASC',
+          maxResults: 100,
+          startAt: 0,
+        }),
+      }),
+    );
   });
 
   it('fetches issues by key', async () => {

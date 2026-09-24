@@ -121,8 +121,16 @@ export const collectCommits = (
   repoRoot: string,
   gitTag: string,
   previousTag: string | null,
+  rangeEndTag: string = gitTag,
 ): GitCommit[] => {
-  const range = previousTag ? `${previousTag}..${gitTag}` : gitTag;
+  const range = previousTag ? `${previousTag}..${rangeEndTag}` : rangeEndTag;
+  const baseReleaseRange = previousTag
+    ? `${previousTag}..${gitTag}`
+    : `repository start..${gitTag}`;
+  const releaseRange =
+    rangeEndTag === gitTag
+      ? baseReleaseRange
+      : `${baseReleaseRange} (+ patches through ${rangeEndTag})`;
   const raw = runGit(repoRoot, [
     'log',
     '--no-merges',
@@ -152,6 +160,8 @@ export const collectCommits = (
         body,
         explicitIssueKeys,
         hash,
+        releaseRange,
+        releaseTag: gitTag,
         shortHash,
         subject,
       };
@@ -164,8 +174,13 @@ export const collectCommitsForTags = (
 ): GitCommit[] => {
   const commitsByHash = new Map<string, GitCommit>();
 
-  for (const { gitTag, previousTag } of gitTags) {
-    for (const commit of collectCommits(repoRoot, gitTag, previousTag)) {
+  for (const { gitTag, previousTag, rangeEndTag } of gitTags) {
+    for (const commit of collectCommits(
+      repoRoot,
+      gitTag,
+      previousTag,
+      rangeEndTag ?? gitTag,
+    )) {
       if (!commitsByHash.has(commit.hash)) {
         commitsByHash.set(commit.hash, commit);
       }

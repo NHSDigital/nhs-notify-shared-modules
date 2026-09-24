@@ -236,17 +236,21 @@ describe('collectCommits', () => {
     expect(collectCommits('/repos/client-config', '0.2.0', '0.1.0')).toEqual([
       {
         hash: 'hash1',
+        releaseTag: '0.2.0',
         shortHash: 'short1',
         subject: 'CCM-100: Add feature',
         body: 'body CCM-101 details',
         explicitIssueKeys: ['CCM-100', 'CCM-101'],
+        releaseRange: '0.1.0..0.2.0',
       },
       {
         hash: 'hash2',
+        releaseTag: '0.2.0',
         shortHash: 'short2',
         subject: 'No key commit',
         body: '',
         explicitIssueKeys: [],
+        releaseRange: '0.1.0..0.2.0',
       },
     ]);
   });
@@ -276,24 +280,58 @@ describe('collectCommits', () => {
     ).toEqual([
       {
         hash: 'hash1',
+        releaseTag: '0.2.0',
         shortHash: 'short1',
         subject: 'CCM-100: Add feature',
         body: '',
         explicitIssueKeys: ['CCM-100'],
+        releaseRange: '0.1.0..0.2.0',
       },
       {
         hash: 'hash2',
+        releaseTag: '0.2.0',
         shortHash: 'short2',
         subject: 'CCM-101: Add feature',
         body: '',
         explicitIssueKeys: ['CCM-101'],
+        releaseRange: '0.1.0..0.2.0',
       },
       {
         hash: 'hash3',
+        releaseTag: '0.3.0',
         shortHash: 'short3',
         subject: 'CCM-102: Add feature',
         body: '',
         explicitIssueKeys: ['CCM-102'],
+        releaseRange: '0.2.0..0.3.0',
+      },
+    ]);
+  });
+
+  it('collects commits through the rolled-up patch end tag', () => {
+    mockedSpawnSync.mockReturnValue({
+      status: 0,
+      stdout: `hash1\u001Fshort1\u001FCCM-100: Add feature\u001F\u001E`,
+      stderr: '',
+    } as never);
+
+    expect(
+      collectCommitsForTags('/repos/client-config', [
+        {
+          gitTag: '0.3.0',
+          previousTag: '0.2.0',
+          rangeEndTag: 'v0.3.1',
+        },
+      ]),
+    ).toEqual([
+      {
+        hash: 'hash1',
+        releaseTag: '0.3.0',
+        shortHash: 'short1',
+        subject: 'CCM-100: Add feature',
+        body: '',
+        explicitIssueKeys: ['CCM-100'],
+        releaseRange: '0.2.0..0.3.0 (+ patches through v0.3.1)',
       },
     ]);
   });

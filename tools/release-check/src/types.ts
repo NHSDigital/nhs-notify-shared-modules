@@ -2,6 +2,7 @@ export type JiraIssue = {
   clinicalLead: string;
   clinicalReviewStatus: string;
   components: string[];
+  fixVersions?: JiraFixVersion[];
   issueType: string;
   key: string;
   medicalClinicalSafetyCategory: string;
@@ -22,6 +23,8 @@ export type GitCommit = {
   body: string;
   explicitIssueKeys: string[];
   hash: string;
+  releaseRange?: string;
+  releaseTag?: string;
   shortHash: string;
   subject: string;
 };
@@ -85,10 +88,12 @@ export type FixAction = 'fix-version' | 'clinical-review-not-needed';
 export type FixProposal = {
   currentValueSummary: string;
   issue: JiraIssueFixDetails;
+  proposedUpdateSummary?: string;
   targetValueSummary: string;
 };
 
 export type SelectedGitTag = {
   gitTag: string;
   previousTag: string | null;
+  rangeEndTag?: string;
 };
