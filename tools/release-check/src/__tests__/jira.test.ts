@@ -1,6 +1,7 @@
 import {
   fetchJiraIssues,
   fetchJiraIssuesByKeys,
+  listJiraVersions,
   resolveJiraVersion,
   resolveJiraVersions,
   updateJiraIssueClinicalReviewStatus,
@@ -315,6 +316,31 @@ describe('jira issue operations', () => {
         medicalClinicalSafetyCategory: 'Cat 1',
         status: 'Done',
         components: ['Platform'],
+      },
+    ]);
+  });
+
+  it('lists Jira versions for a project', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          id: 71_260,
+          name: 'client-config-0.1.0',
+          releaseDate: '2026-07-08',
+          released: true,
+        },
+      ],
+    });
+
+    await expect(
+      listJiraVersions('https://jira.example.com', 'CCM'),
+    ).resolves.toEqual([
+      {
+        id: '71260',
+        name: 'client-config-0.1.0',
+        releaseDate: '2026-07-08',
+        released: true,
       },
     ]);
   });

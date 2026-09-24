@@ -941,4 +941,195 @@ describe('run', () => {
       'Option --fix currently requires exactly one resolved git tag and one resolved Jira version.',
     );
   });
+
+  it('keeps non-semver tags as standalone selections', async () => {
+    mockedListTags.mockReturnValue(['release-2026-09']);
+    mockedResolveGitTags.mockReturnValue(['release-2026-09']);
+    mockedListJiraVersions.mockResolvedValue([
+      {
+        id: '90000',
+        name: 'release-2026-09',
+        releaseDate: null,
+        released: true,
+      },
+    ]);
+    mockedResolveJiraVersions.mockResolvedValue([
+      {
+        id: '90000',
+        name: 'release-2026-09',
+        releaseDate: null,
+        released: true,
+      },
+    ]);
+    mockedGetPreviousTag.mockReturnValue(null);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      'release-2026-09',
+      '--jira-version',
+      'release-2026-09',
+    ]);
+
+    expect(mockedCollectCommitsForTags).toHaveBeenCalledWith('/repo', [
+      {
+        gitTag: 'release-2026-09',
+        previousTag: null,
+        rangeEndTag: 'release-2026-09',
+      },
+    ]);
+  });
+
+  it('keeps patch releases separate when Jira has a matching patch version', async () => {
+    mockedListTags.mockReturnValue(['0.3.0', 'v0.3.1']);
+    mockedResolveGitTags.mockReturnValue(['0.3.0', 'v0.3.1']);
+    mockedListJiraVersions.mockResolvedValue([
+      {
+        id: '73218',
+        name: 'client-config-0.3.0',
+        releaseDate: null,
+        released: true,
+      },
+      {
+        id: '73219',
+        name: 'client-config-0.3.1',
+        releaseDate: null,
+        released: true,
+      },
+    ]);
+    mockedResolveJiraVersions.mockResolvedValue([
+      {
+        id: '73218',
+        name: 'client-config-0.3.0',
+        releaseDate: null,
+        released: true,
+      },
+      {
+        id: '73219',
+        name: 'client-config-0.3.1',
+        releaseDate: null,
+        released: true,
+      },
+    ]);
+    mockedGetPreviousTag.mockImplementation((_, gitTag) => {
+      if (gitTag === '0.3.0') {
+        return 'v0.2.0';
+      }
+
+      if (gitTag === 'v0.3.1') {
+        return '0.3.0';
+      }
+
+      return 'v0.2.0';
+    });
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tags',
+      '0.3.0,v0.3.1',
+      '--jira-versions',
+      'client-config-0.3.0,client-config-0.3.1',
+    ]);
+
+    expect(mockedCollectCommitsForTags).toHaveBeenCalledWith('/repo', [
+      {
+        gitTag: '0.3.0',
+        previousTag: 'v0.2.0',
+        rangeEndTag: '0.3.0',
+      },
+      {
+        gitTag: 'v0.3.1',
+        previousTag: '0.3.0',
+        rangeEndTag: 'v0.3.1',
+      },
+    ]);
+  });
+
+  it('truncates long fix-version proposal summaries', async () => {
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map([
+        [
+          'CCM-100',
+          [
+            {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-100: ship it',
+              body: '',
+              explicitIssueKeys: ['CCM-100'],
+              matchedIssueKeys: ['CCM-100'],
+            },
+          ],
+        ],
+      ]),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-100: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-100'],
+            matchedIssueKeys: ['CCM-100'],
+          },
+          missingKeys: ['CCM-100'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-100'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-100',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Platform'],
+        fixVersions: [
+          { id: '70000', name: 'other-release-1' },
+          { id: '70001', name: 'other-release-2' },
+          { id: '70002', name: 'other-release-3' },
+          { id: '70003', name: 'other-release-4' },
+          { id: '70004', name: 'other-release-5' },
+        ],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'fix-version',
+      '--fix-component',
+      'Platform',
+      '--yes',
+    ]);
+
+    expect(mockedRenderFixProposalTerminalSection).toHaveBeenCalledWith(
+      'fixVersion',
+      'Platform',
+      [
+        expect.objectContaining({
+          proposedUpdateSummary: expect.stringMatching(/\.\.\.$/),
+        }),
+      ],
+      expect.any(Map),
+    );
+  });
 });

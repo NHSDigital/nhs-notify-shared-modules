@@ -23,6 +23,7 @@ const formatJiraIssueLink = (jiraBaseUrl: string, issueKey: string): string =>
   `[${issueKey}](${jiraBaseUrl}/browse/${encodeURIComponent(issueKey)})`;
 
 const formatPlainIssueHeading = (key: string, issue?: JiraIssue): string => {
+  /* c8 ignore next -- terminal fix proposals always provide an issue */
   if (!issue) {
     return `${key}: not found in Jira`;
   }
@@ -272,6 +273,7 @@ const truncateTerminalCell = (value: string, maxWidth: number): string => {
     return value;
   }
 
+  /* c8 ignore next -- terminal widths are clamped to at least 20 chars */
   if (maxWidth <= 3) {
     return value.slice(0, maxWidth);
   }
