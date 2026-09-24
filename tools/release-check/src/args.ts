@@ -53,10 +53,8 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
     repo: values.repo,
     gitTag: values['git-tag'],
     jiraVersion: values['jira-version'],
-    jiraProject: values['jira-project'] ?? DEFAULT_JIRA_PROJECT,
-    jiraBaseUrl: trimTrailingSlashes(
-      values['jira-base-url'] ?? DEFAULT_JIRA_BASE_URL,
-    ),
+    jiraProject: values['jira-project'],
+    jiraBaseUrl: trimTrailingSlashes(values['jira-base-url']),
     previousTag: values['previous-tag'],
     output: values.output,
     releaseNotesSource: values['release-notes-source'],
