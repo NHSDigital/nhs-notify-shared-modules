@@ -55,6 +55,30 @@ describe('parseCliArgs', () => {
     });
   });
 
+  it('accepts github as a release notes source', () => {
+    expect(
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--release-notes-source',
+        'github',
+      ]),
+    ).toEqual({
+      repo: '../repo',
+      gitTag: '0.1.0',
+      jiraVersion: '71260',
+      jiraProject: 'CCM',
+      jiraBaseUrl: 'https://nhsd-jira.digital.nhs.uk',
+      previousTag: undefined,
+      output: undefined,
+      releaseNotesSource: 'github',
+    });
+  });
+
   it('throws for missing required arguments', () => {
     expect(() => parseCliArgs([])).toThrow('Missing required option --repo');
   });
