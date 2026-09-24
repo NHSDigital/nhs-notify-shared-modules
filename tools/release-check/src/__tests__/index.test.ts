@@ -14,6 +14,7 @@ jest.mock('../git', () => ({
   getPreviousTag: jest.fn(),
   getRepoName: jest.fn(),
   getRepoRoot: jest.fn(),
+  listTags: jest.fn(),
   resolveGitTags: jest.fn(),
   resolveRepoPath: jest.fn(),
 }));
@@ -21,6 +22,7 @@ jest.mock('../git', () => ({
 jest.mock('../jira', () => ({
   fetchJiraIssues: jest.fn(),
   fetchJiraIssuesByKeys: jest.fn(),
+  listJiraVersions: jest.fn(),
   resolveJiraVersions: jest.fn(),
   updateJiraIssueClinicalReviewStatus: jest.fn(),
   updateJiraIssueFixVersions: jest.fn(),
@@ -37,6 +39,7 @@ jest.mock('../compare', () => ({
 jest.mock('../report', () => ({
   defaultReportPath: jest.fn(),
   renderFixProposalSection: jest.fn(),
+  renderFixProposalTerminalSection: jest.fn(),
   renderReport: jest.fn(),
 }));
 
@@ -64,6 +67,7 @@ const mockedGetRepoName = git.getRepoName as jest.MockedFunction<
 const mockedResolveGitTags = git.resolveGitTags as jest.MockedFunction<
   typeof git.resolveGitTags
 >;
+const mockedListTags = git.listTags as jest.MockedFunction<typeof git.listTags>;
 const mockedGetPreviousTag = git.getPreviousTag as jest.MockedFunction<
   typeof git.getPreviousTag
 >;
@@ -75,6 +79,9 @@ const mockedResolveJiraVersions =
   jira.resolveJiraVersions as jest.MockedFunction<
     typeof jira.resolveJiraVersions
   >;
+const mockedListJiraVersions = jira.listJiraVersions as jest.MockedFunction<
+  typeof jira.listJiraVersions
+>;
 const mockedFetchJiraIssues = jira.fetchJiraIssues as jest.MockedFunction<
   typeof jira.fetchJiraIssues
 >;
@@ -103,6 +110,10 @@ const mockedDefaultReportPath = report.defaultReportPath as jest.MockedFunction<
 const mockedRenderFixProposalSection =
   report.renderFixProposalSection as jest.MockedFunction<
     typeof report.renderFixProposalSection
+  >;
+const mockedRenderFixProposalTerminalSection =
+  report.renderFixProposalTerminalSection as jest.MockedFunction<
+    typeof report.renderFixProposalTerminalSection
   >;
 const mockedRenderReport = report.renderReport as jest.MockedFunction<
   typeof report.renderReport
@@ -144,9 +155,18 @@ describe('run', () => {
     mockedResolveRepoPath.mockReturnValue('/repo');
     mockedGetRepoRoot.mockReturnValue('/repo');
     mockedGetRepoName.mockReturnValue('repo');
+    mockedListTags.mockReturnValue(['0.1.0']);
     mockedResolveGitTags.mockReturnValue(['0.1.0']);
     mockedGetPreviousTag.mockReturnValue('0.0.9');
     mockedCollectCommitsForTags.mockReturnValue([]);
+    mockedListJiraVersions.mockResolvedValue([
+      {
+        id: '71260',
+        name: 'release',
+        releaseDate: '2026-07-08',
+        released: true,
+      },
+    ]);
     mockedResolveJiraVersions.mockResolvedValue([
       {
         id: '71260',
@@ -180,6 +200,9 @@ describe('run', () => {
     });
     mockedDefaultReportPath.mockReturnValue('/workspace/report.txt');
     mockedRenderFixProposalSection.mockReturnValue('fix proposal section');
+    mockedRenderFixProposalTerminalSection.mockReturnValue(
+      'fix proposal terminal section',
+    );
     mockedRenderReport.mockReturnValue('report');
   });
 
@@ -213,6 +236,10 @@ describe('run', () => {
       'CCM',
       ['71260'],
     );
+    expect(mockedListJiraVersions).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM',
+    );
     expect(mockedReadReleaseNotesForTags).toHaveBeenCalledWith(
       '/repo',
       ['0.1.0'],
@@ -236,6 +263,7 @@ describe('run', () => {
         fixAction: undefined,
         fixComponent: undefined,
         fixProposals: undefined,
+        jiraBaseUrl: 'https://nhsd-jira.digital.nhs.uk',
       }),
     );
     expect(stdoutWrite).toHaveBeenCalledWith(
@@ -244,8 +272,23 @@ describe('run', () => {
   });
 
   it('aggregates multiple selected releases into one run', async () => {
+    mockedListTags.mockReturnValue(['0.1.0', 'v0.2.0']);
     mockedResolveGitTags.mockReturnValue(['0.1.0', 'v0.2.0']);
     mockedGetPreviousTag.mockReturnValueOnce(null).mockReturnValueOnce('0.1.0');
+    mockedListJiraVersions.mockResolvedValue([
+      {
+        id: '71260',
+        name: 'release-a',
+        releaseDate: '2026-07-08',
+        released: true,
+      },
+      {
+        id: '71261',
+        name: 'release-b',
+        releaseDate: null,
+        released: false,
+      },
+    ]);
     mockedCollectCommitsForTags.mockReturnValue([
       {
         hash: 'a'.repeat(40),
@@ -312,8 +355,12 @@ describe('run', () => {
     expect(mockedRenderReport).toHaveBeenCalledWith(
       expect.objectContaining({
         gitTags: [
-          { gitTag: '0.1.0', previousTag: null },
-          { gitTag: 'v0.2.0', previousTag: '0.1.0' },
+          { gitTag: '0.1.0', previousTag: null, rangeEndTag: '0.1.0' },
+          {
+            gitTag: 'v0.2.0',
+            previousTag: '0.1.0',
+            rangeEndTag: 'v0.2.0',
+          },
         ],
         jiraVersions: [
           {
@@ -332,6 +379,59 @@ describe('run', () => {
         totalJiraIssues: 1,
       }),
     );
+  });
+
+  it('rolls patch tags into the base release when Jira has no patch version', async () => {
+    mockedListTags.mockReturnValue(['0.3.0', 'v0.3.0', 'v0.3.1']);
+    mockedResolveGitTags.mockReturnValue(['0.3.0', 'v0.3.0', 'v0.3.1']);
+    mockedListJiraVersions.mockResolvedValue([
+      {
+        id: '73218',
+        name: 'client-config-0.3.0',
+        releaseDate: null,
+        released: true,
+      },
+    ]);
+    mockedResolveJiraVersions.mockResolvedValue([
+      {
+        id: '73218',
+        name: 'client-config-0.3.0',
+        releaseDate: null,
+        released: true,
+      },
+    ]);
+    mockedGetPreviousTag.mockImplementation((_, gitTag) => {
+      if (gitTag === '0.3.0') {
+        return 'v0.2.0';
+      }
+
+      if (gitTag === 'v0.3.0') {
+        return '0.3.0';
+      }
+
+      if (gitTag === 'v0.3.1') {
+        return 'v0.3.0';
+      }
+
+      return 'v0.2.0';
+    });
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tags',
+      '0.3.0,v0.3.0,v0.3.1',
+      '--jira-version',
+      'client-config-0.3.0',
+    ]);
+
+    expect(mockedCollectCommitsForTags).toHaveBeenCalledWith('/repo', [
+      {
+        gitTag: '0.3.0',
+        previousTag: 'v0.2.0',
+        rangeEndTag: 'v0.3.1',
+      },
+    ]);
   });
 
   it('proposes and applies component-filtered fix versions in fix mode', async () => {
@@ -411,7 +511,21 @@ describe('run', () => {
       '--yes',
     ]);
 
-    expect(mockedRenderFixProposalSection).toHaveBeenCalled();
+    expect(mockedRenderFixProposalTerminalSection).toHaveBeenCalled();
+    expect(mockedRenderFixProposalTerminalSection).toHaveBeenCalledWith(
+      'fixVersion',
+      'Platform',
+      [
+        expect.objectContaining({
+          currentValueSummary: 'none',
+          proposedUpdateSummary: 'release',
+          targetValueSummary: 'release',
+        }),
+      ],
+      expect.any(Map),
+    );
+    expect(mockedRenderReport).not.toHaveBeenCalled();
+    expect(fsPromises.writeFile).not.toHaveBeenCalled();
     expect(mockedUpdateJiraIssueFixVersions).toHaveBeenCalledWith(
       'https://nhsd-jira.digital.nhs.uk',
       'CCM-100',
@@ -490,12 +604,13 @@ describe('run', () => {
       '--yes',
     ]);
 
-    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+    expect(mockedRenderFixProposalTerminalSection).toHaveBeenCalledWith(
       'fixVersion',
       'Platform',
       [
         expect.objectContaining({
           currentValueSummary: 'other-release',
+          proposedUpdateSummary: 'release + 1 (other-release)',
           targetValueSummary: 'other-release, release',
         }),
       ],
@@ -579,12 +694,13 @@ describe('run', () => {
       '--yes',
     ]);
 
-    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+    expect(mockedRenderFixProposalTerminalSection).toHaveBeenCalledWith(
       'fixVersion',
       'Platform',
       [
         expect.objectContaining({
           currentValueSummary: 'NA',
+          proposedUpdateSummary: 'release',
           targetValueSummary: 'release',
         }),
       ],
@@ -654,6 +770,8 @@ describe('run', () => {
       'https://nhsd-jira.digital.nhs.uk',
       'CCM-100',
     );
+    expect(mockedRenderReport).not.toHaveBeenCalled();
+    expect(fsPromises.writeFile).not.toHaveBeenCalled();
     expect(stdoutWrite).toHaveBeenCalledWith(
       expect.stringContaining(
         'Applied clinical review status updates to 1 issue(s).\n',
