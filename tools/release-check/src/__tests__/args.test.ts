@@ -4,6 +4,10 @@ describe('parseCliArgs', () => {
   it('parses required and optional arguments', () => {
     expect(
       parseCliArgs([
+        '--fix',
+        'fix-version',
+        '--fix-component',
+        'Platform',
         '--repo',
         '../repo',
         '--git-tag',
@@ -22,6 +26,8 @@ describe('parseCliArgs', () => {
         'tag',
       ]),
     ).toEqual({
+      fixAction: 'fix-version',
+      fixComponent: 'Platform',
       repo: '../repo',
       gitTagSelectors: ['0.1.0'],
       jiraVersionSelectors: ['71260'],
@@ -30,6 +36,7 @@ describe('parseCliArgs', () => {
       previousTag: '0.0.9',
       output: 'out.txt',
       releaseNotesSource: 'tag',
+      yes: false,
     });
   });
 
@@ -44,6 +51,8 @@ describe('parseCliArgs', () => {
         '71260, client-config-0.2.0 , client-config-*',
       ]),
     ).toEqual({
+      fixAction: undefined,
+      fixComponent: undefined,
       repo: '../repo',
       gitTagSelectors: ['0.1.0', 'v0.2.0', 'v0.3.*'],
       jiraVersionSelectors: ['71260', 'client-config-0.2.0', 'client-config-*'],
@@ -52,6 +61,7 @@ describe('parseCliArgs', () => {
       previousTag: undefined,
       output: undefined,
       releaseNotesSource: 'auto',
+      yes: false,
     });
   });
 
@@ -66,6 +76,8 @@ describe('parseCliArgs', () => {
         '71260',
       ]),
     ).toEqual({
+      fixAction: undefined,
+      fixComponent: undefined,
       repo: '../repo',
       gitTagSelectors: ['0.1.0'],
       jiraVersionSelectors: ['71260'],
@@ -74,6 +86,37 @@ describe('parseCliArgs', () => {
       previousTag: undefined,
       output: undefined,
       releaseNotesSource: 'auto',
+      yes: false,
+    });
+  });
+
+  it('parses fix confirmation flags', () => {
+    expect(
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--fix',
+        'clinical-review-not-needed',
+        '--fix-component',
+        'Platform',
+        '--yes',
+      ]),
+    ).toEqual({
+      fixAction: 'clinical-review-not-needed',
+      fixComponent: 'Platform',
+      repo: '../repo',
+      gitTagSelectors: ['0.1.0'],
+      jiraVersionSelectors: ['71260'],
+      jiraProject: 'CCM',
+      jiraBaseUrl: 'https://nhsd-jira.digital.nhs.uk',
+      previousTag: undefined,
+      output: undefined,
+      releaseNotesSource: 'auto',
+      yes: true,
     });
   });
 
@@ -177,5 +220,52 @@ describe('parseCliArgs', () => {
     ).toThrow(
       'Invalid --release-notes-source. Expected one of: auto, github, tag, none',
     );
+  });
+
+  it('throws for an invalid fix action', () => {
+    expect(() =>
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--fix',
+        'weird',
+      ]),
+    ).toThrow(
+      'Invalid --fix. Expected one of: fix-version, clinical-review-not-needed',
+    );
+  });
+
+  it('throws when --fix is missing its component', () => {
+    expect(() =>
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--fix',
+        'fix-version',
+      ]),
+    ).toThrow('Option --fix requires --fix-component');
+  });
+
+  it('throws when --fix-component is provided without --fix', () => {
+    expect(() =>
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--fix-component',
+        'Platform',
+      ]),
+    ).toThrow('Option --fix-component requires --fix');
   });
 });
