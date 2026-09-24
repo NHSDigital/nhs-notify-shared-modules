@@ -10,6 +10,8 @@ describe('parseCliArgs', () => {
         'Platform',
         '--repo',
         '../repo',
+        '--commit-mapping-file',
+        '.release-check/commit-mappings.txt',
         '--git-tag',
         '0.1.0',
         '--jira-version',
@@ -26,6 +28,7 @@ describe('parseCliArgs', () => {
         'tag',
       ]),
     ).toEqual({
+      commitMappingFile: '.release-check/commit-mappings.txt',
       fixAction: 'fix-version',
       fixComponent: 'Platform',
       repo: '../repo',
@@ -51,6 +54,7 @@ describe('parseCliArgs', () => {
         '71260, client-config-0.2.0 , client-config-*',
       ]),
     ).toEqual({
+      commitMappingFile: undefined,
       fixAction: undefined,
       fixComponent: undefined,
       repo: '../repo',
@@ -76,6 +80,7 @@ describe('parseCliArgs', () => {
         '71260',
       ]),
     ).toEqual({
+      commitMappingFile: undefined,
       fixAction: undefined,
       fixComponent: undefined,
       repo: '../repo',
@@ -106,6 +111,7 @@ describe('parseCliArgs', () => {
         '--yes',
       ]),
     ).toEqual({
+      commitMappingFile: undefined,
       fixAction: 'clinical-review-not-needed',
       fixComponent: 'Platform',
       repo: '../repo',
@@ -133,6 +139,7 @@ describe('parseCliArgs', () => {
         'github',
       ]),
     ).toEqual({
+      commitMappingFile: undefined,
       fixAction: undefined,
       fixComponent: undefined,
       repo: '../repo',
