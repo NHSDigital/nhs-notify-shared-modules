@@ -1009,7 +1009,9 @@ describe('renderFixProposalSection', () => {
       true,
     );
 
-    expect(section).toContain('| Issue | Commit | Release range | Fix versions | Proposed update |');
+    expect(section).toContain(
+      '| Issue | Commit | Release range | Fix versions | Proposed update |',
+    );
     expect(section).toContain('0.0.9..0.1.0');
     expect(section).toContain('none');
   });
