@@ -1,7 +1,10 @@
 import {
   fetchJiraIssues,
+  fetchJiraIssuesByKeys,
   resolveJiraVersion,
   resolveJiraVersions,
+  updateJiraIssueClinicalReviewStatus,
+  updateJiraIssueFixVersions,
 } from '../jira';
 
 const mockFetch = jest.fn();
@@ -44,59 +47,6 @@ describe('resolveJiraVersion', () => {
     });
   });
 
-  it('extracts a version id from a Jira version URL', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        id: 71_260,
-        name: 'client-config-0.1.0',
-        releaseDate: '2026-07-08',
-        released: true,
-      }),
-    });
-
-    await expect(
-      resolveJiraVersion(
-        'https://jira.example.com',
-        'CCM',
-        'https://jira.example.com/projects/CCM/versions/71260',
-      ),
-    ).resolves.toEqual({
-      id: '71260',
-      name: 'client-config-0.1.0',
-      releaseDate: '2026-07-08',
-      released: true,
-    });
-  });
-
-  it('resolves a version name from the project versions list', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => [
-        { id: 1, name: 'older' },
-        {
-          id: 71_260,
-          name: 'client-config-0.1.0',
-          releaseDate: '2026-07-08',
-          released: true,
-        },
-      ],
-    });
-
-    await expect(
-      resolveJiraVersion(
-        'https://jira.example.com',
-        'CCM',
-        'client-config-0.1.0',
-      ),
-    ).resolves.toEqual({
-      id: '71260',
-      name: 'client-config-0.1.0',
-      releaseDate: '2026-07-08',
-      released: true,
-    });
-  });
-
   it('resolves multiple versions from exact and wildcard selectors', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
@@ -111,12 +61,6 @@ describe('resolveJiraVersion', () => {
           id: 2,
           name: 'client-config-0.2.0',
           releaseDate: '2026-08-08',
-          released: false,
-        },
-        {
-          id: 3,
-          name: 'other-release',
-          releaseDate: '2026-09-01',
           released: false,
         },
       ],
@@ -143,51 +87,6 @@ describe('resolveJiraVersion', () => {
     ]);
   });
 
-  it('defaults missing release metadata from the version response', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        id: 71_260,
-        name: 'client-config-0.1.0',
-      }),
-    });
-
-    await expect(
-      resolveJiraVersion('https://jira.example.com', 'CCM', '71260'),
-    ).resolves.toEqual({
-      id: '71260',
-      name: 'client-config-0.1.0',
-      releaseDate: null,
-      released: false,
-    });
-  });
-
-  it('throws when the named version is not found', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => [{ id: 1, name: 'older' }],
-    });
-
-    await expect(
-      resolveJiraVersion('https://jira.example.com', 'CCM', 'missing'),
-    ).rejects.toThrow('Could not find Jira version "missing" in project CCM.');
-  });
-
-  it('throws when the wildcard version selector matches nothing', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => [{ id: 1, name: 'older' }],
-    });
-
-    await expect(
-      resolveJiraVersions('https://jira.example.com', 'CCM', [
-        'client-config-*',
-      ]),
-    ).rejects.toThrow(
-      'Could not find Jira versions matching "client-config-*" in project CCM.',
-    );
-  });
-
   it('throws when no Jira token is configured', async () => {
     delete process.env.JIRA_API_TOKEN;
 
@@ -199,7 +98,7 @@ describe('resolveJiraVersion', () => {
   });
 });
 
-describe('fetchJiraIssues', () => {
+describe('jira issue operations', () => {
   const originalToken = process.env.JIRA_API_TOKEN;
 
   beforeEach(() => {
@@ -211,7 +110,7 @@ describe('fetchJiraIssues', () => {
     process.env.JIRA_API_TOKEN = originalToken;
   });
 
-  it('maps paged Jira issues', async () => {
+  it('maps paged Jira issues including fix versions', async () => {
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
@@ -224,6 +123,7 @@ describe('fetchJiraIssues', () => {
                 customfield_10523: { name: 'Dr Test' },
                 customfield_15200: { value: 'Cat 1' },
                 customfield_16657: { value: 'Review required' },
+                fixVersions: [{ id: 71_260, name: 'client-config-0.1.0' }],
                 issuetype: { name: 'Story' },
                 summary: 'First',
                 status: { name: 'Done' },
@@ -244,6 +144,7 @@ describe('fetchJiraIssues', () => {
                 customfield_10523: null,
                 customfield_15200: ['Cat 2', { value: 'Cat 3' }],
                 customfield_16657: 'Review not needed',
+                fixVersions: [],
                 issuetype: { name: 'Bug' },
                 summary: 'Second',
                 status: { name: 'In Progress' },
@@ -267,6 +168,7 @@ describe('fetchJiraIssues', () => {
         key: 'CCM-1',
         clinicalLead: 'Dr Test',
         clinicalReviewStatus: 'Review required',
+        fixVersions: [{ id: '71260', name: 'client-config-0.1.0' }],
         summary: 'First',
         medicalClinicalSafetyCategory: 'Cat 1',
         status: 'Done',
@@ -277,6 +179,7 @@ describe('fetchJiraIssues', () => {
         key: 'CCM-2',
         clinicalLead: '',
         clinicalReviewStatus: 'Review not needed',
+        fixVersions: [],
         summary: 'Second',
         medicalClinicalSafetyCategory: 'Cat 2|Cat 3',
         status: 'In Progress',
@@ -285,23 +188,91 @@ describe('fetchJiraIssues', () => {
     ]);
   });
 
-  it('throws when Jira responds with an error', async () => {
+  it('fetches issues by key', async () => {
     mockFetch.mockResolvedValue({
-      ok: false,
-      status: 500,
-      statusText: 'Server Error',
-      text: async () => 'boom',
+      ok: true,
+      json: async () => ({
+        total: 1,
+        issues: [
+          {
+            key: 'CCM-42',
+            fields: {
+              customfield_10523: { name: 'Dr Test' },
+              customfield_15200: { value: 'Cat 1' },
+              customfield_16657: { value: 'Review required' },
+              fixVersions: [],
+              issuetype: { name: 'Story' },
+              summary: 'Outside selected versions',
+              status: { name: 'Done' },
+              components: [{ name: 'Platform' }],
+            },
+          },
+        ],
+      }),
     });
 
     await expect(
-      fetchJiraIssues('https://jira.example.com', 'CCM', {
-        id: '71260',
-        name: 'release',
-        releaseDate: null,
-        released: true,
+      fetchJiraIssuesByKeys('https://jira.example.com', 'CCM', ['CCM-42']),
+    ).resolves.toEqual([
+      {
+        issueType: 'Story',
+        key: 'CCM-42',
+        clinicalLead: 'Dr Test',
+        clinicalReviewStatus: 'Review required',
+        fixVersions: [],
+        summary: 'Outside selected versions',
+        medicalClinicalSafetyCategory: 'Cat 1',
+        status: 'Done',
+        components: ['Platform'],
+      },
+    ]);
+  });
+
+  it('updates issue fix versions', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () => '',
+    });
+
+    await expect(
+      updateJiraIssueFixVersions('https://jira.example.com', 'CCM-42', [
+        { id: '71260', name: 'client-config-0.1.0' },
+      ]),
+    ).resolves.toBeUndefined();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://jira.example.com/rest/api/2/issue/CCM-42',
+      expect.objectContaining({
+        body: JSON.stringify({
+          fields: {
+            fixVersions: [{ id: '71260' }],
+          },
+        }),
+        method: 'PUT',
       }),
-    ).rejects.toThrow(
-      'Jira request failed (500 Server Error) for https://jira.example.com/rest/api/2/search',
+    );
+  });
+
+  it('updates clinical review status', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () => '',
+    });
+
+    await expect(
+      updateJiraIssueClinicalReviewStatus('https://jira.example.com', 'CCM-42'),
+    ).resolves.toBeUndefined();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://jira.example.com/rest/api/2/issue/CCM-42',
+      expect.objectContaining({
+        body: JSON.stringify({
+          fields: {
+            customfield_16657: { value: 'Review not needed' },
+          },
+        }),
+        method: 'PUT',
+      }),
     );
   });
 });

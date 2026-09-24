@@ -1,5 +1,10 @@
 import { hasGlobPattern, matchesGlobPattern } from './selectors';
-import type { JiraIssue, JiraVersion } from './types';
+import type {
+  JiraFixVersion,
+  JiraIssue,
+  JiraIssueFixDetails,
+  JiraVersion,
+} from './types';
 
 const CLINICAL_LEAD_FIELD_ID = 'customfield_10523';
 const MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID = 'customfield_15200';
@@ -50,12 +55,35 @@ const getJiraToken = (): string => {
 };
 
 const VERSION_PATH_PATTERN = /\/versions\/(\d+)/;
+const JIRA_SEARCH_FIELDS = [
+  'summary',
+  'status',
+  'issuetype',
+  'components',
+  CLINICAL_LEAD_FIELD_ID,
+  MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID,
+  CLINICAL_REVIEW_STATUS_FIELD_ID,
+];
 
 type JiraVersionResponse = {
   id: string | number;
   name: string;
   releaseDate?: string;
   released?: boolean;
+};
+
+type JiraSearchIssueResponse = {
+  key: string;
+  fields: {
+    customfield_10523?: unknown;
+    customfield_15200?: unknown;
+    customfield_16657?: unknown;
+    components: { name: string }[];
+    fixVersions?: { id: string | number; name: string }[];
+    issuetype: { name: string };
+    status: { name: string };
+    summary: string;
+  };
 };
 
 const toJiraVersion = (version: JiraVersionResponse): JiraVersion => ({
@@ -81,6 +109,99 @@ const fetchJiraJson = async <T>(url: string): Promise<T> => {
   }
 
   return response.json() as Promise<T>;
+};
+
+const fetchJiraSearchPage = async (
+  jiraBaseUrl: string,
+  jql: string,
+  startAt: number,
+  maxResults: number,
+): Promise<{ issues: JiraSearchIssueResponse[]; total: number }> => {
+  const response = await fetch(`${jiraBaseUrl}/rest/api/2/search`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${getJiraToken()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fields: JIRA_SEARCH_FIELDS,
+      jql,
+      maxResults,
+      startAt,
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Jira request failed (${response.status} ${response.statusText}) for ${jiraBaseUrl}/rest/api/2/search: ${detail}`,
+    );
+  }
+
+  return response.json() as Promise<{
+    issues: JiraSearchIssueResponse[];
+    total: number;
+  }>;
+};
+
+const toJiraIssueFixDetails = (
+  issue: JiraSearchIssueResponse,
+): JiraIssueFixDetails => {
+  const {
+    components,
+    customfield_10523: clinicalLeadField,
+    customfield_15200: medicalClinicalSafetyCategoryField,
+    customfield_16657: clinicalReviewStatusField,
+    fixVersions,
+    issuetype,
+    status,
+    summary,
+  } = issue.fields;
+
+  return {
+    clinicalLead: getJiraFieldString(clinicalLeadField),
+    clinicalReviewStatus: getJiraFieldString(clinicalReviewStatusField),
+    components: components.map((component) => component.name),
+    fixVersions: (fixVersions ?? []).map((fixVersion) => ({
+      id: String(fixVersion.id),
+      name: fixVersion.name,
+    })),
+    issueType: issuetype.name,
+    key: issue.key,
+    medicalClinicalSafetyCategory: getJiraFieldString(
+      medicalClinicalSafetyCategoryField,
+    ),
+    status: status.name,
+    summary,
+  };
+};
+
+const searchJiraIssues = async (
+  jiraBaseUrl: string,
+  jql: string,
+): Promise<JiraIssueFixDetails[]> => {
+  const issues: JiraIssueFixDetails[] = [];
+  const maxResults = 100;
+  let startAt = 0;
+
+  while (true) {
+    const search = await fetchJiraSearchPage(
+      jiraBaseUrl,
+      jql,
+      startAt,
+      maxResults,
+    );
+
+    issues.push(...search.issues.map((issue) => toJiraIssueFixDetails(issue)));
+
+    startAt += search.issues.length;
+    if (startAt >= search.total) {
+      break;
+    }
+  }
+
+  return issues;
 };
 
 const parseVersionReference = (
@@ -199,60 +320,92 @@ export const fetchJiraIssues = async (
   jiraProject: string,
   jiraVersion: JiraVersion,
 ): Promise<JiraIssue[]> => {
-  const issues: JiraIssue[] = [];
-  const maxResults = 100;
-  let startAt = 0;
   const jql = `project = ${jiraProject} AND fixVersion = ${jiraVersion.id} AND issuetype not in (Epic) AND status != "Not Required" ORDER BY key ASC`;
+  return searchJiraIssues(jiraBaseUrl, jql);
+};
 
-  while (true) {
-    const search = await fetchJiraJson<{
-      issues: {
-        key: string;
-        fields: {
-          customfield_10523?: unknown;
-          customfield_15200?: unknown;
-          customfield_16657?: unknown;
-          components: { name: string }[];
-          issuetype: { name: string };
-          status: { name: string };
-          summary: string;
-        };
-      }[];
-      total: number;
-    }>(
-      `${jiraBaseUrl}/rest/api/2/search?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}&fields=summary,status,issuetype,components,${CLINICAL_LEAD_FIELD_ID},${MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID},${CLINICAL_REVIEW_STATUS_FIELD_ID}`,
-    );
+export const fetchJiraIssuesByKeys = async (
+  jiraBaseUrl: string,
+  jiraProject: string,
+  issueKeys: string[],
+): Promise<JiraIssueFixDetails[]> => {
+  const uniqueIssueKeys = [...new Set(issueKeys)];
 
-    for (const issue of search.issues) {
-      const {
-        components,
-        customfield_10523: clinicalLeadField,
-        customfield_15200: medicalClinicalSafetyCategoryField,
-        customfield_16657: clinicalReviewStatusField,
-        issuetype,
-        status,
-        summary,
-      } = issue.fields;
+  if (uniqueIssueKeys.length === 0) {
+    return [];
+  }
 
-      issues.push({
-        clinicalLead: getJiraFieldString(clinicalLeadField),
-        clinicalReviewStatus: getJiraFieldString(clinicalReviewStatusField),
-        components: components.map((component) => component.name),
-        issueType: issuetype.name,
-        key: issue.key,
-        medicalClinicalSafetyCategory: getJiraFieldString(
-          medicalClinicalSafetyCategoryField,
-        ),
-        status: status.name,
-        summary,
-      });
-    }
+  const issues: JiraIssueFixDetails[] = [];
 
-    startAt += search.issues.length;
-    if (startAt >= search.total) {
-      break;
-    }
+  for (let index = 0; index < uniqueIssueKeys.length; index += 100) {
+    const batch = uniqueIssueKeys
+      .slice(index, index + 100)
+      .map((issueKey) => `"${issueKey}"`)
+      .join(', ');
+    const jql = `project = ${jiraProject} AND key in (${batch}) ORDER BY key ASC`;
+    issues.push(...(await searchJiraIssues(jiraBaseUrl, jql)));
   }
 
   return issues;
+};
+
+export const updateJiraIssueFixVersions = async (
+  jiraBaseUrl: string,
+  issueKey: string,
+  fixVersions: JiraFixVersion[],
+): Promise<void> => {
+  const response = await fetch(
+    `${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}`,
+    {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${getJiraToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fields: {
+          fixVersions: fixVersions.map((fixVersion) => ({
+            id: fixVersion.id,
+          })),
+        },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Jira request failed (${response.status} ${response.statusText}) for ${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}: ${detail}`,
+    );
+  }
+};
+
+export const updateJiraIssueClinicalReviewStatus = async (
+  jiraBaseUrl: string,
+  issueKey: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}`,
+    {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${getJiraToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fields: {
+          [CLINICAL_REVIEW_STATUS_FIELD_ID]: { value: 'Review not needed' },
+        },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Jira request failed (${response.status} ${response.statusText}) for ${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}: ${detail}`,
+    );
+  }
 };

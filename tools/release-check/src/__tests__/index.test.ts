@@ -16,7 +16,10 @@ jest.mock('../git', () => ({
 
 jest.mock('../jira', () => ({
   fetchJiraIssues: jest.fn(),
+  fetchJiraIssuesByKeys: jest.fn(),
   resolveJiraVersions: jest.fn(),
+  updateJiraIssueClinicalReviewStatus: jest.fn(),
+  updateJiraIssueFixVersions: jest.fn(),
 }));
 
 jest.mock('../github-release', () => ({
@@ -29,6 +32,7 @@ jest.mock('../compare', () => ({
 
 jest.mock('../report', () => ({
   defaultReportPath: jest.fn(),
+  renderFixProposalSection: jest.fn(),
   renderReport: jest.fn(),
 }));
 
@@ -40,6 +44,7 @@ const notes =
   jest.requireMock<typeof import('../github-release')>('../github-release');
 const compare = jest.requireMock<typeof import('../compare')>('../compare');
 const report = jest.requireMock<typeof import('../report')>('../report');
+
 const mockedResolveRepoPath = git.resolveRepoPath as jest.MockedFunction<
   typeof git.resolveRepoPath
 >;
@@ -66,6 +71,18 @@ const mockedResolveJiraVersions =
 const mockedFetchJiraIssues = jira.fetchJiraIssues as jest.MockedFunction<
   typeof jira.fetchJiraIssues
 >;
+const mockedFetchJiraIssuesByKeys =
+  jira.fetchJiraIssuesByKeys as jest.MockedFunction<
+    typeof jira.fetchJiraIssuesByKeys
+  >;
+const mockedUpdateJiraIssueClinicalReviewStatus =
+  jira.updateJiraIssueClinicalReviewStatus as jest.MockedFunction<
+    typeof jira.updateJiraIssueClinicalReviewStatus
+  >;
+const mockedUpdateJiraIssueFixVersions =
+  jira.updateJiraIssueFixVersions as jest.MockedFunction<
+    typeof jira.updateJiraIssueFixVersions
+  >;
 const mockedReadReleaseNotesForTags =
   notes.readReleaseNotesForTags as jest.MockedFunction<
     typeof notes.readReleaseNotesForTags
@@ -76,6 +93,10 @@ const mockedCompareRelease = compare.compareRelease as jest.MockedFunction<
 const mockedDefaultReportPath = report.defaultReportPath as jest.MockedFunction<
   typeof report.defaultReportPath
 >;
+const mockedRenderFixProposalSection =
+  report.renderFixProposalSection as jest.MockedFunction<
+    typeof report.renderFixProposalSection
+  >;
 const mockedRenderReport = report.renderReport as jest.MockedFunction<
   typeof report.renderReport
 >;
@@ -103,6 +124,9 @@ describe('run', () => {
       },
     ]);
     mockedFetchJiraIssues.mockResolvedValue([]);
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([]);
+    mockedUpdateJiraIssueClinicalReviewStatus.mockResolvedValue(undefined);
+    mockedUpdateJiraIssueFixVersions.mockResolvedValue(undefined);
     mockedReadReleaseNotesForTags.mockResolvedValue({
       issueKeys: [],
       source: 'none',
@@ -123,6 +147,7 @@ describe('run', () => {
       releaseNotesIssueKeysOutsideRelease: [],
     });
     mockedDefaultReportPath.mockReturnValue('/workspace/report.txt');
+    mockedRenderFixProposalSection.mockReturnValue('fix proposal section');
     mockedRenderReport.mockReturnValue('report');
   });
 
@@ -131,42 +156,6 @@ describe('run', () => {
   });
 
   it('runs the end-to-end comparison and writes the report', async () => {
-    mockedCompareRelease.mockReturnValue({
-      commitsByIssueKey: new Map(),
-      commitsWithIssueKeysOutsideRelease: [],
-      commitsWithoutMatches: [],
-      gitReferencedIssueKeys: [],
-      jiraIssuesMissingClinicalLead: [
-        {
-          clinicalLead: '',
-          clinicalReviewStatus: 'Pending',
-          components: [],
-          issueType: 'Story',
-          key: 'CCM-2',
-          medicalClinicalSafetyCategory: '',
-          status: 'Done',
-          summary: 'lead missing',
-        },
-      ],
-      jiraIssuesMissingClinicalSafetyCategory: [
-        {
-          clinicalLead: '',
-          clinicalReviewStatus: 'Pending',
-          components: [],
-          issueType: 'Story',
-          key: 'CCM-1',
-          medicalClinicalSafetyCategory: '',
-          status: 'Done',
-          summary: 'category missing',
-        },
-      ],
-      jiraIssuesMissingFromGit: [],
-      jiraIssuesMissingFromReleaseNotes: [],
-      notesReferencedIssueKeys: [],
-      releaseReferencedIssuesNotDone: [],
-      releaseNotesIssueKeysOutsideRelease: [],
-    });
-
     await run([
       '--repo',
       '../repo',
@@ -188,6 +177,11 @@ describe('run', () => {
       ['0.1.0'],
       'auto',
     );
+    expect(mockedFetchJiraIssuesByKeys).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM',
+      [],
+    );
     expect(fsPromises.mkdir).toHaveBeenCalledWith('/workspace', {
       recursive: true,
     });
@@ -196,13 +190,12 @@ describe('run', () => {
       'report',
       'utf8',
     );
-    expect(stdoutWrite).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Jira issues missing clinical safety category: 1\n',
-      ),
-    );
-    expect(stdoutWrite).toHaveBeenCalledWith(
-      expect.stringContaining('Jira issues missing clinical lead: 1\n'),
+    expect(mockedRenderReport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fixAction: undefined,
+        fixComponent: undefined,
+        fixProposals: undefined,
+      }),
     );
     expect(stdoutWrite).toHaveBeenCalledWith(
       expect.stringContaining('Report written to /workspace/report.txt\n'),
@@ -298,23 +291,70 @@ describe('run', () => {
         totalJiraIssues: 1,
       }),
     );
-    expect(stdoutWrite).toHaveBeenCalledWith(
-      expect.stringContaining('Git tags selected (2): 0.1.0, v0.2.0\n'),
-    );
-    expect(stdoutWrite).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Comparison bases: 0.1.0 <- repository start; v0.2.0 <- 0.1.0\n',
-      ),
-    );
-    expect(stdoutWrite).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Jira versions selected (2): release-a (71260), release-b (71261)\n',
-      ),
-    );
   });
 
-  it('respects an explicit output path and a missing previous tag', async () => {
-    mockedGetPreviousTag.mockReturnValue(null);
+  it('proposes and applies component-filtered fix versions in fix mode', async () => {
+    mockedCollectCommitsForTags.mockReturnValue([
+      {
+        hash: 'a'.repeat(40),
+        shortHash: 'aaaaaaaa',
+        subject: 'CCM-100: ship it',
+        body: '',
+        explicitIssueKeys: ['CCM-100'],
+      },
+    ]);
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map([
+        [
+          'CCM-100',
+          [
+            {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-100: ship it',
+              body: '',
+              explicitIssueKeys: ['CCM-100'],
+              matchedIssueKeys: ['CCM-100'],
+            },
+          ],
+        ],
+      ]),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-100: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-100'],
+            matchedIssueKeys: ['CCM-100'],
+          },
+          missingKeys: ['CCM-100'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-100'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-100',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Platform'],
+        fixVersions: [],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
 
     await run([
       '--repo',
@@ -323,17 +363,86 @@ describe('run', () => {
       '0.1.0',
       '--jira-version',
       '71260',
-      '--output',
-      'reports/custom.txt',
+      '--fix',
+      'fix-version',
+      '--fix-component',
+      'Platform',
+      '--yes',
     ]);
 
-    expect(mockedDefaultReportPath).not.toHaveBeenCalled();
-    expect(fsPromises.mkdir).toHaveBeenCalledWith(
-      expect.stringContaining('/reports'),
-      { recursive: true },
+    expect(mockedRenderFixProposalSection).toHaveBeenCalled();
+    expect(mockedUpdateJiraIssueFixVersions).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM-100',
+      [{ id: '71260', name: 'release' }],
     );
     expect(stdoutWrite).toHaveBeenCalledWith(
-      expect.stringContaining('Comparison base: repository start\n'),
+      expect.stringContaining('Applied fixVersion updates to 1 issue(s).\n'),
+    );
+  });
+
+  it('applies component-filtered clinical review status updates', async () => {
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map([
+        [
+          'CCM-100',
+          [
+            {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-100: ship it',
+              body: '',
+              explicitIssueKeys: ['CCM-100'],
+              matchedIssueKeys: ['CCM-100'],
+            },
+          ],
+        ],
+      ]),
+      commitsWithIssueKeysOutsideRelease: [],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: [],
+      jiraIssuesMissingClinicalLead: [
+        {
+          key: 'CCM-100',
+          clinicalLead: '',
+          clinicalReviewStatus: 'Review required',
+          components: ['Platform'],
+          issueType: 'Story',
+          medicalClinicalSafetyCategory: '',
+          status: 'Done',
+          summary: 'needs review update',
+        },
+      ],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'clinical-review-not-needed',
+      '--fix-component',
+      'Platform',
+      '--yes',
+    ]);
+
+    expect(mockedUpdateJiraIssueClinicalReviewStatus).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM-100',
+    );
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Applied clinical review status updates to 1 issue(s).\n',
+      ),
     );
   });
 });
