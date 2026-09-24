@@ -60,6 +60,7 @@ const JIRA_SEARCH_FIELDS = [
   'status',
   'issuetype',
   'components',
+  'fixVersions',
   CLINICAL_LEAD_FIELD_ID,
   MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID,
   CLINICAL_REVIEW_STATUS_FIELD_ID,
@@ -314,6 +315,11 @@ export const resolveJiraVersion = async (
   ]);
   return version;
 };
+
+export const listJiraVersions = async (
+  jiraBaseUrl: string,
+  jiraProject: string,
+): Promise<JiraVersion[]> => fetchProjectVersions(jiraBaseUrl, jiraProject);
 
 export const fetchJiraIssues = async (
   jiraBaseUrl: string,

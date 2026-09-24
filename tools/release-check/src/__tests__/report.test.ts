@@ -1,6 +1,7 @@
 import {
   defaultReportPath,
   renderFixProposalSection,
+  renderFixProposalTerminalSection,
   renderReport,
 } from '../report';
 
@@ -53,6 +54,7 @@ const fixProposals: FixProposal[] = [
       medicalClinicalSafetyCategory: '',
       fixVersions: [],
     },
+    proposedUpdateSummary: 'client-config-0.1.0',
     targetValueSummary: 'client-config-0.1.0',
   },
 ];
@@ -256,7 +258,9 @@ describe('renderReport', () => {
       fixAction: 'fixVersion',
       fixComponent: 'Platform',
       fixProposals,
-      gitTags: [{ gitTag: '0.1.0', previousTag: '0.0.9' }],
+      gitTags: [
+        { gitTag: '0.1.0', previousTag: '0.0.9', rangeEndTag: '0.1.0' },
+      ],
       jiraProject: 'CCM',
       jiraVersions: [jiraVersion],
       outsideReleaseIssuesByKey: new Map([
@@ -303,20 +307,26 @@ describe('renderReport', () => {
     );
     expect(populatedReport).toContain('| Issue | Commit |');
     expect(populatedReport).toContain(
-      '| CCM-101: [Platform] Missing from git (Done) | No matching commit |',
+      '| [CCM-101](https://nhsd-jira.digital.nhs.uk/browse/CCM-101): [Platform] Missing from git (Done) | No matching commit |',
     );
     expect(populatedReport).toContain(
-      '| CCM-100: [Platform] Referenced and not done (In Progress) | `aaaaaaaa CCM-100: ship it` _(1 commit total)_ |',
+      '| [CCM-100](https://nhsd-jira.digital.nhs.uk/browse/CCM-100): [Platform] Referenced and not done (In Progress) | `aaaaaaaa CCM-100: ship it` _(1 commit total)_ |',
     );
     expect(populatedReport).toContain(
-      '| CCM-999: [Platform] Outside selected versions (Done) | `bbbbbbbb CCM-999: outside` _(2 commits total)_ |',
+      '| [CCM-999](https://nhsd-jira.digital.nhs.uk/browse/CCM-999): [Platform] Outside selected versions (Done) | `bbbbbbbb CCM-999: outside` _(2 commits total)_ |',
     );
     expect(populatedReport).toContain(
       '## Proposed fixVersion updates for component Platform',
     );
     expect(populatedReport).toContain('| Issue | Commit | Proposed update |');
     expect(populatedReport).toContain(
-      '| CCM-555: [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` _(1 commit total)_ | none -> client-config-0.1.0 |',
+      '| [CCM-555](https://nhsd-jira.digital.nhs.uk/browse/CCM-555): [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` _(1 commit total)_ | client-config-0.1.0 |',
+    );
+    expect(populatedReport).toContain(
+      '- Git commit ranges mapped to Jira versions:',
+    );
+    expect(populatedReport).toContain(
+      '  - `0.0.9..0.1.0` -> client-config-0.1.0',
     );
     expect(populatedReport).toContain(
       '## Commits without a Jira key or exact Jira-summary match',
@@ -331,8 +341,8 @@ describe('renderReport', () => {
       fixComponent: undefined,
       fixProposals: undefined,
       gitTags: [
-        { gitTag: '0.1.0', previousTag: null },
-        { gitTag: 'v0.2.0', previousTag: '0.1.0' },
+        { gitTag: '0.1.0', previousTag: null, rangeEndTag: '0.1.0' },
+        { gitTag: 'v0.2.0', previousTag: '0.1.0', rangeEndTag: 'v0.2.0' },
       ],
       jiraProject: 'CCM',
       jiraVersions: [
@@ -368,6 +378,143 @@ describe('renderReport', () => {
     );
     expect(report).toContain('- **Jira versions released:** 1/2');
     expect(report).toContain('- **Release notes source:** mixed');
+    expect(report).toContain(
+      '  - `repository start..0.1.0` -> client-config-0.1.0',
+    );
+    expect(report).toContain('  - `0.1.0..v0.2.0` -> client-config-0.2.0');
+  });
+
+  it('adds separate release range and fix version columns to multi-release reports', () => {
+    const report = renderReport({
+      comparison: {
+        ...comparison,
+        jiraIssuesMissingClinicalSafetyCategory: [
+          {
+            issueType: 'Story',
+            key: 'CCM-998',
+            summary: 'Missing clinical safety category',
+            status: 'Done',
+            components: ['Platform'],
+            clinicalLead: 'Dr Test',
+            clinicalReviewStatus: 'Review required',
+            medicalClinicalSafetyCategory: '',
+            fixVersions: [{ id: '71261', name: 'client-config-0.2.0' }],
+          },
+        ],
+        commitsByIssueKey: new Map([
+          [
+            'CCM-999',
+            [
+              {
+                hash: 'b'.repeat(40),
+                shortHash: 'bbbbbbbb',
+                subject: 'CCM-999: outside',
+                body: '',
+                explicitIssueKeys: ['CCM-999'],
+                matchedIssueKeys: ['CCM-999'],
+                releaseRange: '0.1.0..v0.2.0',
+                releaseTag: 'v0.2.0',
+              },
+              {
+                hash: 'c'.repeat(40),
+                shortHash: 'cccccccc',
+                subject: 'CCM-999: outside follow-up',
+                body: '',
+                explicitIssueKeys: ['CCM-999'],
+                matchedIssueKeys: ['CCM-999'],
+                releaseRange: 'v0.2.0..v0.3.0',
+                releaseTag: 'v0.3.0',
+              },
+            ],
+          ],
+        ]),
+        commitsWithIssueKeysOutsideRelease: [
+          {
+            commit: {
+              hash: 'b'.repeat(40),
+              shortHash: 'bbbbbbbb',
+              subject: 'CCM-999: outside',
+              body: '',
+              explicitIssueKeys: ['CCM-999'],
+              matchedIssueKeys: ['CCM-999'],
+              releaseRange: '0.1.0..v0.2.0',
+              releaseTag: 'v0.2.0',
+            },
+            missingKeys: ['CCM-999'],
+          },
+        ],
+      },
+      fixAction: undefined,
+      fixComponent: undefined,
+      fixProposals: undefined,
+      gitTags: [
+        { gitTag: 'v0.2.0', previousTag: '0.1.0', rangeEndTag: 'v0.2.0' },
+        { gitTag: 'v0.3.0', previousTag: 'v0.2.0', rangeEndTag: 'v0.3.0' },
+      ],
+      jiraProject: 'CCM',
+      jiraVersions: [
+        {
+          id: '71261',
+          name: 'client-config-0.2.0',
+          releaseDate: null,
+          released: false,
+        },
+        {
+          id: '71262',
+          name: 'client-config-0.3.0',
+          releaseDate: null,
+          released: false,
+        },
+      ],
+      outsideReleaseIssuesByKey: new Map([
+        [
+          'CCM-999',
+          {
+            issueType: 'Story',
+            key: 'CCM-999',
+            summary: 'Outside selected versions',
+            status: 'Done',
+            components: ['Platform'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+            fixVersions: [
+              { id: '71260', name: 'client-config-0.1.0' },
+              { id: '80000', name: 'another-release' },
+            ],
+          },
+        ],
+      ]),
+      releaseNotes: {
+        issueKeys: [],
+        source: 'none',
+        text: null,
+        warnings: [],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 0,
+    });
+
+    expect(report).toContain(
+      '| Issue | Commit | Release range | Fix versions |',
+    );
+    expect(report).toContain(
+      '| [CCM-999](https://nhsd-jira.digital.nhs.uk/browse/CCM-999): [Platform] Outside selected versions (Done) | `bbbbbbbb CCM-999: outside` _(2 commits total)_ | 0.1.0..v0.2.0; v0.2.0..v0.3.0 | client-config-0.1.0, another-release |',
+    );
+    expect(report).toContain('### Example fix-version commands by component');
+    expect(report).toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag 'v0.2.0' --jira-version 'client-config-0.2.0' --fix fix-version --fix-component 'Platform'",
+    );
+    expect(report).toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag 'v0.3.0' --jira-version 'client-config-0.3.0' --fix fix-version --fix-component 'Platform'",
+    );
+    expect(report).toContain(
+      '### Example clinical-review-not-needed commands by component',
+    );
+    expect(report).toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag 'v0.2.0' --jira-version 'client-config-0.2.0' --fix clinical-review-not-needed --fix-component 'Platform'",
+    );
   });
 
   it('renders unknown release metadata when Jira has not set it', () => {
@@ -400,6 +547,163 @@ describe('renderReport', () => {
 
     expect(report).toContain('- **Jira release date:** unknown');
     expect(report).toContain('- **Jira version released:** no');
+  });
+
+  it('scopes clinical review example commands to the issue fix versions', () => {
+    const report = renderReport({
+      comparison: {
+        ...comparison,
+        commitsByIssueKey: new Map([
+          [
+            'CCM-12081',
+            [
+              {
+                hash: 'a'.repeat(40),
+                shortHash: 'aaaaaaaa',
+                subject: 'CCM-12081: first release work',
+                body: '',
+                explicitIssueKeys: ['CCM-12081'],
+                matchedIssueKeys: ['CCM-12081'],
+                releaseRange: 'repository start..0.1.0',
+                releaseTag: '0.1.0',
+              },
+            ],
+          ],
+          [
+            'CCM-22822',
+            [
+              {
+                hash: 'b'.repeat(40),
+                shortHash: 'bbbbbbbb',
+                subject: 'CCM-22822: third release work',
+                body: '',
+                explicitIssueKeys: ['CCM-22822'],
+                matchedIssueKeys: ['CCM-22822'],
+                releaseRange: 'v0.2.0..v0.3.1',
+                releaseTag: '0.3.0',
+              },
+            ],
+          ],
+        ]),
+        jiraIssuesMissingClinicalSafetyCategory: [
+          {
+            issueType: 'Story',
+            key: 'CCM-12081',
+            summary: 'First release issue',
+            status: 'Done',
+            components: ['Onboarding-Improvements'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+            fixVersions: [{ id: '71260', name: 'client-config-0.1.0' }],
+          },
+          {
+            issueType: 'Story',
+            key: 'CCM-22822',
+            summary: 'Third release issue',
+            status: 'Done',
+            components: ['onboarding-journey-improvements'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+            fixVersions: [{ id: '71262', name: 'client-config-0.3.0' }],
+          },
+        ],
+      },
+      fixAction: undefined,
+      fixComponent: undefined,
+      fixProposals: undefined,
+      gitTags: [
+        { gitTag: '0.1.0', previousTag: null, rangeEndTag: '0.1.0' },
+        { gitTag: '0.3.0', previousTag: 'v0.2.0', rangeEndTag: 'v0.3.1' },
+      ],
+      jiraProject: 'CCM',
+      jiraVersions: [
+        {
+          id: '71260',
+          name: 'client-config-0.1.0',
+          releaseDate: '2026-07-08',
+          released: true,
+        },
+        {
+          id: '71262',
+          name: 'client-config-0.3.0',
+          releaseDate: '2026-09-15',
+          released: true,
+        },
+      ],
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes: {
+        issueKeys: [],
+        source: 'none',
+        text: null,
+        warnings: [],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 2,
+    });
+
+    expect(report).toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag '0.1.0' --jira-version 'client-config-0.1.0' --fix clinical-review-not-needed --fix-component 'Onboarding-Improvements'",
+    );
+    expect(report).toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag '0.3.0' --jira-version 'client-config-0.3.0' --fix clinical-review-not-needed --fix-component 'onboarding-journey-improvements'",
+    );
+    expect(report).not.toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag '0.3.0' --jira-version 'client-config-0.3.0' --fix clinical-review-not-needed --fix-component 'Onboarding-Improvements'",
+    );
+  });
+
+  it('does not invent clinical review commands for issues without a selected fix version', () => {
+    const report = renderReport({
+      comparison: {
+        ...comparison,
+        jiraIssuesMissingClinicalSafetyCategory: [
+          {
+            issueType: 'Story',
+            key: 'CCM-999',
+            summary: 'No selected fix version',
+            status: 'Done',
+            components: ['Platform'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+            fixVersions: [{ id: '80000', name: 'some-other-release' }],
+          },
+        ],
+      },
+      fixAction: undefined,
+      fixComponent: undefined,
+      fixProposals: undefined,
+      gitTags: [
+        { gitTag: '0.3.0', previousTag: 'v0.2.0', rangeEndTag: 'v0.3.1' },
+      ],
+      jiraProject: 'CCM',
+      jiraVersions: [
+        {
+          id: '71262',
+          name: 'client-config-0.3.0',
+          releaseDate: '2026-09-15',
+          released: true,
+        },
+      ],
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes: {
+        issueKeys: [],
+        source: 'none',
+        text: null,
+        warnings: [],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 1,
+    });
+
+    expect(report).not.toContain('--fix clinical-review-not-needed');
+    expect(report).toContain(
+      '# No single-release clinical review command generated for CCM-999',
+    );
   });
 
   it('labels missing Jira issues as not found while retaining commits', () => {
@@ -454,7 +758,7 @@ describe('renderReport', () => {
     });
 
     expect(report).toContain(
-      '| CCM-404: not found in Jira | `eeeeeeee CCM-404: missing issue` _(1 commit total)_ |',
+      '| [CCM-404](https://nhsd-jira.digital.nhs.uk/browse/CCM-404): not found in Jira | `eeeeeeee CCM-404: missing issue` _(1 commit total)_ |',
     );
   });
 });
@@ -487,7 +791,89 @@ describe('renderFixProposalSection', () => {
     );
     expect(section).toContain('| Issue | Commit | Proposed update |');
     expect(section).toContain(
-      '| CCM-555: [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` _(1 commit total)_ | none -> client-config-0.1.0 |',
+      '| [CCM-555](https://nhsd-jira.digital.nhs.uk/browse/CCM-555): [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` _(1 commit total)_ | client-config-0.1.0 |',
     );
+  });
+
+  it('renders terminal-friendly proposed fixes without markdown formatting', () => {
+    const section = renderFixProposalTerminalSection(
+      'fixVersion',
+      'Platform',
+      fixProposals,
+      new Map([
+        [
+          'CCM-555',
+          [
+            {
+              hash: 'd'.repeat(40),
+              shortHash: 'dddddddd',
+              subject: 'CCM-555: proposed fix',
+              body: '',
+              explicitIssueKeys: ['CCM-555'],
+              matchedIssueKeys: ['CCM-555'],
+            },
+          ],
+        ],
+      ]),
+    );
+
+    expect(section).toContain(
+      'Proposed fixVersion updates for component Platform',
+    );
+    expect(section).toContain('CCM-555: [Platform] Needs fix version (Done)');
+    expect(section).toContain(
+      'dddddddd CCM-555: proposed fix (1 commit total)',
+    );
+    expect(section).not.toContain('## Proposed');
+    expect(section).not.toContain('| Issue | Commit | Proposed update |');
+    expect(section).not.toContain('[CCM-555](');
+  });
+
+  it('truncates wide issue and commit cells in terminal output', () => {
+    const longSummary = `Needs fix version ${'summary '.repeat(20)}`.trim();
+    const longCommit = `CCM-777: ${'proposed fix '.repeat(20)}`.trim();
+
+    const section = renderFixProposalTerminalSection(
+      'fixVersion',
+      'Platform',
+      [
+        {
+          currentValueSummary: 'other-release',
+          issue: {
+            issueType: 'Story',
+            key: 'CCM-777',
+            summary: longSummary,
+            status: 'Done',
+            components: ['Platform'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+            fixVersions: [{ id: '70000', name: 'other-release' }],
+          },
+          proposedUpdateSummary: 'client-config-0.1.0 + 1 (other-release)',
+          targetValueSummary: 'other-release, client-config-0.1.0',
+        },
+      ],
+      new Map([
+        [
+          'CCM-777',
+          [
+            {
+              hash: 'd'.repeat(40),
+              shortHash: 'dddddddd',
+              subject: longCommit,
+              body: '',
+              explicitIssueKeys: ['CCM-777'],
+              matchedIssueKeys: ['CCM-777'],
+            },
+          ],
+        ],
+      ]),
+    );
+
+    expect(section).toContain('...');
+    expect(section).not.toContain(longSummary);
+    expect(section).not.toContain(`dddddddd ${longCommit} (1 commit total)`);
+    expect(section).toContain('client-config-0.1.0 + 1 (other-release)');
   });
 });

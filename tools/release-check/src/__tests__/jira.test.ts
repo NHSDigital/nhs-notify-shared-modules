@@ -266,6 +266,7 @@ describe('jira issue operations', () => {
             'status',
             'issuetype',
             'components',
+            'fixVersions',
             'customfield_10523',
             'customfield_15200',
             'customfield_16657',
