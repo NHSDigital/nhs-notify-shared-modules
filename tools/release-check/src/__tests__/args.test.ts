@@ -133,6 +133,8 @@ describe('parseCliArgs', () => {
         'github',
       ]),
     ).toEqual({
+      fixAction: undefined,
+      fixComponent: undefined,
       repo: '../repo',
       gitTagSelectors: ['0.1.0'],
       jiraVersionSelectors: ['71260'],
@@ -141,6 +143,7 @@ describe('parseCliArgs', () => {
       previousTag: undefined,
       output: undefined,
       releaseNotesSource: 'github',
+      yes: false,
     });
   });
 
