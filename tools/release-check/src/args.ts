@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
 
 import { parseSelectorList } from './selectors';
-import type { CliOptions, ReleaseNotesSource } from './types';
+import type { CliOptions, FixAction, ReleaseNotesSource } from './types';
 
 const DEFAULT_JIRA_BASE_URL = 'https://nhsd-jira.digital.nhs.uk';
 const DEFAULT_JIRA_PROJECT = 'CCM';
@@ -18,6 +18,9 @@ const isReleaseNotesSource = (
   value: string | undefined,
 ): value is ReleaseNotesSource =>
   value === 'auto' || value === 'github' || value === 'tag' || value === 'none';
+
+const isFixAction = (value: string | undefined): value is FixAction =>
+  value === 'fix-version' || value === 'clinical-review-not-needed';
 
 const parseSelectors = (
   single: string | undefined,
@@ -48,6 +51,8 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
   const { values } = parseArgs({
     args: argv,
     options: {
+      fix: { type: 'string' },
+      'fix-component': { type: 'string' },
       repo: { type: 'string' },
       'git-tag': { type: 'string' },
       'git-tags': { type: 'string' },
@@ -58,9 +63,12 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
       'previous-tag': { type: 'string' },
       output: { type: 'string' },
       'release-notes-source': { type: 'string', default: 'auto' },
+      yes: { type: 'boolean', default: false },
     },
     allowPositionals: false,
   });
+
+  const fixAction = values.fix;
 
   if (!values.repo) {
     throw new Error('Missing required option --repo');
@@ -70,8 +78,21 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
       'Invalid --release-notes-source. Expected one of: auto, github, tag, none',
     );
   }
+  if (fixAction && !isFixAction(fixAction)) {
+    throw new Error(
+      'Invalid --fix. Expected one of: fix-version, clinical-review-not-needed',
+    );
+  }
+  if (fixAction && !values['fix-component']) {
+    throw new Error('Option --fix requires --fix-component');
+  }
+  if (!fixAction && values['fix-component']) {
+    throw new Error('Option --fix-component requires --fix');
+  }
 
   return {
+    fixAction: isFixAction(fixAction) ? fixAction : undefined,
+    fixComponent: values['fix-component'],
     repo: values.repo,
     gitTagSelectors: parseSelectors(
       values['git-tag'],
@@ -92,5 +113,6 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
     previousTag: values['previous-tag'],
     output: values.output,
     releaseNotesSource: values['release-notes-source'],
+    yes: values.yes ?? false,
   };
 };
