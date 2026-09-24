@@ -48,10 +48,9 @@ const notes =
   jest.requireMock<typeof import('../github-release')>('../github-release');
 const compare = jest.requireMock<typeof import('../compare')>('../compare');
 const report = jest.requireMock<typeof import('../report')>('../report');
-const readlinePromises =
-  jest.requireMock<typeof import('node:readline/promises')>(
-    'node:readline/promises',
-  );
+const readlinePromises = jest.requireMock<
+  typeof import('node:readline/promises')
+>('node:readline/promises');
 
 const mockedResolveRepoPath = git.resolveRepoPath as jest.MockedFunction<
   typeof git.resolveRepoPath
@@ -122,7 +121,10 @@ const originalStdoutIsTTY = Object.getOwnPropertyDescriptor(
   'isTTY',
 );
 
-const setStreamTty = (stream: NodeJS.ReadStream | NodeJS.WriteStream, value: boolean): void => {
+const setStreamTty = (
+  stream: NodeJS.ReadStream | NodeJS.WriteStream,
+  value: boolean,
+): void => {
   Object.defineProperty(stream, 'isTTY', {
     configurable: true,
     value,
