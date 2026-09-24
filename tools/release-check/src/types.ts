@@ -23,6 +23,10 @@ export type GitCommit = {
   body: string;
   explicitIssueKeys: string[];
   hash: string;
+  issueKeyOverride?: {
+    commitHash: string;
+    issueKey: string;
+  };
   releaseRange?: string;
   releaseTag?: string;
   shortHash: string;
@@ -49,6 +53,8 @@ export type JiraVersion = {
 };
 
 export type MatchedCommit = GitCommit & {
+  detectedIssueKeys?: string[];
+  issueKeySource?: 'explicit' | 'mapped' | 'none' | 'summary';
   matchedIssueKeys: string[];
 };
 
@@ -70,6 +76,7 @@ export type ComparisonResult = {
 };
 
 export type CliOptions = {
+  commitMappingFile?: string;
   fixAction?: FixAction;
   fixComponent?: string;
   gitTagSelectors: string[];
