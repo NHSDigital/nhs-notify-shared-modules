@@ -1,5 +1,6 @@
 import { parseArgs } from 'node:util';
 
+import { parseSelectorList } from './selectors';
 import type { CliOptions, ReleaseNotesSource } from './types';
 
 const DEFAULT_JIRA_BASE_URL = 'https://nhsd-jira.digital.nhs.uk';
@@ -18,13 +19,40 @@ const isReleaseNotesSource = (
 ): value is ReleaseNotesSource =>
   value === 'auto' || value === 'github' || value === 'tag' || value === 'none';
 
+const parseSelectors = (
+  single: string | undefined,
+  multiple: string | undefined,
+  singleOption: string,
+  multipleOption: string,
+): string[] => {
+  if (single && multiple) {
+    throw new Error(
+      `Options --${singleOption} and --${multipleOption} are mutually exclusive`,
+    );
+  }
+
+  if (multiple) {
+    return parseSelectorList(multiple);
+  }
+
+  if (single) {
+    return [single.trim()].filter(Boolean);
+  }
+
+  throw new Error(
+    `Missing required option --${singleOption} or --${multipleOption}`,
+  );
+};
+
 export const parseCliArgs = (argv: string[]): CliOptions => {
   const { values } = parseArgs({
     args: argv,
     options: {
       repo: { type: 'string' },
       'git-tag': { type: 'string' },
+      'git-tags': { type: 'string' },
       'jira-version': { type: 'string' },
+      'jira-versions': { type: 'string' },
       'jira-project': { type: 'string', default: DEFAULT_JIRA_PROJECT },
       'jira-base-url': { type: 'string', default: DEFAULT_JIRA_BASE_URL },
       'previous-tag': { type: 'string' },
@@ -37,12 +65,6 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
   if (!values.repo) {
     throw new Error('Missing required option --repo');
   }
-  if (!values['git-tag']) {
-    throw new Error('Missing required option --git-tag');
-  }
-  if (!values['jira-version']) {
-    throw new Error('Missing required option --jira-version');
-  }
   if (!isReleaseNotesSource(values['release-notes-source'])) {
     throw new Error(
       'Invalid --release-notes-source. Expected one of: auto, github, tag, none',
@@ -51,8 +73,18 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
 
   return {
     repo: values.repo,
-    gitTag: values['git-tag'],
-    jiraVersion: values['jira-version'],
+    gitTagSelectors: parseSelectors(
+      values['git-tag'],
+      values['git-tags'],
+      'git-tag',
+      'git-tags',
+    ),
+    jiraVersionSelectors: parseSelectors(
+      values['jira-version'],
+      values['jira-versions'],
+      'jira-version',
+      'jira-versions',
+    ),
     jiraProject: values['jira-project'],
     jiraBaseUrl: trimTrailingSlashes(values['jira-base-url']),
     previousTag: values['previous-tag'],

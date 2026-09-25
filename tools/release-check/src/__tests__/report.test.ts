@@ -31,10 +31,22 @@ const releaseNotes: ReleaseNotes = {
 };
 
 describe('defaultReportPath', () => {
-  it('writes reports under .tmp/release-check in the cwd', () => {
+  it('writes single-release reports under .tmp/release-check in the cwd', () => {
     expect(
-      defaultReportPath('nhs-notify-client-config', '0.1.0', '/workspace'),
+      defaultReportPath('nhs-notify-client-config', ['0.1.0'], '/workspace'),
     ).toBe('/workspace/.tmp/release-check/nhs-notify-client-config-0.1.0.txt');
+  });
+
+  it('summarises multiple selected tags in the report filename', () => {
+    expect(
+      defaultReportPath(
+        'nhs-notify-client-config',
+        ['0.1.0', 'v0.2.0', 'v0.3.1'],
+        '/workspace',
+      ),
+    ).toBe(
+      '/workspace/.tmp/release-check/nhs-notify-client-config-0.1.0-to-v0.3.1-3-tags.txt',
+    );
   });
 });
 
@@ -42,10 +54,9 @@ describe('renderReport', () => {
   it('renders summary metadata and warnings', () => {
     const report = renderReport({
       comparison,
-      gitTag: '0.1.0',
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
       jiraProject: 'CCM',
-      jiraVersion,
-      previousTag: null,
+      jiraVersions: [jiraVersion],
       releaseNotes,
       repoName: 'nhs-notify-client-config',
       repoRoot: '/repos/nhs-notify-client-config',
@@ -162,10 +173,9 @@ describe('renderReport', () => {
         ],
         releaseNotesIssueKeysOutsideRelease: ['CCM-200'],
       },
-      gitTag: '0.1.0',
+      gitTags: [{ gitTag: '0.1.0', previousTag: '0.0.9' }],
       jiraProject: 'CCM',
-      jiraVersion,
-      previousTag: '0.0.9',
+      jiraVersions: [jiraVersion],
       releaseNotes: {
         issueKeys: ['CCM-100'],
         source: 'github-release',
@@ -199,18 +209,61 @@ describe('renderReport', () => {
     expect(populatedReport).toContain('- cccccccc maintenance');
   });
 
+  it('renders multi-release metadata when multiple tags and Jira versions are selected', () => {
+    const report = renderReport({
+      comparison,
+      gitTags: [
+        { gitTag: '0.1.0', previousTag: null },
+        { gitTag: 'v0.2.0', previousTag: '0.1.0' },
+      ],
+      jiraProject: 'CCM',
+      jiraVersions: [
+        jiraVersion,
+        {
+          id: '71261',
+          name: 'client-config-0.2.0',
+          releaseDate: null,
+          released: false,
+        },
+      ],
+      releaseNotes: {
+        issueKeys: ['CCM-100'],
+        source: 'mixed',
+        text: null,
+        warnings: [],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 20,
+    });
+
+    expect(report).toContain('Git tags selected (2): 0.1.0, v0.2.0');
+    expect(report).toContain(
+      'Comparison bases: 0.1.0 <- repository start; v0.2.0 <- 0.1.0',
+    );
+    expect(report).toContain(
+      'Jira versions selected (2): client-config-0.1.0 (71260), client-config-0.2.0 (71261)',
+    );
+    expect(report).toContain(
+      'Jira release dates: client-config-0.1.0: 2026-07-08; client-config-0.2.0: unknown',
+    );
+    expect(report).toContain('Jira versions released: 1/2');
+    expect(report).toContain('Release notes source: mixed');
+  });
+
   it('renders unknown release metadata when Jira has not set it', () => {
     const report = renderReport({
       comparison,
-      gitTag: '0.1.0',
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
       jiraProject: 'CCM',
-      jiraVersion: {
-        id: '71260',
-        name: 'client-config-0.1.0',
-        releaseDate: null,
-        released: false,
-      },
-      previousTag: null,
+      jiraVersions: [
+        {
+          id: '71260',
+          name: 'client-config-0.1.0',
+          releaseDate: null,
+          released: false,
+        },
+      ],
       releaseNotes: {
         issueKeys: [],
         source: 'none',

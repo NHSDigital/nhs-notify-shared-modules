@@ -1,9 +1,9 @@
 # release-check
 
-Compares a local repository release tag against a Jira release version and reports mismatches across:
+Compares a local repository release tag, or a selected set of release tags, against one or more Jira release versions and reports mismatches across:
 
-- git commit history since the previous tag
-- Jira issues assigned to the release version
+- git commit history for the selected release ranges
+- Jira issues assigned to the selected release versions
 - release notes, using the GitHub release body when available
 
 ## Usage
@@ -20,6 +20,34 @@ Or directly:
 pnpm --filter @nhsdigital/nhs-notify-release-check run check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
 ```
 
+## Multi-release usage
+
+Explicit list selection:
+
+```bash
+pnpm release-check -- \
+  --repo ../nhs-notify-client-config \
+  --git-tags 0.1.0,v0.2.0,v0.3.0,v0.3.1 \
+  --jira-versions client-config-0.1.0,client-config-0.2.0,client-config-0.3.0,client-config-0.3.1
+```
+
+Wildcard selection against tag and Jira version names:
+
+```bash
+pnpm release-check -- \
+  --repo ../nhs-notify-client-config \
+  --git-tags '0.1.0,v0.2.*,v0.3.*' \
+  --jira-versions 'client-config-0.1.0,client-config-0.2.*,client-config-0.3.*'
+```
+
+Notes for multi-release mode:
+
+- `--git-tags` and `--jira-versions` accept comma-separated selectors.
+- Selectors can be exact values or glob-style patterns using `*` and `?`.
+- Multiple selected git tags are expanded in repository tag order.
+- Commit history is aggregated by collecting each selected release range and de-duplicating overlapping commits.
+- Multiple selected Jira versions are aggregated into one issue set before comparison.
+
 ## Required environment
 
 - `JIRA_API_TOKEN` or `JIRA_PERSONAL_TOKEN` or `JIRA_TOKEN`
@@ -32,7 +60,8 @@ pnpm --filter @nhsdigital/nhs-notify-release-check run check -- --repo ../nhs-no
 
 - The tool auto-detects the previous tag using `git describe --tags --abbrev=0 <tag>^`.
 - When GitHub release notes are unavailable, auto mode falls back to annotated tag notes if the tag is annotated.
-- Reports default to `.tmp/release-check/<repo>-<tag>.txt` in the current working directory.
+- Reports default to `.tmp/release-check/<repo>-<tag>.txt` for single-release checks.
+- Multi-release reports default to `.tmp/release-check/<repo>-<first-tag>-to-<last-tag>-<count>-tags.txt`.
 
 ## Publishing
 
