@@ -56,12 +56,49 @@ Notes for multi-release mode:
 
 - `GITHUB_TOKEN` or `GH_TOKEN` for fetching GitHub release notes from private repositories
 
+## Fix workflows
+
+The CLI can also prepare and optionally apply targeted Jira updates for a single
+resolved release pair.
+
+### Add the selected Jira fix version to git-referenced issues outside the release
+
+```bash
+pnpm release-check -- \
+  --repo ../nhs-notify-client-config \
+  --git-tag v0.2.0 \
+  --jira-version client-config-0.2.0 \
+  --fix fix-version \
+  --fix-component onboarding-journey-improvements
+```
+
+### Mark clinical review as not needed for a component-scoped subset
+
+```bash
+pnpm release-check -- \
+  --repo ../nhs-notify-client-config \
+  --git-tag v0.3.0 \
+  --jira-version client-config-0.3.0 \
+  --fix clinical-review-not-needed \
+  --fix-component onboarding-journey-improvements
+```
+
+Notes for fix mode:
+
+- `--fix` accepts `fix-version` or `clinical-review-not-needed`.
+- `--fix-component` is required and scopes the proposed Jira updates.
+- Fix mode currently requires exactly one resolved git tag and one resolved Jira version.
+- The CLI prints the full issue and representative commit list before applying updates.
+- By default the CLI asks for confirmation before changing Jira.
+- Use `--yes` to skip the confirmation prompt in non-interactive automation.
+
 ## Notes
 
 - The tool auto-detects the previous tag using `git describe --tags --abbrev=0 <tag>^`.
 - When GitHub release notes are unavailable, auto mode falls back to annotated tag notes if the tag is annotated.
-- Reports default to `.tmp/release-check/<repo>-<tag>.txt` for single-release checks.
-- Multi-release reports default to `.tmp/release-check/<repo>-<first-tag>-to-<last-tag>-<count>-tags.txt`.
+- Reports default to `.tmp/release-check/<repo>-<tag>.md` for single-release checks.
+- Multi-release reports default to `.tmp/release-check/<repo>-<first-tag>-to-<last-tag>-<count>-tags.md`.
+- Reports are emitted as Markdown so they can be inspected in a Markdown preview.
 
 ## Publishing
 
