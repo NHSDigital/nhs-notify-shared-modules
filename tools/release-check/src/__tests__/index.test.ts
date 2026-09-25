@@ -10,11 +10,14 @@ jest.mock('node:fs/promises', () => ({
 }));
 
 jest.mock('../git', () => ({
+  applyCommitIssueKeyMappings: jest.fn(),
   collectCommitsForTags: jest.fn(),
+  findDefaultCommitIssueMappingFile: jest.fn(),
   getPreviousTag: jest.fn(),
   getRepoName: jest.fn(),
   getRepoRoot: jest.fn(),
   listTags: jest.fn(),
+  readCommitIssueKeyMappings: jest.fn(),
   resolveGitTags: jest.fn(),
   resolveRepoPath: jest.fn(),
 }));
@@ -74,6 +77,18 @@ const mockedGetPreviousTag = git.getPreviousTag as jest.MockedFunction<
 const mockedCollectCommitsForTags =
   git.collectCommitsForTags as jest.MockedFunction<
     typeof git.collectCommitsForTags
+  >;
+const mockedFindDefaultCommitIssueMappingFile =
+  git.findDefaultCommitIssueMappingFile as jest.MockedFunction<
+    typeof git.findDefaultCommitIssueMappingFile
+  >;
+const mockedApplyCommitIssueKeyMappings =
+  git.applyCommitIssueKeyMappings as jest.MockedFunction<
+    typeof git.applyCommitIssueKeyMappings
+  >;
+const mockedReadCommitIssueKeyMappings =
+  git.readCommitIssueKeyMappings as jest.MockedFunction<
+    typeof git.readCommitIssueKeyMappings
   >;
 const mockedResolveJiraVersions =
   jira.resolveJiraVersions as jest.MockedFunction<
@@ -159,6 +174,9 @@ describe('run', () => {
     mockedResolveGitTags.mockReturnValue(['0.1.0']);
     mockedGetPreviousTag.mockReturnValue('0.0.9');
     mockedCollectCommitsForTags.mockReturnValue([]);
+    mockedFindDefaultCommitIssueMappingFile.mockReturnValue(undefined);
+    mockedApplyCommitIssueKeyMappings.mockImplementation((commits) => commits);
+    mockedReadCommitIssueKeyMappings.mockResolvedValue(new Map());
     mockedListJiraVersions.mockResolvedValue([
       {
         id: '71260',
@@ -245,6 +263,10 @@ describe('run', () => {
       ['0.1.0'],
       'auto',
     );
+    expect(mockedApplyCommitIssueKeyMappings).toHaveBeenCalledWith(
+      [],
+      new Map(),
+    );
     expect(mockedFetchJiraIssuesByKeys).toHaveBeenCalledWith(
       'https://nhsd-jira.digital.nhs.uk',
       'CCM',
@@ -268,6 +290,120 @@ describe('run', () => {
     );
     expect(stdoutWrite).toHaveBeenCalledWith(
       expect.stringContaining('Report written to /workspace/report.txt\n'),
+    );
+  });
+
+  it('reads and applies commit ticket mappings when configured', async () => {
+    mockedCollectCommitsForTags.mockReturnValue([
+      {
+        hash: 'a'.repeat(40),
+        shortHash: 'aaaaaaaa',
+        subject: 'CCM-999: wrong ticket',
+        body: '',
+        explicitIssueKeys: ['CCM-999'],
+      },
+    ]);
+    mockedApplyCommitIssueKeyMappings.mockReturnValue([
+      {
+        hash: 'a'.repeat(40),
+        shortHash: 'aaaaaaaa',
+        subject: 'CCM-999: wrong ticket',
+        body: '',
+        explicitIssueKeys: ['CCM-999'],
+        issueKeyOverride: {
+          commitHash: 'aaaaaaa',
+          issueKey: 'CCM-100',
+        },
+      },
+    ]);
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map(),
+      commitsWithIssueKeysOutsideRelease: [],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: [],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--commit-mapping-file',
+      '.release-check/map.txt',
+    ]);
+
+    expect(mockedReadCommitIssueKeyMappings).toHaveBeenCalledWith(
+      '/repo',
+      '.release-check/map.txt',
+    );
+    expect(mockedApplyCommitIssueKeyMappings).toHaveBeenCalledWith(
+      [
+        {
+          hash: 'a'.repeat(40),
+          shortHash: 'aaaaaaaa',
+          subject: 'CCM-999: wrong ticket',
+          body: '',
+          explicitIssueKeys: ['CCM-999'],
+        },
+      ],
+      new Map(),
+    );
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining('Commit ticket mappings applied: 1\n'),
+    );
+  });
+
+  it('auto-detects a .jira-commits file from the target repo root', async () => {
+    mockedFindDefaultCommitIssueMappingFile.mockReturnValue(
+      '/repo/.jira-commits',
+    );
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+    ]);
+
+    expect(mockedFindDefaultCommitIssueMappingFile).toHaveBeenCalledWith(
+      '/repo',
+    );
+    expect(mockedReadCommitIssueKeyMappings).toHaveBeenCalledWith(
+      '/repo',
+      '/repo/.jira-commits',
+    );
+  });
+
+  it('prefers an explicit mapping file over the repo-root .jira-commits file', async () => {
+    mockedFindDefaultCommitIssueMappingFile.mockReturnValue(
+      '/repo/.jira-commits',
+    );
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--commit-mapping-file',
+      '.release-check/map.txt',
+    ]);
+
+    expect(mockedReadCommitIssueKeyMappings).toHaveBeenCalledWith(
+      '/repo',
+      '.release-check/map.txt',
     );
   });
 
