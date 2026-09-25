@@ -405,6 +405,56 @@ describe('renderReport', () => {
     );
   });
 
+  it('renders mapped commits that replace a missing detected ticket', () => {
+    const report = renderReport({
+      comparison: {
+        ...comparison,
+        commitsByIssueKey: new Map([
+          [
+            'CCM-777',
+            [
+              {
+                hash: 'f'.repeat(40),
+                shortHash: 'ffffffff',
+                subject: 'release plumbing',
+                body: '',
+                explicitIssueKeys: [],
+                detectedIssueKeys: [],
+                issueKeyOverride: {
+                  commitHash: 'fffffff',
+                  issueKey: 'CCM-777',
+                },
+                issueKeySource: 'mapped',
+                matchedIssueKeys: ['CCM-777'],
+              },
+            ],
+          ],
+        ]),
+      },
+      fixAction: undefined,
+      fixComponent: undefined,
+      fixProposals: undefined,
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
+      jiraProject: 'CCM',
+      jiraVersions: [jiraVersion],
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes: {
+        issueKeys: [],
+        source: 'none',
+        text: null,
+        warnings: [],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 0,
+    });
+
+    expect(report).toContain('## Commits with Jira ticket mappings applied');
+    expect(report).toContain(
+      '| `ffffffff release plumbing` | [CCM-777](https://nhsd-jira.digital.nhs.uk/browse/CCM-777): not found in Jira | no detected ticket |',
+    );
+  });
+
   it('renders multi-release metadata when multiple tags and Jira versions are selected', () => {
     const report = renderReport({
       comparison,

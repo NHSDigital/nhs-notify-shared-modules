@@ -479,10 +479,10 @@ const maybeWriteComparisonReport = async ({
   jiraVersions,
   output,
   outsideReleaseIssuesByKey,
-  selectedReleaseIssuesByKey,
   releaseNotes,
   repoName,
   repoRoot,
+  selectedReleaseIssuesByKey,
   totalJiraIssues,
 }: {
   comparison: ReturnType<typeof compareRelease>;
@@ -495,10 +495,10 @@ const maybeWriteComparisonReport = async ({
   jiraVersions: JiraVersion[];
   output?: string;
   outsideReleaseIssuesByKey: Map<string, JiraIssue>;
-  selectedReleaseIssuesByKey: Map<string, JiraIssue>;
   releaseNotes: Awaited<ReturnType<typeof readReleaseNotesForTags>>;
   repoName: string;
   repoRoot: string;
+  selectedReleaseIssuesByKey: Map<string, JiraIssue>;
   totalJiraIssues: number;
 }): Promise<string | undefined> => {
   if (fixAction) {
@@ -521,10 +521,10 @@ const maybeWriteComparisonReport = async ({
     jiraBaseUrl,
     jiraProject,
     jiraVersions,
+    outsideReleaseIssuesByKey,
     releaseNotes,
     repoName,
     repoRoot,
-    outsideReleaseIssuesByKey,
     selectedReleaseIssuesByKey,
     totalJiraIssues,
   });

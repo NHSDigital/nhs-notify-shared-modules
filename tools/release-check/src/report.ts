@@ -429,10 +429,6 @@ const renderMappedCommitSection = ({
   jiraBaseUrl: string;
 }): string => {
   const title = 'Commits with Jira ticket mappings applied';
-  if (commits.length === 0) {
-    return `## ${title}\n\n- none\n`;
-  }
-
   const rows = commits.map((commit) => {
     const mappedIssueKey = commit.issueKeyOverride?.issueKey ?? '';
     const mappedIssue = issueByKey.get(mappedIssueKey);
@@ -764,10 +760,10 @@ export const renderReport = ({
   jiraProject,
   jiraVersions,
   outsideReleaseIssuesByKey,
-  selectedReleaseIssuesByKey = new Map<string, JiraIssue>(),
   releaseNotes,
   repoName,
   repoRoot,
+  selectedReleaseIssuesByKey = new Map<string, JiraIssue>(),
   totalJiraIssues,
 }: {
   comparison: ComparisonResult;
@@ -779,10 +775,10 @@ export const renderReport = ({
   jiraProject: string;
   jiraVersions: JiraVersion[];
   outsideReleaseIssuesByKey: Map<string, JiraIssue>;
-  selectedReleaseIssuesByKey?: Map<string, JiraIssue>;
   releaseNotes: ReleaseNotes;
   repoName: string;
   repoRoot: string;
+  selectedReleaseIssuesByKey?: Map<string, JiraIssue>;
   totalJiraIssues: number;
 }): string => {
   const { warnings } = releaseNotes;
