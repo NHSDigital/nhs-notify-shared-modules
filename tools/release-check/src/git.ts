@@ -5,7 +5,10 @@ import { spawnSync } from 'node:child_process';
 import type { GitCommit } from './types';
 
 const GIT_EXECUTABLE = '/usr/bin/git';
-const ISSUE_KEY_PATTERN = /\b[A-Z][A-Z0-9]+-\d+\b/g;
+const ISSUE_KEY_PATTERN = /(^|[^A-Z0-9/])([A-Z][A-Z0-9]+-\d+)(?=$|[^A-Z0-9/])/g;
+
+const extractIssueKeys = (text: string): string[] =>
+  [...text.matchAll(ISSUE_KEY_PATTERN)].map((match) => match[2].toUpperCase());
 
 const runGit = (repoPath: string, args: string[]): string => {
   const result = spawnSync(GIT_EXECUTABLE, ['-C', repoPath, ...args], {
@@ -102,11 +105,12 @@ export const collectCommits = (
     .filter(Boolean)
     .map((record) => {
       const [hash, shortHash, subject, body = ''] = record.split('\u001F');
+      const subjectIssueKeys = extractIssueKeys(subject);
       const explicitIssueKeys = [
         ...new Set(
-          (subject.match(ISSUE_KEY_PATTERN) ?? []).map((key) =>
-            key.toUpperCase(),
-          ),
+          subjectIssueKeys.length > 0
+            ? subjectIssueKeys
+            : extractIssueKeys(body),
         ),
       ];
 
