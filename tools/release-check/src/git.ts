@@ -104,7 +104,7 @@ export const collectCommits = (
       const [hash, shortHash, subject, body = ''] = record.split('\u001F');
       const explicitIssueKeys = [
         ...new Set(
-          (`${subject}\n${body}`.match(ISSUE_KEY_PATTERN) ?? []).map((key) =>
+          (subject.match(ISSUE_KEY_PATTERN) ?? []).map((key) =>
             key.toUpperCase(),
           ),
         ),
