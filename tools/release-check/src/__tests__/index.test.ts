@@ -422,6 +422,180 @@ describe('run', () => {
     );
   });
 
+  it('shows additive fix-version proposals when issues already have other fix versions', async () => {
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map([
+        [
+          'CCM-100',
+          [
+            {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-100: ship it',
+              body: '',
+              explicitIssueKeys: ['CCM-100'],
+              matchedIssueKeys: ['CCM-100'],
+            },
+          ],
+        ],
+      ]),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-100: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-100'],
+            matchedIssueKeys: ['CCM-100'],
+          },
+          missingKeys: ['CCM-100'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-100'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-100',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Platform'],
+        fixVersions: [{ id: '70000', name: 'other-release' }],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'fix-version',
+      '--fix-component',
+      'Platform',
+      '--yes',
+    ]);
+
+    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+      'fixVersion',
+      'Platform',
+      [
+        expect.objectContaining({
+          currentValueSummary: 'other-release',
+          targetValueSummary: 'other-release, release',
+        }),
+      ],
+      expect.any(Map),
+    );
+    expect(mockedUpdateJiraIssueFixVersions).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM-100',
+      [
+        { id: '70000', name: 'other-release' },
+        { id: '71260', name: 'release' },
+      ],
+    );
+  });
+
+  it('removes the placeholder NA fix version when adding a real release version', async () => {
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map([
+        [
+          'CCM-100',
+          [
+            {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-100: ship it',
+              body: '',
+              explicitIssueKeys: ['CCM-100'],
+              matchedIssueKeys: ['CCM-100'],
+            },
+          ],
+        ],
+      ]),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-100: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-100'],
+            matchedIssueKeys: ['CCM-100'],
+          },
+          missingKeys: ['CCM-100'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-100'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-100',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Platform'],
+        fixVersions: [{ id: 'na', name: 'NA' }],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'fix-version',
+      '--fix-component',
+      'Platform',
+      '--yes',
+    ]);
+
+    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+      'fixVersion',
+      'Platform',
+      [
+        expect.objectContaining({
+          currentValueSummary: 'NA',
+          targetValueSummary: 'release',
+        }),
+      ],
+      expect.any(Map),
+    );
+    expect(mockedUpdateJiraIssueFixVersions).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM-100',
+      [{ id: '71260', name: 'release' }],
+    );
+  });
   it('applies component-filtered clinical review status updates', async () => {
     mockedCompareRelease.mockReturnValue({
       commitsByIssueKey: new Map([
