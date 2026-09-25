@@ -9,6 +9,7 @@ import {
   getPreviousTag,
   getRepoName,
   getRepoRoot,
+  listTags,
   resolveGitTags,
   resolveRepoPath,
 } from './git';
@@ -16,13 +17,14 @@ import { readReleaseNotesForTags } from './github-release';
 import {
   fetchJiraIssues,
   fetchJiraIssuesByKeys,
+  listJiraVersions,
   resolveJiraVersions,
   updateJiraIssueClinicalReviewStatus,
   updateJiraIssueFixVersions,
 } from './jira';
 import {
   defaultReportPath,
-  renderFixProposalSection,
+  renderFixProposalTerminalSection,
   renderReport,
 } from './report';
 import type {
@@ -56,14 +58,22 @@ const dedupeBy = <T>(items: T[], getKey: (item: T) => string): T[] => {
   return dedupedItems;
 };
 
+const formatSelectedGitTagLabel = ({
+  gitTag,
+  rangeEndTag,
+}: SelectedGitTag): string =>
+  rangeEndTag && rangeEndTag !== gitTag
+    ? `${gitTag} (+ patches through ${rangeEndTag})`
+    : gitTag;
+
 const formatGitTagSummary = (gitTags: SelectedGitTag[]): string =>
-  gitTags.map(({ gitTag }) => gitTag).join(', ');
+  gitTags.map((gitTag) => formatSelectedGitTagLabel(gitTag)).join(', ');
 
 const formatComparisonBaseSummary = (gitTags: SelectedGitTag[]): string =>
   gitTags
     .map(
-      ({ gitTag, previousTag }) =>
-        `${gitTag} <- ${previousTag ?? 'repository start'}`,
+      (gitTag) =>
+        `${formatSelectedGitTagLabel(gitTag)} <- ${gitTag.previousTag ?? 'repository start'}`,
     )
     .join('; ');
 
@@ -88,7 +98,6 @@ const removePlaceholderFixVersions = (
   fixVersions.filter(
     (fixVersion) => fixVersion.name.trim().toUpperCase() !== 'NA',
   );
-
 const appendFixVersion = (
   fixVersions: JiraIssueFixDetails['fixVersions'],
   targetVersion: JiraVersion,
@@ -99,22 +108,231 @@ const appendFixVersion = (
     name: targetVersion.name,
   },
 ];
+
+const PROPOSED_FIX_UPDATE_MAX_LENGTH = 60;
+
+const truncateSummary = (value: string, maxLength: number): string => {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  if (maxLength <= 3) {
+    return value.slice(0, maxLength);
+  }
+
+  return `${value.slice(0, maxLength - 3)}...`;
+};
+
+const formatProposedFixVersionUpdate = (
+  targetVersion: JiraVersion,
+  existingFixVersions: JiraIssueFixDetails['fixVersions'],
+): string => {
+  if (existingFixVersions.length === 0) {
+    return targetVersion.name;
+  }
+
+  const retainedFixVersions = removePlaceholderFixVersions(existingFixVersions);
+  if (retainedFixVersions.length === 0) {
+    return targetVersion.name;
+  }
+
+  const summary = `${targetVersion.name} + ${retainedFixVersions.length} (${retainedFixVersions.map(({ name }) => name).join(', ')})`;
+
+  return truncateSummary(summary, PROPOSED_FIX_UPDATE_MAX_LENGTH);
+};
 const dedupeIssuesByKey = <T extends { key: string }>(issues: T[]): T[] =>
   dedupeBy(issues, (issue) => issue.key);
 
-const resolveSelectedGitTags = (
+const VERSION_TAG_PATTERN = /^v?(\d+)\.(\d+)\.(\d+)$/;
+
+type ParsedVersionTag = {
+  major: number;
+  minor: number;
+  patch: number;
+};
+
+const parseVersionTag = (tag: string): ParsedVersionTag | undefined => {
+  const match = VERSION_TAG_PATTERN.exec(tag);
+  if (!match) {
+    return undefined;
+  }
+
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+  };
+};
+
+const isSameMinorSeries = (
+  left: ParsedVersionTag,
+  right: ParsedVersionTag,
+): boolean => left.major === right.major && left.minor === right.minor;
+
+const compareVersionTags = (left: string, right: string): number => {
+  const parsedLeft = parseVersionTag(left);
+  const parsedRight = parseVersionTag(right);
+
+  if (!parsedLeft || !parsedRight) {
+    return left.localeCompare(right);
+  }
+
+  return (
+    parsedLeft.major - parsedRight.major ||
+    parsedLeft.minor - parsedRight.minor ||
+    parsedLeft.patch - parsedRight.patch ||
+    left.localeCompare(right)
+  );
+};
+
+const hasSpecificJiraVersionForTag = (
+  gitTag: string,
+  jiraVersions: JiraVersion[],
+): boolean => {
+  const parsedTag = parseVersionTag(gitTag);
+  if (!parsedTag) {
+    return false;
+  }
+
+  const versionSuffix = `${parsedTag.major}.${parsedTag.minor}.${parsedTag.patch}`;
+  return jiraVersions.some((jiraVersion) =>
+    jiraVersion.name.endsWith(versionSuffix),
+  );
+};
+
+const findCanonicalSeriesBaseTag = (
+  gitTag: string,
+  availableTags: string[],
+): string => {
+  const parsedTag = parseVersionTag(gitTag);
+  if (!parsedTag) {
+    return gitTag;
+  }
+
+  return (
+    availableTags.find((candidateTag) => {
+      const parsedCandidate = parseVersionTag(candidateTag);
+      return (
+        parsedCandidate &&
+        parsedCandidate.patch === 0 &&
+        isSameMinorSeries(parsedCandidate, parsedTag)
+      );
+    }) ?? gitTag
+  );
+};
+
+const findPatchRollupEndTag = (
+  repoRoot: string,
+  canonicalBaseTag: string,
+  availableTags: string[],
+  jiraVersions: JiraVersion[],
+): string => {
+  const parsedBaseTag = parseVersionTag(canonicalBaseTag);
+  if (!parsedBaseTag) {
+    return canonicalBaseTag;
+  }
+
+  const sameSeriesCandidates = availableTags
+    .filter((candidateTag) => {
+      const parsedCandidate = parseVersionTag(candidateTag);
+      return (
+        candidateTag !== canonicalBaseTag &&
+        parsedCandidate &&
+        isSameMinorSeries(parsedCandidate, parsedBaseTag)
+      );
+    })
+    .toSorted(compareVersionTags);
+  let currentTag = canonicalBaseTag;
+
+  while (true) {
+    let nextTag: string | undefined;
+
+    for (const candidateTag of sameSeriesCandidates) {
+      if (getPreviousTag(repoRoot, candidateTag) === currentTag) {
+        nextTag = candidateTag;
+        break;
+      }
+    }
+
+    if (!nextTag) {
+      break;
+    }
+
+    const parsedNextTag = parseVersionTag(nextTag);
+    if (
+      parsedNextTag &&
+      parsedNextTag.patch > 0 &&
+      hasSpecificJiraVersionForTag(nextTag, jiraVersions)
+    ) {
+      break;
+    }
+
+    currentTag = nextTag;
+  }
+
+  return currentTag;
+};
+
+const getCanonicalBaseTag = (
+  resolvedTagName: string,
+  availableTags: string[],
+  projectJiraVersions: JiraVersion[],
+): string => {
+  const parsedResolvedTag = parseVersionTag(resolvedTagName);
+  if (parsedResolvedTag?.patch === 0) {
+    return findCanonicalSeriesBaseTag(resolvedTagName, availableTags);
+  }
+
+  if (hasSpecificJiraVersionForTag(resolvedTagName, projectJiraVersions)) {
+    return resolvedTagName;
+  }
+
+  return findCanonicalSeriesBaseTag(resolvedTagName, availableTags);
+};
+
+const resolveSelectedGitTags = async (
   repoRoot: string,
   gitTagSelectors: string[],
+  jiraBaseUrl: string,
+  jiraProject: string,
   previousTag?: string,
-): SelectedGitTag[] =>
-  resolveGitTags(repoRoot, gitTagSelectors).map((gitTag, index) => ({
-    gitTag,
-    previousTag: getPreviousTag(
-      repoRoot,
-      gitTag,
-      index === 0 ? previousTag : undefined,
-    ),
-  }));
+): Promise<SelectedGitTag[]> => {
+  const availableTags = listTags(repoRoot);
+  const projectJiraVersions = await listJiraVersions(jiraBaseUrl, jiraProject);
+  const resolvedSelectedTagNames = resolveGitTags(repoRoot, gitTagSelectors);
+  const seenBaseTags = new Set<string>();
+  const orderedBaseTags: string[] = [];
+
+  for (const resolvedTagName of resolvedSelectedTagNames) {
+    const canonicalBaseTag = getCanonicalBaseTag(
+      resolvedTagName,
+      availableTags,
+      projectJiraVersions,
+    );
+
+    if (!seenBaseTags.has(canonicalBaseTag)) {
+      seenBaseTags.add(canonicalBaseTag);
+      orderedBaseTags.push(canonicalBaseTag);
+    }
+  }
+
+  return orderedBaseTags
+    .toSorted(compareVersionTags)
+    .map((canonicalBaseTag, index) => ({
+      gitTag: canonicalBaseTag,
+      previousTag: getPreviousTag(
+        repoRoot,
+        canonicalBaseTag,
+        index === 0 ? previousTag : undefined,
+      ),
+      rangeEndTag: findPatchRollupEndTag(
+        repoRoot,
+        canonicalBaseTag,
+        availableTags,
+        projectJiraVersions,
+      ),
+    }));
+};
 
 const getOutsideReleaseIssueKeys = (
   comparison: ReturnType<typeof compareRelease>,
@@ -159,6 +377,10 @@ const buildFixProposals = (
     .map((issue) => ({
       currentValueSummary: formatFixVersions(issue.fixVersions),
       issue,
+      proposedUpdateSummary: formatProposedFixVersionUpdate(
+        targetVersion,
+        issue.fixVersions,
+      ),
       targetValueSummary: formatFixVersions(
         appendFixVersion(issue.fixVersions, targetVersion),
       ),
@@ -243,14 +465,128 @@ const applyFixProposal = async (
   );
 };
 
+const maybeWriteComparisonReport = async ({
+  comparison,
+  fixAction,
+  fixComponent,
+  fixProposals,
+  gitTags,
+  jiraBaseUrl,
+  jiraProject,
+  jiraVersions,
+  output,
+  outsideReleaseIssuesByKey,
+  releaseNotes,
+  repoName,
+  repoRoot,
+  totalJiraIssues,
+}: {
+  comparison: ReturnType<typeof compareRelease>;
+  fixAction?: NonNullable<ReturnType<typeof parseCliArgs>['fixAction']>;
+  fixComponent?: string;
+  fixProposals?: FixProposal[];
+  gitTags: SelectedGitTag[];
+  jiraBaseUrl: string;
+  jiraProject: string;
+  jiraVersions: JiraVersion[];
+  output?: string;
+  outsideReleaseIssuesByKey: Map<string, JiraIssue>;
+  releaseNotes: Awaited<ReturnType<typeof readReleaseNotesForTags>>;
+  repoName: string;
+  repoRoot: string;
+  totalJiraIssues: number;
+}): Promise<string | undefined> => {
+  if (fixAction) {
+    return undefined;
+  }
+
+  const outputPath = path.resolve(
+    output ??
+      defaultReportPath(
+        repoName,
+        gitTags.map(({ gitTag }) => gitTag),
+      ),
+  );
+  const report = renderReport({
+    comparison,
+    fixAction,
+    fixComponent,
+    fixProposals,
+    gitTags,
+    jiraBaseUrl,
+    jiraProject,
+    jiraVersions,
+    releaseNotes,
+    repoName,
+    repoRoot,
+    outsideReleaseIssuesByKey,
+    totalJiraIssues,
+  });
+
+  await writeReport(outputPath, report);
+  return outputPath;
+};
+
+const maybeApplyFixProposals = async ({
+  commitsByIssueKey,
+  fixAction,
+  fixComponent,
+  fixProposals,
+  jiraBaseUrl,
+  jiraVersion,
+  yes,
+}: {
+  commitsByIssueKey: ReturnType<typeof compareRelease>['commitsByIssueKey'];
+  fixAction?: NonNullable<ReturnType<typeof parseCliArgs>['fixAction']>;
+  fixComponent?: string;
+  fixProposals?: FixProposal[];
+  jiraBaseUrl: string;
+  jiraVersion: JiraVersion;
+  yes: boolean;
+}): Promise<void> => {
+  if (!fixAction || !fixProposals) {
+    return;
+  }
+
+  const fixActionLabel = getFixActionLabel(fixAction);
+  const proposalSection = renderFixProposalTerminalSection(
+    fixActionLabel,
+    fixComponent!,
+    fixProposals,
+    commitsByIssueKey,
+  );
+  const confirmed = await confirmFixApplication(
+    proposalSection,
+    fixActionLabel,
+    yes,
+  );
+
+  if (!confirmed) {
+    process.stdout.write(
+      `Aborted without applying ${fixActionLabel} updates.\n`,
+    );
+    return;
+  }
+
+  for (const proposal of fixProposals) {
+    await applyFixProposal(jiraBaseUrl, fixAction, proposal, jiraVersion);
+  }
+
+  process.stdout.write(
+    `Applied ${fixActionLabel} updates to ${fixProposals.length} issue(s).\n`,
+  );
+};
+
 export const run = async (argv: string[]): Promise<void> => {
   const options = parseCliArgs(argv);
   const repoPath = resolveRepoPath(options.repo);
   const repoRoot = getRepoRoot(repoPath);
   const repoName = getRepoName(repoRoot);
-  const selectedGitTags = resolveSelectedGitTags(
+  const selectedGitTags = await resolveSelectedGitTags(
     repoRoot,
     options.gitTagSelectors,
+    options.jiraBaseUrl,
+    options.jiraProject,
     options.previousTag,
   );
   const commits = collectCommitsForTags(repoRoot, selectedGitTags);
@@ -312,68 +648,37 @@ export const run = async (argv: string[]): Promise<void> => {
     );
   }
 
-  const outputPath = path.resolve(
-    options.output ??
-      defaultReportPath(
-        repoName,
-        selectedGitTags.map(({ gitTag }) => gitTag),
-      ),
-  );
-  const report = renderReport({
+  const outputPath = await maybeWriteComparisonReport({
     comparison,
     fixAction: options.fixAction,
     fixComponent: options.fixComponent,
     fixProposals,
     gitTags: selectedGitTags,
+    jiraBaseUrl: options.jiraBaseUrl,
     jiraProject: options.jiraProject,
     jiraVersions,
+    output: options.output,
+    outsideReleaseIssuesByKey,
     releaseNotes,
     repoName,
     repoRoot,
-    outsideReleaseIssuesByKey,
     totalJiraIssues: jiraIssues.length,
   });
 
-  await writeReport(outputPath, report);
-
-  if (options.fixAction && fixProposals) {
-    const fixActionLabel = getFixActionLabel(options.fixAction);
-    const proposalSection = renderFixProposalSection(
-      fixActionLabel,
-      options.fixComponent!,
-      fixProposals,
-      comparison.commitsByIssueKey,
-    );
-    const confirmed = await confirmFixApplication(
-      proposalSection,
-      fixActionLabel,
-      options.yes,
-    );
-
-    if (confirmed) {
-      for (const proposal of fixProposals) {
-        await applyFixProposal(
-          options.jiraBaseUrl,
-          options.fixAction,
-          proposal,
-          jiraVersions[0],
-        );
-      }
-
-      process.stdout.write(
-        `Applied ${fixActionLabel} updates to ${fixProposals.length} issue(s).\n`,
-      );
-    } else {
-      process.stdout.write(
-        `Aborted without applying ${fixActionLabel} updates.\n`,
-      );
-    }
-  }
+  await maybeApplyFixProposals({
+    commitsByIssueKey: comparison.commitsByIssueKey,
+    fixAction: options.fixAction,
+    fixComponent: options.fixComponent,
+    fixProposals,
+    jiraBaseUrl: options.jiraBaseUrl,
+    jiraVersion: jiraVersions[0],
+    yes: options.yes,
+  });
 
   const summaryLines = [
     `Repository: ${repoName}`,
     selectedGitTags.length === 1
-      ? `Git tag: ${selectedGitTags[0].gitTag}`
+      ? `Git tag: ${formatSelectedGitTagLabel(selectedGitTags[0])}`
       : `Git tags selected (${selectedGitTags.length}): ${formatGitTagSummary(selectedGitTags)}`,
     selectedGitTags.length === 1
       ? `Comparison base: ${selectedGitTags[0].previousTag ?? 'repository start'}`
@@ -389,7 +694,7 @@ export const run = async (argv: string[]): Promise<void> => {
     `Jira issues missing clinical safety category: ${comparison.jiraIssuesMissingClinicalSafetyCategory.length}`,
     `Jira issues missing clinical lead: ${comparison.jiraIssuesMissingClinicalLead.length}`,
     `Commits without Jira matches: ${comparison.commitsWithoutMatches.length}`,
-    `Report written to ${outputPath}`,
+    ...(outputPath ? [`Report written to ${outputPath}`] : []),
   ];
 
   process.stdout.write(`${summaryLines.join('\n')}\n`);

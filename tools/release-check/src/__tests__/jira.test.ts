@@ -1,6 +1,7 @@
 import {
   fetchJiraIssues,
   fetchJiraIssuesByKeys,
+  listJiraVersions,
   resolveJiraVersion,
   resolveJiraVersions,
   updateJiraIssueClinicalReviewStatus,
@@ -256,28 +257,44 @@ describe('jira issue operations', () => {
         components: [],
       },
     ]);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://jira.example.com/rest/api/2/search',
+      expect.objectContaining({
+        body: JSON.stringify({
+          fields: [
+            'summary',
+            'status',
+            'issuetype',
+            'components',
+            'fixVersions',
+            'customfield_10523',
+            'customfield_15200',
+            'customfield_16657',
+          ],
+          jql: 'project = CCM AND fixVersion = 71260 AND issuetype not in (Epic) AND status != "Not Required" ORDER BY key ASC',
+          maxResults: 100,
+          startAt: 0,
+        }),
+      }),
+    );
   });
 
   it('fetches issues by key', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        total: 1,
-        issues: [
-          {
-            key: 'CCM-42',
-            fields: {
-              customfield_10523: { name: 'Dr Test' },
-              customfield_15200: { value: 'Cat 1' },
-              customfield_16657: { value: 'Review required' },
-              fixVersions: [],
-              issuetype: { name: 'Story' },
-              summary: 'Outside selected versions',
-              status: { name: 'Done' },
-              components: [{ name: 'Platform' }],
-            },
-          },
-        ],
+        key: 'CCM-42',
+        fields: {
+          customfield_10523: { name: 'Dr Test' },
+          customfield_15200: { value: 'Cat 1' },
+          customfield_16657: { value: 'Review required' },
+          fixVersions: [],
+          issuetype: { name: 'Story' },
+          summary: 'Outside selected versions',
+          status: { name: 'Done' },
+          components: [{ name: 'Platform' }],
+        },
       }),
     });
 
@@ -294,6 +311,76 @@ describe('jira issue operations', () => {
         medicalClinicalSafetyCategory: 'Cat 1',
         status: 'Done',
         components: ['Platform'],
+      },
+    ]);
+  });
+
+  it('skips missing Jira issues when fetching by key', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'missing',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          key: 'CCM-42',
+          fields: {
+            customfield_10523: { name: 'Dr Test' },
+            customfield_15200: { value: 'Cat 1' },
+            customfield_16657: { value: 'Review required' },
+            fixVersions: [],
+            issuetype: { name: 'Story' },
+            summary: 'Outside selected versions',
+            status: { name: 'Done' },
+            components: [{ name: 'Platform' }],
+          },
+        }),
+      });
+
+    await expect(
+      fetchJiraIssuesByKeys('https://jira.example.com', 'CCM', [
+        'CCM-404',
+        'CCM-42',
+      ]),
+    ).resolves.toEqual([
+      {
+        issueType: 'Story',
+        key: 'CCM-42',
+        clinicalLead: 'Dr Test',
+        clinicalReviewStatus: 'Review required',
+        fixVersions: [],
+        summary: 'Outside selected versions',
+        medicalClinicalSafetyCategory: 'Cat 1',
+        status: 'Done',
+        components: ['Platform'],
+      },
+    ]);
+  });
+
+  it('lists Jira versions for a project', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          id: 71_260,
+          name: 'client-config-0.1.0',
+          releaseDate: '2026-07-08',
+          released: true,
+        },
+      ],
+    });
+
+    await expect(
+      listJiraVersions('https://jira.example.com', 'CCM'),
+    ).resolves.toEqual([
+      {
+        id: '71260',
+        name: 'client-config-0.1.0',
+        releaseDate: '2026-07-08',
+        released: true,
       },
     ]);
   });
