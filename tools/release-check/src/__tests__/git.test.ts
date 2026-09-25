@@ -544,21 +544,20 @@ describe('commit ticket mappings', () => {
     expect(applyCommitIssueKeyMappings(commits, new Map())).toBe(commits);
   });
 
-  it('rejects mappings that do not match a selected commit', () => {
-    expect(() =>
-      applyCommitIssueKeyMappings(
-        [
-          {
-            hash: '2f6c9d1abcdef00000000000000000000000000',
-            shortHash: '2f6c9d1',
-            subject: 'CCM-999: wrong ticket',
-            body: '',
-            explicitIssueKeys: ['CCM-999'],
-          },
-        ],
-        new Map([['deadbee', 'CCM-12081']]),
-      ),
-    ).toThrow('did not match any selected commits');
+  it('ignores mappings that do not match the selected commits', () => {
+    const commits = [
+      {
+        hash: '2f6c9d1abcdef00000000000000000000000000',
+        shortHash: '2f6c9d1',
+        subject: 'CCM-999: wrong ticket',
+        body: '',
+        explicitIssueKeys: ['CCM-999'],
+      },
+    ];
+
+    expect(
+      applyCommitIssueKeyMappings(commits, new Map([['deadbee', 'CCM-12081']])),
+    ).toEqual(commits);
   });
 
   it('rejects ambiguous commit hash prefixes', () => {

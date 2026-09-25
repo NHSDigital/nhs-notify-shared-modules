@@ -282,31 +282,27 @@ export const applyCommitIssueKeyMappings = (
       commit.hash.toLowerCase().startsWith(commitHashPrefix),
     );
 
-    if (matchingCommits.length === 0) {
-      throw new Error(
-        `Commit mapping hash "${commitHashPrefix}" did not match any selected commits.`,
-      );
-    }
     if (matchingCommits.length > 1) {
       throw new Error(
         `Commit mapping hash "${commitHashPrefix}" matched multiple selected commits; use a longer hash prefix.`,
       );
     }
+    if (matchingCommits.length === 1) {
+      const [matchingCommit] = matchingCommits;
+      if (updatedCommits.has(matchingCommit.hash)) {
+        throw new Error(
+          `Multiple commit mappings matched commit ${matchingCommit.hash}; use distinct hashes.`,
+        );
+      }
 
-    const [matchingCommit] = matchingCommits;
-    if (updatedCommits.has(matchingCommit.hash)) {
-      throw new Error(
-        `Multiple commit mappings matched commit ${matchingCommit.hash}; use distinct hashes.`,
-      );
+      updatedCommits.set(matchingCommit.hash, {
+        ...matchingCommit,
+        issueKeyOverride: {
+          commitHash: commitHashPrefix,
+          issueKey,
+        },
+      });
     }
-
-    updatedCommits.set(matchingCommit.hash, {
-      ...matchingCommit,
-      issueKeyOverride: {
-        commitHash: commitHashPrefix,
-        issueKey,
-      },
-    });
   }
 
   return commits.map((commit) => updatedCommits.get(commit.hash) ?? commit);
