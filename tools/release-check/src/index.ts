@@ -82,6 +82,23 @@ const formatFixVersions = (
     ? fixVersions.map(({ name }) => name).join(', ')
     : 'none';
 
+const removePlaceholderFixVersions = (
+  fixVersions: JiraIssueFixDetails['fixVersions'],
+): JiraIssueFixDetails['fixVersions'] =>
+  fixVersions.filter(
+    (fixVersion) => fixVersion.name.trim().toUpperCase() !== 'NA',
+  );
+
+const appendFixVersion = (
+  fixVersions: JiraIssueFixDetails['fixVersions'],
+  targetVersion: JiraVersion,
+): JiraIssueFixDetails['fixVersions'] => [
+  ...removePlaceholderFixVersions(fixVersions),
+  {
+    id: targetVersion.id,
+    name: targetVersion.name,
+  },
+];
 const dedupeIssuesByKey = <T extends { key: string }>(issues: T[]): T[] =>
   dedupeBy(issues, (issue) => issue.key);
 
@@ -142,7 +159,9 @@ const buildFixProposals = (
     .map((issue) => ({
       currentValueSummary: formatFixVersions(issue.fixVersions),
       issue,
-      targetValueSummary: targetVersion.name,
+      targetValueSummary: formatFixVersions(
+        appendFixVersion(issue.fixVersions, targetVersion),
+      ),
     }));
 };
 
@@ -217,13 +236,11 @@ const applyFixProposal = async (
     return;
   }
 
-  await updateJiraIssueFixVersions(jiraBaseUrl, proposal.issue.key, [
-    ...proposal.issue.fixVersions,
-    {
-      id: jiraVersion.id,
-      name: jiraVersion.name,
-    },
-  ]);
+  await updateJiraIssueFixVersions(
+    jiraBaseUrl,
+    proposal.issue.key,
+    appendFixVersion(proposal.issue.fixVersions, jiraVersion),
+  );
 };
 
 export const run = async (argv: string[]): Promise<void> => {
