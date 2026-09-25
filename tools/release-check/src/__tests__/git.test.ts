@@ -248,14 +248,9 @@ describe('collectCommits', () => {
         releaseTag: '0.2.0',
         shortHash: 'short2',
         subject: 'No key commit',
-<<<<<<< HEAD
         body: 'body CCM-101 details',
         explicitIssueKeys: ['CCM-101'],
-=======
-        body: '',
-        explicitIssueKeys: [],
         releaseRange: '0.1.0..0.2.0',
->>>>>>> 9c9dd35 (CCM-14750: Refine release-check reporting and fixes)
       },
     ]);
   });
@@ -301,10 +296,12 @@ describe('collectCommits', () => {
       },
       {
         hash: 'hash2',
+        releaseTag: '0.2.0',
         shortHash: 'short2',
         subject: 'No key commit',
         body: 'Refs CCM-101 for rollout',
         explicitIssueKeys: ['CCM-101'],
+        releaseRange: '0.1.0..0.2.0',
       },
     ]);
   });
