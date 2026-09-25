@@ -165,7 +165,7 @@ describe('collectCommits', () => {
     expect(collectCommits('/repos/client-config', '0.1.0', null)).toEqual([]);
   });
 
-  it('parses git log output and extracts unique Jira keys', () => {
+  it('parses git log output and extracts unique Jira keys from the subject', () => {
     mockedSpawnSync.mockReturnValue({
       status: 0,
       stdout:
@@ -180,13 +180,40 @@ describe('collectCommits', () => {
         shortHash: 'short1',
         subject: 'CCM-100: Add feature',
         body: 'body CCM-101 details',
-        explicitIssueKeys: ['CCM-100', 'CCM-101'],
+        explicitIssueKeys: ['CCM-100'],
       },
       {
         hash: 'hash2',
         shortHash: 'short2',
         subject: 'No key commit',
         body: '',
+        explicitIssueKeys: [],
+      },
+    ]);
+  });
+
+  it('ignores Jira-like keys that only appear in the commit body', () => {
+    mockedSpawnSync.mockReturnValue({
+      status: 0,
+      stdout:
+        `hash1\u001Fshort1\u001FCCM-11990 Workflow fixes (#80)\u001F* CCM-1190 adding a test for amplify CI\u001E` +
+        `hash2\u001Fshort2\u001FCombined Dependabot PRs (#16)\u001F* Bump requests in /docs/adr/assets/ADR-003/examples/python\u001E`,
+      stderr: '',
+    } as never);
+
+    expect(collectCommits('/repos/client-config', '0.2.0', '0.1.0')).toEqual([
+      {
+        hash: 'hash1',
+        shortHash: 'short1',
+        subject: 'CCM-11990 Workflow fixes (#80)',
+        body: '* CCM-1190 adding a test for amplify CI',
+        explicitIssueKeys: ['CCM-11990'],
+      },
+      {
+        hash: 'hash2',
+        shortHash: 'short2',
+        subject: 'Combined Dependabot PRs (#16)',
+        body: '* Bump requests in /docs/adr/assets/ADR-003/examples/python',
         explicitIssueKeys: [],
       },
     ]);
