@@ -165,12 +165,12 @@ describe('collectCommits', () => {
     expect(collectCommits('/repos/client-config', '0.1.0', null)).toEqual([]);
   });
 
-  it('parses git log output and extracts unique Jira keys from the subject', () => {
+  it('prefers Jira keys in the subject and falls back to body keys otherwise', () => {
     mockedSpawnSync.mockReturnValue({
       status: 0,
       stdout:
         `hash1\u001Fshort1\u001FCCM-100: Add feature\u001Fbody CCM-101 details\u001E` +
-        `hash2\u001Fshort2\u001FNo key commit\u001F\u001E`,
+        `hash2\u001Fshort2\u001FNo key commit\u001Fbody CCM-101 details\u001E`,
       stderr: '',
     } as never);
 
@@ -186,18 +186,16 @@ describe('collectCommits', () => {
         hash: 'hash2',
         shortHash: 'short2',
         subject: 'No key commit',
-        body: '',
-        explicitIssueKeys: [],
+        body: 'body CCM-101 details',
+        explicitIssueKeys: ['CCM-101'],
       },
     ]);
   });
 
-  it('ignores Jira-like keys that only appear in the commit body', () => {
+  it('ignores body keys when the subject already names a Jira issue', () => {
     mockedSpawnSync.mockReturnValue({
       status: 0,
-      stdout:
-        `hash1\u001Fshort1\u001FCCM-11990 Workflow fixes (#80)\u001F* CCM-1190 adding a test for amplify CI\u001E` +
-        `hash2\u001Fshort2\u001FCombined Dependabot PRs (#16)\u001F* Bump requests in /docs/adr/assets/ADR-003/examples/python\u001E`,
+      stdout: `hash1\u001Fshort1\u001FCCM-11990 Workflow fixes (#80)\u001F* CCM-1190 adding a test for amplify CI\u001E`,
       stderr: '',
     } as never);
 
@@ -209,12 +207,32 @@ describe('collectCommits', () => {
         body: '* CCM-1190 adding a test for amplify CI',
         explicitIssueKeys: ['CCM-11990'],
       },
+    ]);
+  });
+
+  it('ignores path-like issue keys when falling back to the body', () => {
+    mockedSpawnSync.mockReturnValue({
+      status: 0,
+      stdout:
+        `hash1\u001Fshort1\u001FCombined Dependabot PRs (#16)\u001F* Bump requests in /docs/adr/assets/ADR-003/examples/python\u001E` +
+        `hash2\u001Fshort2\u001FNo key commit\u001FRefs CCM-101 for rollout\u001E`,
+      stderr: '',
+    } as never);
+
+    expect(collectCommits('/repos/client-config', '0.2.0', '0.1.0')).toEqual([
       {
-        hash: 'hash2',
-        shortHash: 'short2',
+        hash: 'hash1',
+        shortHash: 'short1',
         subject: 'Combined Dependabot PRs (#16)',
         body: '* Bump requests in /docs/adr/assets/ADR-003/examples/python',
         explicitIssueKeys: [],
+      },
+      {
+        hash: 'hash2',
+        shortHash: 'short2',
+        subject: 'No key commit',
+        body: 'Refs CCM-101 for rollout',
+        explicitIssueKeys: ['CCM-101'],
       },
     ]);
   });
