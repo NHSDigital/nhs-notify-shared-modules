@@ -578,6 +578,118 @@ describe('renderReport', () => {
     expect(report).toContain('- **Jira version released:** no');
   });
 
+  it('omits fix-version commands for release tags already present on the issue', () => {
+    const report = renderReport({
+      comparison: {
+        ...comparison,
+        commitsByIssueKey: new Map([
+          [
+            'CCM-9336',
+            [
+              {
+                hash: 'a'.repeat(40),
+                shortHash: 'aaaaaaaa',
+                subject: 'CCM-9336: first range',
+                body: '',
+                explicitIssueKeys: ['CCM-9336'],
+                matchedIssueKeys: ['CCM-9336'],
+                releaseRange: '0.1.0..v0.2.0',
+                releaseTag: 'v0.2.0',
+              },
+              {
+                hash: 'b'.repeat(40),
+                shortHash: 'bbbbbbbb',
+                subject: 'CCM-9336: second range',
+                body: '',
+                explicitIssueKeys: ['CCM-9336'],
+                matchedIssueKeys: ['CCM-9336'],
+                releaseRange: 'v0.2.0..0.3.0 (+ patches through v0.3.1)',
+                releaseTag: '0.3.0',
+              },
+            ],
+          ],
+        ]),
+        commitsWithIssueKeysOutsideRelease: [
+          {
+            commit: {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-9336: first range',
+              body: '',
+              explicitIssueKeys: ['CCM-9336'],
+              matchedIssueKeys: ['CCM-9336'],
+              releaseRange: '0.1.0..v0.2.0',
+              releaseTag: 'v0.2.0',
+            },
+            missingKeys: ['CCM-9336'],
+          },
+        ],
+        releaseNotesIssueKeysOutsideRelease: [],
+      },
+      fixAction: undefined,
+      fixComponent: undefined,
+      fixProposals: undefined,
+      gitTags: [
+        { gitTag: 'v0.2.0', previousTag: '0.1.0' },
+        { gitTag: '0.3.0', previousTag: 'v0.2.0', rangeEndTag: 'v0.3.1' },
+      ],
+      jiraProject: 'CCM',
+      jiraVersions: [
+        {
+          id: '71261',
+          name: 'client-config-0.2.0',
+          releaseDate: '2026-07-10',
+          released: true,
+        },
+        {
+          id: '71262',
+          name: 'client-config-0.3.0',
+          releaseDate: '2026-07-17',
+          released: true,
+        },
+      ],
+      outsideReleaseIssuesByKey: new Map([
+        [
+          'CCM-9336',
+          {
+            issueType: 'Story',
+            key: 'CCM-9336',
+            summary: 'Already has latest fix version',
+            status: 'In Progress',
+            components: ['Cohorting - Platform', 'Platform'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+            fixVersions: [{ id: '71262', name: 'client-config-0.3.0' }],
+          },
+        ],
+      ]),
+      releaseNotes: {
+        issueKeys: [],
+        source: 'none',
+        text: null,
+        warnings: [],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 0,
+    });
+
+    expect(report).toContain('### Example fix-version commands by component');
+    expect(report).toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag 'v0.2.0' --jira-version 'client-config-0.2.0' --fix fix-version --fix-component 'Cohorting - Platform'",
+    );
+    expect(report).toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag 'v0.2.0' --jira-version 'client-config-0.2.0' --fix fix-version --fix-component 'Platform'",
+    );
+    expect(report).not.toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag '0.3.0' --jira-version 'client-config-0.3.0' --fix fix-version --fix-component 'Cohorting - Platform'",
+    );
+    expect(report).not.toContain(
+      "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag '0.3.0' --jira-version 'client-config-0.3.0' --fix fix-version --fix-component 'Platform'",
+    );
+  });
+
   it('scopes clinical review example commands to the issue fix versions', () => {
     const report = renderReport({
       comparison: {

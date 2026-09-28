@@ -197,6 +197,14 @@ const getIssueReleaseTags = (
       .filter((releaseTag): releaseTag is string => releaseTag != null),
   );
 
+const issueHasJiraVersion = (
+  issue: JiraIssue,
+  jiraVersion: JiraVersion,
+): boolean =>
+  (issue.fixVersions ?? []).some(
+    ({ id, name }) => jiraVersion.id === id || jiraVersion.name === name,
+  );
+
 const addFixVersionCommandEntries = ({
   commandEntries,
   gitTags,
@@ -221,16 +229,18 @@ const addFixVersionCommandEntries = ({
     const jiraVersion = findJiraVersionForGitTag(releaseTag, jiraVersions);
 
     if (selectedGitTag && jiraVersion) {
-      for (const component of issue.components) {
-        commandEntries.add(
-          `# ${component}\n${formatFixCommand({
-            action: 'fix-version',
-            component,
-            gitTag: selectedGitTag,
-            jiraVersion: jiraVersion.name,
-            repoRoot,
-          })}`,
-        );
+      if (!issueHasJiraVersion(issue, jiraVersion)) {
+        for (const component of issue.components) {
+          commandEntries.add(
+            `# ${component}\n${formatFixCommand({
+              action: 'fix-version',
+              component,
+              gitTag: selectedGitTag,
+              jiraVersion: jiraVersion.name,
+              repoRoot,
+            })}`,
+          );
+        }
       }
     } else {
       unmappedRanges.add(releaseTag);
