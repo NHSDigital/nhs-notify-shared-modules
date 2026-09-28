@@ -613,7 +613,7 @@ describe('run', () => {
       '--yes',
     ]);
 
-    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+    expect(mockedRenderFixProposalTerminalSection).toHaveBeenCalledWith(
       'fixVersion',
       'Cohorting - Platform',
       [
@@ -707,7 +707,7 @@ describe('run', () => {
       '--yes',
     ]);
 
-    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+    expect(mockedRenderFixProposalTerminalSection).toHaveBeenCalledWith(
       'fixVersion',
       'Cohorting - Platform',
       [],
