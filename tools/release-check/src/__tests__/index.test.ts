@@ -422,6 +422,186 @@ describe('run', () => {
     );
   });
 
+  it('matches issues that have the requested component alongside other components', async () => {
+    mockedCollectCommitsForTags.mockReturnValue([
+      {
+        hash: 'a'.repeat(40),
+        shortHash: 'aaaaaaaa',
+        subject: 'CCM-9336: ship it',
+        body: '',
+        explicitIssueKeys: ['CCM-9336'],
+      },
+    ]);
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map([
+        [
+          'CCM-9336',
+          [
+            {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-9336: ship it',
+              body: '',
+              explicitIssueKeys: ['CCM-9336'],
+              matchedIssueKeys: ['CCM-9336'],
+            },
+          ],
+        ],
+      ]),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-9336: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-9336'],
+            matchedIssueKeys: ['CCM-9336'],
+          },
+          missingKeys: ['CCM-9336'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-9336'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-9336',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Cohorting - Platform', 'Platform'],
+        fixVersions: [],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'fix-version',
+      '--fix-component',
+      'Cohorting - Platform',
+      '--yes',
+    ]);
+
+    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+      'fixVersion',
+      'Cohorting - Platform',
+      [
+        expect.objectContaining({
+          issue: expect.objectContaining({ key: 'CCM-9336' }),
+        }),
+      ],
+      expect.any(Map),
+    );
+    expect(mockedUpdateJiraIssueFixVersions).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM-9336',
+      [{ id: '71260', name: 'release' }],
+    );
+  });
+
+  it('skips matching issues when they already have the target fix version', async () => {
+    mockedCollectCommitsForTags.mockReturnValue([
+      {
+        hash: 'a'.repeat(40),
+        shortHash: 'aaaaaaaa',
+        subject: 'CCM-9336: ship it',
+        body: '',
+        explicitIssueKeys: ['CCM-9336'],
+      },
+    ]);
+    mockedCompareRelease.mockReturnValue({
+      commitsByIssueKey: new Map([
+        [
+          'CCM-9336',
+          [
+            {
+              hash: 'a'.repeat(40),
+              shortHash: 'aaaaaaaa',
+              subject: 'CCM-9336: ship it',
+              body: '',
+              explicitIssueKeys: ['CCM-9336'],
+              matchedIssueKeys: ['CCM-9336'],
+            },
+          ],
+        ],
+      ]),
+      commitsWithIssueKeysOutsideRelease: [
+        {
+          commit: {
+            hash: 'a'.repeat(40),
+            shortHash: 'aaaaaaaa',
+            subject: 'CCM-9336: ship it',
+            body: '',
+            explicitIssueKeys: ['CCM-9336'],
+            matchedIssueKeys: ['CCM-9336'],
+          },
+          missingKeys: ['CCM-9336'],
+        },
+      ],
+      commitsWithoutMatches: [],
+      gitReferencedIssueKeys: ['CCM-9336'],
+      jiraIssuesMissingClinicalLead: [],
+      jiraIssuesMissingClinicalSafetyCategory: [],
+      jiraIssuesMissingFromGit: [],
+      jiraIssuesMissingFromReleaseNotes: [],
+      notesReferencedIssueKeys: [],
+      releaseReferencedIssuesNotDone: [],
+      releaseNotesIssueKeysOutsideRelease: [],
+    });
+    mockedFetchJiraIssuesByKeys.mockResolvedValue([
+      {
+        key: 'CCM-9336',
+        clinicalLead: '',
+        clinicalReviewStatus: '',
+        components: ['Cohorting - Platform', 'Platform'],
+        fixVersions: [{ id: '71260', name: 'release' }],
+        issueType: 'Story',
+        medicalClinicalSafetyCategory: '',
+        status: 'Done',
+        summary: 'outside',
+      },
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'fix-version',
+      '--fix-component',
+      'Cohorting - Platform',
+      '--yes',
+    ]);
+
+    expect(mockedRenderFixProposalSection).toHaveBeenCalledWith(
+      'fixVersion',
+      'Cohorting - Platform',
+      [],
+      expect.any(Map),
+    );
+    expect(mockedUpdateJiraIssueFixVersions).not.toHaveBeenCalled();
+  });
+
   it('shows additive fix-version proposals when issues already have other fix versions', async () => {
     mockedCompareRelease.mockReturnValue({
       commitsByIssueKey: new Map([
