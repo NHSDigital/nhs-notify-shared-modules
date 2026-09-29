@@ -23,7 +23,7 @@ module "lambda_lambda_apim_refresh_token" {
   function_code_dir       = "apim-access-token-refresher"
   function_include_common = true
   handler_function_name   = "handler"
-  runtime                 = "nodejs22.x"
+  runtime                 = "nodejs24.x"
   memory                  = 256
   timeout                 = var.lambda_timeout_seconds
   log_level               = var.log_level

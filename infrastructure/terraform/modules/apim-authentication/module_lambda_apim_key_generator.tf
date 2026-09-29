@@ -24,7 +24,7 @@ module "lambda_apim_key_generation" {
   function_include_common = true
   function_module_name    = "lambda"
   handler_function_name   = "handler"
-  runtime                 = "nodejs22.x"
+  runtime                 = "nodejs24.x"
   memory                  = 512
   timeout                 = 300
   log_level               = var.log_level
