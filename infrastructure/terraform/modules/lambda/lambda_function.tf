@@ -2,7 +2,7 @@ resource "aws_lambda_function" "main" {
   description   = var.description
   function_name = local.csi
   role          = aws_iam_role.main.arn
-  handler       = local.package_type == "zip" ? "${var.function_module_name}.${var.handler_function_name}" : null
+  handler       = local.package_type == "zip" ? local.handler : null
   runtime       = local.package_type == "zip" ? var.runtime : null
   package_type  = title(local.package_type)
   publish       = true

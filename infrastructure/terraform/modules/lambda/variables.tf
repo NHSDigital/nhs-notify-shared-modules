@@ -71,7 +71,7 @@ variable "description" {
 variable "handler_function_name" {
   type        = string
   description = "The name of the lambda handler function (passed directly to the Lambda's handler option)"
-  default     = "handler"
+  default     = ""
 }
 
 variable "memory" {

@@ -3,6 +3,8 @@ locals {
 
   package_type = lower(var.package_type)
 
+  handler = var.handler_function_name != "" ? "${var.function_module_name}.${var.handler_function_name}" : var.function_module_name
+
   # Compound Scope Identifier
   csi = replace(
     format(
