@@ -96,8 +96,9 @@ Notes for fix mode:
 
 - The tool auto-detects the previous tag using `git describe --tags --abbrev=0 <tag>^`.
 - When GitHub release notes are unavailable, auto mode falls back to annotated tag notes if the tag is annotated.
-- Reports default to `.tmp/release-check/<repo>-<tag>.md` for single-release checks.
-- Multi-release reports default to `.tmp/release-check/<repo>-<first-tag>-to-<last-tag>-<count>-tags.md`.
+- Reports default to `.reports/release-check/<repo>-<tag>.md` for single-release checks.
+- Multi-release reports default to `.reports/release-check/<repo>-<first-tag>-to-<last-tag>-<count>-tags.md`.
+- Epic issues are labelled as `[Epic]` in report rows so they are visible in the same tables as other Jira issues.
 - Reports are emitted as Markdown so they can be inspected in a Markdown preview.
 
 ## Publishing

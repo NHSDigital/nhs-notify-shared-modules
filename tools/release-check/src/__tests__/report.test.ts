@@ -80,10 +80,10 @@ const setTerminalSize = (isTTY: boolean, columns: number): void => {
 };
 
 describe('defaultReportPath', () => {
-  it('writes single-release reports under .tmp/release-check in the cwd', () => {
+  it('writes single-release reports under .reports/release-check in the cwd', () => {
     expect(
       defaultReportPath('nhs-notify-client-config', ['0.1.0'], '/workspace'),
-    ).toBe('/workspace/.tmp/release-check/nhs-notify-client-config-0.1.0.md');
+    ).toBe('/workspace/.reports/release-check/nhs-notify-client-config-0.1.0.md');
   });
 
   it('summarises multiple selected tags in the report filename', () => {
@@ -94,7 +94,7 @@ describe('defaultReportPath', () => {
         '/workspace',
       ),
     ).toBe(
-      '/workspace/.tmp/release-check/nhs-notify-client-config-0.1.0-to-v0.3.1-3-tags.md',
+      '/workspace/.reports/release-check/nhs-notify-client-config-0.1.0-to-v0.3.1-3-tags.md',
     );
   });
 });
@@ -296,7 +296,7 @@ describe('renderReport', () => {
         [
           'CCM-999',
           {
-            issueType: 'Story',
+            issueType: 'Epic',
             key: 'CCM-999',
             summary: 'Outside selected versions',
             status: 'Done',
@@ -342,7 +342,7 @@ describe('renderReport', () => {
       '| [CCM-100](https://nhsd-jira.digital.nhs.uk/browse/CCM-100): [Platform] Referenced and not done (In Progress) | `aaaaaaaa CCM-100: ship it` _(1 commit total)_ |',
     );
     expect(populatedReport).toContain(
-      '| [CCM-999](https://nhsd-jira.digital.nhs.uk/browse/CCM-999): [Platform] Outside selected versions (Done) | `bbbbbbbb CCM-999: outside` _(2 commits total)_ |',
+      '| [CCM-999](https://nhsd-jira.digital.nhs.uk/browse/CCM-999): [Epic] [Platform] Outside selected versions (Done) | `bbbbbbbb CCM-999: outside` _(2 commits total)_ |',
     );
     expect(populatedReport).toContain(
       '## Proposed fixVersion updates for component Platform',
