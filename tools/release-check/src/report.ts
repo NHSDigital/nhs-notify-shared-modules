@@ -22,15 +22,19 @@ const escapeMarkdownCell = (value: string): string =>
 const formatJiraIssueLink = (jiraBaseUrl: string, issueKey: string): string =>
   `[${issueKey}](${jiraBaseUrl}/browse/${encodeURIComponent(issueKey)})`;
 
+const formatIssueTypeLabel = (issue: JiraIssue): string =>
+  issue.issueType === 'Epic' ? '[Epic] ' : '';
+
 const formatPlainIssueHeading = (key: string, issue?: JiraIssue): string => {
   /* c8 ignore next -- terminal fix proposals always provide an issue */
   if (!issue) {
     return `${key}: not found in Jira`;
   }
 
+  const issueType = formatIssueTypeLabel(issue);
   const components =
     issue.components.length > 0 ? `[${issue.components.join(', ')}] ` : '';
-  return `${key}: ${components}${issue.summary} (${issue.status})`;
+  return `${key}: ${issueType}${components}${issue.summary} (${issue.status})`;
 };
 
 const formatIssueHeading = (
@@ -44,9 +48,10 @@ const formatIssueHeading = (
     return `${linkedKey}: not found in Jira`;
   }
 
+  const issueType = formatIssueTypeLabel(issue);
   const components =
     issue.components.length > 0 ? `[${issue.components.join(', ')}] ` : '';
-  return `${linkedKey}: ${components}${issue.summary} (${issue.status})`;
+  return `${linkedKey}: ${issueType}${components}${issue.summary} (${issue.status})`;
 };
 
 const formatRepresentativeCommit = (
@@ -683,7 +688,7 @@ export const defaultReportPath = (
 ): string =>
   path.join(
     cwd,
-    '.tmp',
+    '.reports',
     'release-check',
     `${sanitizeFileSegment(repoName)}-${summarizeGitTagsForPath(gitTags)}.md`,
   );
@@ -837,7 +842,7 @@ export const renderReport = ({
       jiraBaseUrl,
     ),
     renderIssueSection(
-      `Git-referenced Jira issue keys missing from ${jiraVersionScopeLabel}`,
+      `Git-referenced Jira issues missing from ${jiraVersionScopeLabel}`,
       outsideReleaseIssueKeys,
       outsideReleaseIssuesByKey,
       comparison.commitsByIssueKey,
@@ -853,7 +858,7 @@ export const renderReport = ({
       repoRoot,
     }),
     renderIssueSection(
-      `Release-note Jira issue keys missing from ${jiraVersionScopeLabel}`,
+      `Release-note Jira issues missing from ${jiraVersionScopeLabel}`,
       comparison.releaseNotesIssueKeysOutsideRelease,
       outsideReleaseIssuesByKey,
       comparison.commitsByIssueKey,
