@@ -159,6 +159,7 @@ describe('fetchJiraIssues', () => {
                 customfield_10523: { name: 'Dr Test' },
                 customfield_15200: { value: 'Cat 1' },
                 customfield_16657: { value: 'Review required' },
+                issuetype: { name: 'Epic' },
                 summary: 'First',
                 status: { name: 'Done' },
                 components: [{ name: 'Platform' }],
@@ -178,6 +179,7 @@ describe('fetchJiraIssues', () => {
                 customfield_10523: null,
                 customfield_15200: ['Cat 2', { value: 'Cat 3' }],
                 customfield_16657: 'Review not needed',
+                issuetype: { name: 'Bug' },
                 summary: 'Second',
                 status: { name: 'In Progress' },
                 components: [],
@@ -199,6 +201,7 @@ describe('fetchJiraIssues', () => {
         key: 'CCM-1',
         clinicalLead: 'Dr Test',
         clinicalReviewStatus: 'Review required',
+        issueType: 'Epic',
         summary: 'First',
         medicalClinicalSafetyCategory: 'Cat 1',
         status: 'Done',
@@ -208,12 +211,23 @@ describe('fetchJiraIssues', () => {
         key: 'CCM-2',
         clinicalLead: '',
         clinicalReviewStatus: 'Review not needed',
+        issueType: 'Bug',
         summary: 'Second',
         medicalClinicalSafetyCategory: 'Cat 2|Cat 3',
         status: 'In Progress',
         components: [],
       },
     ]);
+
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining(
+        encodeURIComponent(
+          'project = CCM AND fixVersion = 71260 AND status != "Not Required" ORDER BY key ASC',
+        ),
+      ),
+      expect.any(Object),
+    );
   });
 
   it('throws when Jira responds with an error', async () => {
