@@ -195,7 +195,6 @@ describe('jira issue operations', () => {
                 customfield_16657: { value: 'Review required' },
                 issuetype: { name: 'Epic' },
                 fixVersions: [{ id: 71_260, name: 'client-config-0.1.0' }],
-                issuetype: { name: 'Epic' },
                 summary: 'First',
                 status: { name: 'Done' },
                 components: [{ name: 'Platform' }],
@@ -238,7 +237,6 @@ describe('jira issue operations', () => {
         key: 'CCM-1',
         clinicalLead: 'Dr Test',
         clinicalReviewStatus: 'Review required',
-        issueType: 'Epic',
         fixVersions: [{ id: '71260', name: 'client-config-0.1.0' }],
         issueType: 'Epic',
         summary: 'First',
@@ -250,8 +248,6 @@ describe('jira issue operations', () => {
         key: 'CCM-2',
         clinicalLead: '',
         clinicalReviewStatus: 'Review not needed',
-        issueType: 'Bug',
-        fixVersions: [],
         fixVersions: [],
         issueType: 'Bug',
         summary: 'Second',
@@ -261,14 +257,24 @@ describe('jira issue operations', () => {
       },
     ]);
 
-    expect(mockFetch).toHaveBeenNthCalledWith(
-      1,
-      expect.stringContaining(
-        encodeURIComponent(
-          'project = CCM AND fixVersion = 71260 AND status != "Not Required" ORDER BY key ASC',
-        ),
-      ),
-      expect.any(Object),
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://jira.example.com/rest/api/2/search',
+      expect.objectContaining({
+        body: JSON.stringify({
+          fields: [
+            'summary',
+            'status',
+            'issuetype',
+            'components',
+            'customfield_10523',
+            'customfield_15200',
+            'customfield_16657',
+          ],
+          jql: 'project = CCM AND fixVersion = 71260 AND status != "Not Required" ORDER BY key ASC',
+          maxResults: 100,
+          startAt: 0,
+        }),
+      }),
     );
   });
 
