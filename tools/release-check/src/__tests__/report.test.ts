@@ -83,7 +83,9 @@ describe('defaultReportPath', () => {
   it('writes single-release reports under .reports/release-check in the cwd', () => {
     expect(
       defaultReportPath('nhs-notify-client-config', ['0.1.0'], '/workspace'),
-    ).toBe('/workspace/.reports/release-check/nhs-notify-client-config-0.1.0.md');
+    ).toBe(
+      '/workspace/.reports/release-check/nhs-notify-client-config-0.1.0.md',
+    );
   });
 
   it('summarises multiple selected tags in the report filename', () => {
