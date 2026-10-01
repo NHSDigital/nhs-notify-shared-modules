@@ -1,3 +1,4 @@
+import { hasGlobPattern, matchesGlobPattern } from './selectors';
 import type { JiraIssue, JiraVersion } from './types';
 
 const CLINICAL_LEAD_FIELD_ID = 'customfield_10523';
@@ -50,6 +51,20 @@ const getJiraToken = (): string => {
 
 const VERSION_PATH_PATTERN = /\/versions\/(\d+)/;
 
+type JiraVersionResponse = {
+  id: string | number;
+  name: string;
+  releaseDate?: string;
+  released?: boolean;
+};
+
+const toJiraVersion = (version: JiraVersionResponse): JiraVersion => ({
+  id: String(version.id),
+  name: version.name,
+  releaseDate: version.releaseDate ?? null,
+  released: Boolean(version.released),
+});
+
 const fetchJiraJson = async <T>(url: string): Promise<T> => {
   const response = await fetch(url, {
     headers: {
@@ -88,53 +103,95 @@ const parseVersionReference = (
   return { type: 'name', value: trimmed };
 };
 
+const fetchProjectVersions = async (
+  jiraBaseUrl: string,
+  jiraProject: string,
+): Promise<JiraVersion[]> => {
+  const versions = await fetchJiraJson<JiraVersionResponse[]>(
+    `${jiraBaseUrl}/rest/api/2/project/${encodeURIComponent(jiraProject)}/versions`,
+  );
+
+  return versions.map((version) => toJiraVersion(version));
+};
+
+const fetchVersionById = async (
+  jiraBaseUrl: string,
+  versionId: string,
+): Promise<JiraVersion> => {
+  const version = await fetchJiraJson<JiraVersionResponse>(
+    `${jiraBaseUrl}/rest/api/2/version/${encodeURIComponent(versionId)}`,
+  );
+
+  return toJiraVersion(version);
+};
+
+const resolveNamedJiraVersions = (
+  jiraProject: string,
+  projectVersions: JiraVersion[],
+  reference: string,
+): JiraVersion[] => {
+  const matches = hasGlobPattern(reference)
+    ? projectVersions.filter((version) =>
+        matchesGlobPattern(version.name, reference),
+      )
+    : projectVersions.filter((version) => version.name === reference);
+
+  if (matches.length > 0) {
+    return matches;
+  }
+
+  if (hasGlobPattern(reference)) {
+    throw new Error(
+      `Could not find Jira versions matching "${reference}" in project ${jiraProject}.`,
+    );
+  }
+
+  throw new Error(
+    `Could not find Jira version "${reference}" in project ${jiraProject}.`,
+  );
+};
+
+export const resolveJiraVersions = async (
+  jiraBaseUrl: string,
+  jiraProject: string,
+  references: string[],
+): Promise<JiraVersion[]> => {
+  const selectedVersions: JiraVersion[] = [];
+  const selectedVersionIds = new Set<string>();
+  const needsProjectVersions = references.some(
+    (reference) => parseVersionReference(reference).type === 'name',
+  );
+  const projectVersions = needsProjectVersions
+    ? await fetchProjectVersions(jiraBaseUrl, jiraProject)
+    : [];
+
+  for (const reference of references) {
+    const parsed = parseVersionReference(reference);
+    const matches =
+      parsed.type === 'id'
+        ? [await fetchVersionById(jiraBaseUrl, parsed.value)]
+        : resolveNamedJiraVersions(jiraProject, projectVersions, parsed.value);
+
+    for (const match of matches) {
+      if (!selectedVersionIds.has(match.id)) {
+        selectedVersions.push(match);
+        selectedVersionIds.add(match.id);
+      }
+    }
+  }
+
+  return selectedVersions;
+};
+
 export const resolveJiraVersion = async (
   jiraBaseUrl: string,
   jiraProject: string,
   reference: string,
 ): Promise<JiraVersion> => {
-  const parsed = parseVersionReference(reference);
-
-  if (parsed.type === 'id') {
-    const version = await fetchJiraJson<{
-      id: string | number;
-      name: string;
-      releaseDate?: string;
-      released?: boolean;
-    }>(`${jiraBaseUrl}/rest/api/2/version/${encodeURIComponent(parsed.value)}`);
-
-    return {
-      id: String(version.id),
-      name: version.name,
-      releaseDate: version.releaseDate ?? null,
-      released: Boolean(version.released),
-    };
-  }
-
-  const versions = await fetchJiraJson<
-    {
-      id: string | number;
-      name: string;
-      releaseDate?: string;
-      released?: boolean;
-    }[]
-  >(
-    `${jiraBaseUrl}/rest/api/2/project/${encodeURIComponent(jiraProject)}/versions`,
-  );
-
-  const version = versions.find((candidate) => candidate.name === parsed.value);
-  if (!version) {
-    throw new Error(
-      `Could not find Jira version "${parsed.value}" in project ${jiraProject}.`,
-    );
-  }
-
-  return {
-    id: String(version.id),
-    name: version.name,
-    releaseDate: version.releaseDate ?? null,
-    released: Boolean(version.released),
-  };
+  const [version] = await resolveJiraVersions(jiraBaseUrl, jiraProject, [
+    reference,
+  ]);
+  return version;
 };
 
 export const fetchJiraIssues = async (
