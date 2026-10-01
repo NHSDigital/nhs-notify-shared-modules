@@ -1,6 +1,8 @@
 import { getOriginRemoteUrl, readTagAnnotation } from './git';
 
 import type {
+  GitCommit,
+  ReleaseNoteEntry,
   ReleaseNotes,
   ReleaseNotesLookupSource,
   ReleaseNotesSource,
@@ -10,6 +12,11 @@ const GITHUB_REMOTE_SSH_PATTERN = /^git@github\.com:([^/]+)\/(.+?)(?:\.git)?$/;
 const GITHUB_REMOTE_HTTPS_PATTERN =
   /^https:\/\/github\.com\/([^/]+)\/(.+?)(?:\.git)?$/;
 const ISSUE_KEY_PATTERN = /\b[A-Z][A-Z0-9]+-\d+\b/g;
+const RELEASE_NOTE_PULL_REQUEST_PATTERN = /\/pull\/(\d+)\b/;
+const COMMIT_PULL_REQUEST_PATTERNS = [
+  /\(#(\d+)\)/g,
+  /^Merge pull request #(\d+)\b/g,
+];
 
 const parseGitHubRepositoryFromRemote = (
   remoteUrl: string,
@@ -32,6 +39,80 @@ const extractIssueKeys = (text: string): string[] => [
     (text.match(ISSUE_KEY_PATTERN) ?? []).map((key) => key.toUpperCase()),
   ),
 ];
+
+const parseReleaseNoteEntries = (text: string): ReleaseNoteEntry[] =>
+  text
+    .split('\n')
+    .map((line) => {
+      const pullRequest = RELEASE_NOTE_PULL_REQUEST_PATTERN.exec(line)?.[1];
+      return {
+        issueKeys: extractIssueKeys(line),
+        pullRequestNumber: pullRequest ? Number(pullRequest) : null,
+      };
+    })
+    .filter(
+      ({ issueKeys, pullRequestNumber }) =>
+        issueKeys.length > 0 || pullRequestNumber != null,
+    );
+
+const buildReleaseNotes = (
+  source: ReleaseNotesLookupSource,
+  text: string,
+  warnings: string[],
+): ReleaseNotes => ({
+  entries: parseReleaseNoteEntries(text),
+  issueKeys: extractIssueKeys(text),
+  source,
+  text,
+  warnings,
+});
+
+const getCommitPullRequestNumber = (commit: GitCommit): number | null => {
+  for (const pattern of COMMIT_PULL_REQUEST_PATTERNS) {
+    const matches = [...commit.subject.matchAll(pattern)];
+    const last = matches.at(-1)?.[1];
+    if (last) {
+      return Number(last);
+    }
+  }
+  return null;
+};
+
+// Release notes are written from PR titles, so they carry the same wrong ticket
+// as the commit; apply the commit mappings to the notes via the PR number.
+export const applyCommitMappingsToReleaseNotes = (
+  releaseNotes: ReleaseNotes,
+  commits: GitCommit[],
+): ReleaseNotes => {
+  const mappedKeyByPullRequest = new Map<number, string>();
+  for (const commit of commits) {
+    const pullRequestNumber = getCommitPullRequestNumber(commit);
+    if (commit.issueKeyOverride && pullRequestNumber != null) {
+      mappedKeyByPullRequest.set(
+        pullRequestNumber,
+        commit.issueKeyOverride.issueKey,
+      );
+    }
+  }
+
+  if (mappedKeyByPullRequest.size === 0) {
+    return releaseNotes;
+  }
+
+  const entries = releaseNotes.entries.map((entry) => {
+    const mappedKey =
+      entry.pullRequestNumber == null
+        ? undefined
+        : mappedKeyByPullRequest.get(entry.pullRequestNumber);
+    return mappedKey ? { ...entry, issueKeys: [mappedKey] } : entry;
+  });
+
+  return {
+    ...releaseNotes,
+    entries,
+    issueKeys: [...new Set(entries.flatMap(({ issueKeys }) => issueKeys))],
+  };
+};
 
 type GitHubReleaseLookupMissReason = 'empty-body' | 'not-found';
 
@@ -143,12 +224,7 @@ const tryReadGitHubReleaseNotes = async (
     }
   }
   if (result.kind === 'body') {
-    return {
-      issueKeys: extractIssueKeys(result.body),
-      source: 'github-release',
-      text: result.body,
-      warnings,
-    };
+    return buildReleaseNotes('github-release', result.body, warnings);
   }
 
   if (source === 'github') {
@@ -169,12 +245,7 @@ const readTagReleaseNotes = (
 ): ReleaseNotes | null => {
   const annotation = readTagAnnotation(repoRoot, gitTag);
   if (annotation) {
-    return {
-      issueKeys: extractIssueKeys(annotation),
-      source: 'tag-annotation',
-      text: annotation,
-      warnings,
-    };
+    return buildReleaseNotes('tag-annotation', annotation, warnings);
   }
   if (source === 'tag') {
     throw new Error(
@@ -206,6 +277,7 @@ export const readReleaseNotes = async (
 
   if (source === 'none') {
     return {
+      entries: [],
       issueKeys: [],
       source: 'none',
       text: null,
@@ -247,6 +319,7 @@ export const readReleaseNotes = async (
   }
 
   return {
+    entries: [],
     issueKeys: [],
     source: 'none',
     text: null,
@@ -271,6 +344,7 @@ export const readReleaseNotesForTags = async (
   );
 
   return {
+    entries: notesByTag.flatMap(({ releaseNotes }) => releaseNotes.entries),
     issueKeys: [
       ...new Set(
         notesByTag.flatMap(({ releaseNotes }) => releaseNotes.issueKeys),

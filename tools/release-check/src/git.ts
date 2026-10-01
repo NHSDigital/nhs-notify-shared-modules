@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -10,6 +11,8 @@ const ISSUE_KEY_PATTERN = /(^|[^A-Z0-9/])([A-Z][A-Z0-9]+-\d+)(?=$|[^A-Z0-9/])/g;
 
 const extractIssueKeys = (text: string): string[] =>
   [...text.matchAll(ISSUE_KEY_PATTERN)].map((match) => match[2].toUpperCase());
+const FULL_ISSUE_KEY_PATTERN = /^[A-Z][A-Z0-9]+-\d+$/i;
+const COMMIT_HASH_PATTERN = /^[0-9a-f]{7,40}$/i;
 
 const runGit = (repoPath: string, args: string[]): string => {
   const result = spawnSync(GIT_EXECUTABLE, ['-C', repoPath, ...args], {
@@ -49,6 +52,13 @@ export const getRepoRoot = (repoPath: string): string =>
 
 export const getRepoName = (repoRoot: string): string =>
   path.basename(repoRoot);
+
+export const findDefaultCommitIssueMappingFile = (
+  repoRoot: string,
+): string | undefined => {
+  const defaultMappingPath = path.join(repoRoot, '.jira-commits');
+  return existsSync(defaultMappingPath) ? defaultMappingPath : undefined;
+};
 
 export const listTags = (repoRoot: string): string[] => {
   const raw = runGit(repoRoot, ['tag', '--list', '--sort=version:refname']);
@@ -192,6 +202,110 @@ export const collectCommitsForTags = (
   }
 
   return [...commitsByHash.values()];
+};
+
+const parseCommitIssueKeyMappingLine = (
+  line: string,
+  lineNumber: number,
+  mappingPath: string,
+): [string, string] | undefined => {
+  const trimmedLine = line.trim();
+  if (!trimmedLine || trimmedLine.startsWith('#')) {
+    return undefined;
+  }
+
+  const parts = trimmedLine.split(/\s+/);
+  if (parts.length !== 2) {
+    throw new Error(
+      `Invalid commit mapping on line ${lineNumber} of ${mappingPath}: expected "<commit-hash> <JIRA-KEY>".`,
+    );
+  }
+
+  const [commitHash, issueKey] = parts;
+  if (!COMMIT_HASH_PATTERN.test(commitHash)) {
+    throw new Error(
+      `Invalid commit hash "${commitHash}" on line ${lineNumber} of ${mappingPath}. Expected 7-40 hexadecimal characters.`,
+    );
+  }
+  if (!FULL_ISSUE_KEY_PATTERN.test(issueKey)) {
+    throw new Error(
+      `Invalid Jira issue key "${issueKey}" on line ${lineNumber} of ${mappingPath}.`,
+    );
+  }
+
+  return [commitHash.toLowerCase(), issueKey.toUpperCase()];
+};
+
+export const readCommitIssueKeyMappings = async (
+  repoRoot: string,
+  mappingFile: string,
+): Promise<Map<string, string>> => {
+  const mappingPath = path.isAbsolute(mappingFile)
+    ? mappingFile
+    : path.resolve(repoRoot, mappingFile);
+  const contents = await readFile(mappingPath, 'utf8');
+  const mappings = new Map<string, string>();
+
+  for (const [index, line] of contents.split(/\r?\n/).entries()) {
+    const parsedMapping = parseCommitIssueKeyMappingLine(
+      line,
+      index + 1,
+      mappingPath,
+    );
+    if (parsedMapping) {
+      const [commitHash, issueKey] = parsedMapping;
+      if (mappings.has(commitHash)) {
+        throw new Error(
+          `Duplicate commit mapping for "${commitHash}" in ${mappingPath}.`,
+        );
+      }
+
+      mappings.set(commitHash, issueKey);
+    }
+  }
+
+  return mappings;
+};
+
+export const applyCommitIssueKeyMappings = (
+  commits: GitCommit[],
+  mappings: Map<string, string>,
+): GitCommit[] => {
+  if (mappings.size === 0) {
+    return commits;
+  }
+
+  const updatedCommits = new Map<string, GitCommit>();
+
+  for (const [commitHashPrefix, issueKey] of mappings) {
+    const matchingCommits = commits.filter((commit) =>
+      commit.hash.toLowerCase().startsWith(commitHashPrefix),
+    );
+
+    if (matchingCommits.length > 1) {
+      throw new Error(
+        `Commit mapping hash "${commitHashPrefix}" matched multiple selected commits; use a longer hash prefix.`,
+      );
+    }
+    if (matchingCommits.length === 1) {
+      const [matchingCommit] = matchingCommits;
+      if (updatedCommits.has(matchingCommit.hash)) {
+        throw new Error(
+          `Multiple commit mappings matched commit ${matchingCommit.hash}; use distinct hashes.`,
+        );
+      }
+
+      updatedCommits.set(matchingCommit.hash, {
+        ...matchingCommit,
+        issueKeyOverride: {
+          commitHash: commitHashPrefix,
+          issueKey,
+        },
+      });
+    }
+  }
+
+  return commits.map((commit) => updatedCommits.get(commit.hash) ?? commit);
 };
 
 export const getOriginRemoteUrl = (repoRoot: string): string =>
