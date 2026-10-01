@@ -34,6 +34,7 @@ const jiraVersion: JiraVersion = {
 };
 
 const releaseNotes: ReleaseNotes = {
+  entries: [],
   issueKeys: ['CCM-100'],
   source: 'github-release',
   text: 'CCM-100: release note entry',
@@ -163,6 +164,7 @@ describe('renderReport', () => {
       jiraVersions: [jiraVersion],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -404,6 +406,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: ['CCM-100'],
         source: 'github-release',
         text: 'CCM-100 release note entry',
@@ -493,6 +496,7 @@ describe('renderReport', () => {
       jiraVersions: [jiraVersion],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -531,6 +535,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: ['CCM-100'],
         source: 'mixed',
         text: null,
@@ -661,6 +666,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -771,6 +777,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -872,6 +879,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -982,6 +990,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -1038,6 +1047,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -1095,6 +1105,7 @@ describe('renderReport', () => {
       jiraVersions: [jiraVersion],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -1183,6 +1194,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -1246,6 +1258,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
