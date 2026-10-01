@@ -136,6 +136,58 @@ describe('renderReport', () => {
     );
   });
 
+  it('omits release-note comparison sections when no release notes were available', () => {
+    const report = renderReport({
+      comparison: {
+        ...comparison,
+        jiraIssuesMissingFromReleaseNotes: [
+          {
+            issueType: 'Story',
+            key: 'CCM-101',
+            summary: 'Missing from release notes',
+            status: 'Done',
+            components: ['Platform'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+          },
+        ],
+        notesReferencedIssueKeys: ['CCM-999'],
+        releaseNotesIssueKeysOutsideRelease: ['CCM-999'],
+      },
+      fixAction: undefined,
+      fixComponent: undefined,
+      fixProposals: undefined,
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
+      jiraProject: 'CCM',
+      jiraVersions: [jiraVersion],
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes: {
+        issueKeys: [],
+        source: 'none',
+        text: null,
+        warnings: [
+          'No GitHub release body found for tag 0.1.0; if this repository is private, set GITHUB_TOKEN or GH_TOKEN and try again. Falling back.',
+        ],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 16,
+    });
+
+    expect(report).not.toContain('Jira issues referenced in release notes');
+    expect(report).not.toContain('Jira issues missing from release notes');
+    expect(report).not.toContain(
+      'Jira issues in the release with no matching release-note reference',
+    );
+    expect(report).not.toContain(
+      'Release-note Jira issues missing from the Jira release',
+    );
+    expect(report).toContain(
+      'No GitHub release body found for tag 0.1.0; if this repository is private, set GITHUB_TOKEN or GH_TOKEN and try again. Falling back.',
+    );
+  });
+
   it('renders populated issue and fix sections as markdown tables', () => {
     const populatedReport = renderReport({
       comparison: {
@@ -351,7 +403,7 @@ describe('renderReport', () => {
     );
     expect(populatedReport).toContain('| Issue | Commit | Proposed update |');
     expect(populatedReport).toContain(
-      '| [CCM-555](https://nhsd-jira.digital.nhs.uk/browse/CCM-555): [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` _(1 commit total)_ | client-config-0.1.0 |',
+      '| [CCM-555](https://nhsd-jira.digital.nhs.uk/browse/CCM-555): [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` | client-config-0.1.0 |',
     );
     expect(populatedReport).toContain(
       '- Git commit ranges mapped to Jira versions:',
@@ -546,6 +598,67 @@ describe('renderReport', () => {
     expect(report).toContain(
       "npm run check -- --repo '/repos/nhs-notify-client-config' --git-tag 'v0.2.0' --jira-version 'client-config-0.2.0' --fix clinical-review-not-needed --fix-component 'Platform'",
     );
+  });
+
+  it('uses RELEASE_CHECK_COMMAND for fix commands when a wrapper provides it', () => {
+    process.env.RELEASE_CHECK_COMMAND = 'pnpm run release-check --';
+
+    try {
+      const report = renderReport({
+        comparison: {
+          ...comparison,
+          jiraIssuesMissingClinicalSafetyCategory: [
+            {
+              issueType: 'Story',
+              key: 'CCM-998',
+              summary: 'Missing clinical safety category',
+              status: 'Done',
+              components: ['Platform'],
+              clinicalLead: 'Dr Test',
+              clinicalReviewStatus: 'Review required',
+              medicalClinicalSafetyCategory: '',
+              fixVersions: [{ id: '71260', name: 'client-config-0.1.0' }],
+            },
+          ],
+          commitsByIssueKey: new Map([
+            [
+              'CCM-998',
+              [
+                {
+                  hash: 'b'.repeat(40),
+                  shortHash: 'bbbbbbbb',
+                  subject: 'CCM-998: change',
+                  body: '',
+                  explicitIssueKeys: ['CCM-998'],
+                  matchedIssueKeys: ['CCM-998'],
+                  releaseRange: 'repository start..0.1.0',
+                  releaseTag: '0.1.0',
+                },
+              ],
+            ],
+          ]),
+        },
+        fixAction: undefined,
+        fixComponent: undefined,
+        fixProposals: undefined,
+        gitTags: [{ gitTag: '0.1.0', previousTag: null }],
+        jiraProject: 'CCM',
+        jiraVersions: [jiraVersion],
+        outsideReleaseIssuesByKey: new Map(),
+        releaseNotes,
+        repoName: 'nhs-notify-client-config',
+        repoRoot: '/repos/nhs-notify-client-config',
+        totalJiraIssues: 1,
+      });
+
+      expect(report).toContain(
+        "pnpm run release-check -- --git-tag '0.1.0' --jira-version 'client-config-0.1.0' --fix clinical-review-not-needed --fix-component 'Platform'",
+      );
+      expect(report).not.toContain('npm run check');
+      expect(report).not.toContain('--repo');
+    } finally {
+      delete process.env.RELEASE_CHECK_COMMAND;
+    }
   });
 
   it('renders unknown release metadata when Jira has not set it', () => {
@@ -1060,6 +1173,15 @@ describe('renderReport', () => {
   });
 });
 
+const commit = (hash: string, shortHash: string, subject: string) => ({
+  hash,
+  shortHash,
+  subject,
+  body: '',
+  explicitIssueKeys: ['CCM-555'],
+  matchedIssueKeys: ['CCM-555'],
+});
+
 describe('renderFixProposalSection', () => {
   it('renders markdown table rows for proposed fixes', () => {
     const section = renderFixProposalSection(
@@ -1088,8 +1210,44 @@ describe('renderFixProposalSection', () => {
     );
     expect(section).toContain('| Issue | Commit | Proposed update |');
     expect(section).toContain(
-      '| [CCM-555](https://nhsd-jira.digital.nhs.uk/browse/CCM-555): [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` _(1 commit total)_ | client-config-0.1.0 |',
+      '| [CCM-555](https://nhsd-jira.digital.nhs.uk/browse/CCM-555): [Platform] Needs fix version (Done) | `dddddddd CCM-555: proposed fix` | client-config-0.1.0 |',
     );
+  });
+
+  it('lists every commit for a proposed fix in markdown and terminal output', () => {
+    const commitsByIssueKey = new Map([
+      [
+        'CCM-555',
+        [
+          commit('a'.repeat(40), 'aaaaaaaa', 'CCM-555: first change'),
+          commit('b'.repeat(40), 'bbbbbbbb', 'CCM-555: second change'),
+          commit('c'.repeat(40), 'cccccccc', 'CCM-555: third change'),
+        ],
+      ],
+    ]);
+
+    const markdown = renderFixProposalSection(
+      'fixVersion',
+      'Platform',
+      fixProposals,
+      commitsByIssueKey,
+    );
+    expect(markdown).toContain(
+      '`aaaaaaaa CCM-555: first change`<br>`bbbbbbbb CCM-555: second change`<br>`cccccccc CCM-555: third change`',
+    );
+
+    const terminal = renderFixProposalTerminalSection(
+      'fixVersion',
+      'Platform',
+      fixProposals,
+      commitsByIssueKey,
+    );
+    const lines = terminal.split('\n');
+    const firstRow = lines.findIndex((line) => line.includes('aaaaaaaa'));
+    expect(lines[firstRow]).toContain('CCM-555: [Platform] Needs fix version');
+    expect(lines[firstRow]).toContain('client-config-0.1.0');
+    expect(lines[firstRow + 1]).toContain('bbbbbbbb CCM-555: second change');
+    expect(lines[firstRow + 2]).toContain('cccccccc CCM-555: third change');
   });
 
   it('renders empty fix proposal sections explicitly', () => {
@@ -1156,9 +1314,7 @@ describe('renderFixProposalSection', () => {
       'Proposed fixVersion updates for component Platform',
     );
     expect(section).toContain('CCM-555: [Platform] Needs fix version (Done)');
-    expect(section).toContain(
-      'dddddddd CCM-555: proposed fix (1 commit total)',
-    );
+    expect(section).toContain('dddddddd CCM-555: proposed fix');
     expect(section).not.toContain('## Proposed');
     expect(section).not.toContain('| Issue | Commit | Proposed update |');
     expect(section).not.toContain('[CCM-555](');

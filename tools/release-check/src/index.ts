@@ -689,11 +689,15 @@ export const run = async (argv: string[]): Promise<void> => {
       : `Jira versions selected (${jiraVersions.length}): ${formatJiraVersionSummary(jiraVersions)}`,
     `Jira issues in ${jiraVersions.length === 1 ? 'release' : 'selected releases'}: ${jiraIssues.length}`,
     `Jira issues missing from git: ${comparison.jiraIssuesMissingFromGit.length}`,
-    `Jira issues missing from release notes: ${comparison.jiraIssuesMissingFromReleaseNotes.length}`,
     `Referenced Jira issues not done: ${comparison.releaseReferencedIssuesNotDone.length}`,
     `Jira issues missing clinical safety category: ${comparison.jiraIssuesMissingClinicalSafetyCategory.length}`,
     `Jira issues missing clinical lead: ${comparison.jiraIssuesMissingClinicalLead.length}`,
     `Commits without Jira matches: ${comparison.commitsWithoutMatches.length}`,
+    ...(releaseNotes.source === 'none'
+      ? []
+      : [
+          `Jira issues missing from release notes: ${comparison.jiraIssuesMissingFromReleaseNotes.length}`,
+        ]),
     ...(outputPath ? [`Report written to ${outputPath}`] : []),
   ];
 
