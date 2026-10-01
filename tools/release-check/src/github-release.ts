@@ -29,11 +29,37 @@ const extractIssueKeys = (text: string): string[] => [
   ),
 ];
 
+type GitHubReleaseLookupMissReason = 'empty-body' | 'not-found';
+
+type GitHubReleaseLookupResult =
+  | {
+      body: string;
+      kind: 'body';
+    }
+  | {
+      kind: 'missing';
+      reason: GitHubReleaseLookupMissReason;
+    };
+
+const hasGitHubToken = (): boolean =>
+  Boolean(process.env.GITHUB_TOKEN || process.env.GH_TOKEN);
+
+const formatMissingReleaseBodyMessage = (
+  gitTag: string,
+  reason: GitHubReleaseLookupMissReason,
+): string => {
+  if (reason === 'not-found' && !hasGitHubToken()) {
+    return `No GitHub release body found for tag ${gitTag}; if this repository is private, set GITHUB_TOKEN or GH_TOKEN and try again.`;
+  }
+
+  return `No GitHub release body found for tag ${gitTag}.`;
+};
+
 const fetchGitHubReleaseBody = async (
   owner: string,
   repo: string,
   gitTag: string,
-): Promise<string | null> => {
+): Promise<GitHubReleaseLookupResult> => {
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
@@ -49,7 +75,10 @@ const fetchGitHubReleaseBody = async (
   );
 
   if (response.status === 404) {
-    return null;
+    return {
+      kind: 'missing',
+      reason: 'not-found',
+    };
   }
 
   if (!response.ok) {
@@ -61,7 +90,17 @@ const fetchGitHubReleaseBody = async (
 
   const release = (await response.json()) as { body?: string | null };
   const body = release.body?.trim();
-  return body || null;
+  if (body) {
+    return {
+      body,
+      kind: 'body',
+    };
+  }
+
+  return {
+    kind: 'missing',
+    reason: 'empty-body',
+  };
 };
 
 const formatLookupError = (error: unknown): string =>
@@ -84,22 +123,36 @@ const tryReadGitHubReleaseNotes = async (
     return null;
   }
 
-  const body = await fetchGitHubReleaseBody(remote.owner, remote.repo, gitTag);
-  if (body) {
+  let result = await fetchGitHubReleaseBody(remote.owner, remote.repo, gitTag);
+  if (result.kind === 'missing' && result.reason === 'not-found') {
+    // Git tags and GitHub release tags are not always named consistently (0.3.0 vs v0.3.0)
+    const alternateTag = gitTag.startsWith('v')
+      ? gitTag.slice(1)
+      : `v${gitTag}`;
+    const alternateResult = await fetchGitHubReleaseBody(
+      remote.owner,
+      remote.repo,
+      alternateTag,
+    );
+    if (alternateResult.kind === 'body') {
+      result = alternateResult;
+    }
+  }
+  if (result.kind === 'body') {
     return {
-      issueKeys: extractIssueKeys(body),
+      issueKeys: extractIssueKeys(result.body),
       source: 'github-release',
-      text: body,
+      text: result.body,
       warnings,
     };
   }
 
   if (source === 'github') {
-    throw new Error(`No GitHub release body found for tag ${gitTag}.`);
+    throw new Error(formatMissingReleaseBodyMessage(gitTag, result.reason));
   }
 
   warnings.push(
-    `No GitHub release body found for tag ${gitTag}; falling back.`,
+    `${formatMissingReleaseBodyMessage(gitTag, result.reason)} Falling back.`,
   );
   return null;
 };

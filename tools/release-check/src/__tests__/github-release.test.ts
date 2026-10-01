@@ -180,8 +180,87 @@ describe('readReleaseNotes', () => {
     });
 
     await expect(readReleaseNotes('/repo', '0.1.0', 'github')).rejects.toThrow(
-      'No GitHub release body found for tag 0.1.0.',
+      'No GitHub release body found for tag 0.1.0; if this repository is private, set GITHUB_TOKEN or GH_TOKEN and try again.',
     );
+  });
+
+  it('retries with a v-prefixed tag when the github release is tagged differently', async () => {
+    mockedGetOriginRemoteUrl.mockReturnValue(
+      'https://github.com/NHSDigital/nhs-notify-client-config.git',
+    );
+    mockFetch
+      .mockResolvedValueOnce({
+        status: 404,
+        ok: false,
+        statusText: 'Not Found',
+        text: async () => 'missing',
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        statusText: 'OK',
+        json: async () => ({ body: 'CCM-400 prefixed release' }),
+      });
+
+    await expect(readReleaseNotes('/repo', '0.3.0', 'auto')).resolves.toEqual({
+      issueKeys: ['CCM-400'],
+      source: 'github-release',
+      text: 'CCM-400 prefixed release',
+      warnings: [],
+    });
+    expect(mockFetch).toHaveBeenLastCalledWith(
+      'https://api.github.com/repos/NHSDigital/nhs-notify-client-config/releases/tags/v0.3.0',
+      expect.anything(),
+    );
+  });
+
+  it('retries without the v prefix when the git tag is v-prefixed', async () => {
+    mockedGetOriginRemoteUrl.mockReturnValue(
+      'https://github.com/NHSDigital/nhs-notify-client-config.git',
+    );
+    mockFetch
+      .mockResolvedValueOnce({
+        status: 404,
+        ok: false,
+        statusText: 'Not Found',
+        text: async () => 'missing',
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        statusText: 'OK',
+        json: async () => ({ body: 'CCM-401 unprefixed release' }),
+      });
+
+    await expect(readReleaseNotes('/repo', 'v0.3.0', 'auto')).resolves.toEqual({
+      issueKeys: ['CCM-401'],
+      source: 'github-release',
+      text: 'CCM-401 unprefixed release',
+      warnings: [],
+    });
+  });
+
+  it('warns with a private-repository token hint when github returns 404 in auto mode', async () => {
+    mockedGetOriginRemoteUrl.mockReturnValue(
+      'https://github.com/NHSDigital/nhs-notify-client-config.git',
+    );
+    mockFetch.mockResolvedValue({
+      status: 404,
+      ok: false,
+      statusText: 'Not Found',
+      text: async () => 'missing',
+    });
+    mockedReadTagAnnotation.mockReturnValue(null);
+
+    await expect(readReleaseNotes('/repo', '0.1.0', 'auto')).resolves.toEqual({
+      issueKeys: [],
+      source: 'none',
+      text: null,
+      warnings: [
+        'No GitHub release body found for tag 0.1.0; if this repository is private, set GITHUB_TOKEN or GH_TOKEN and try again. Falling back.',
+        'Tag 0.1.0 is not annotated; no tag release notes available.',
+      ],
+    });
   });
 
   it('warns and falls back when the github release exists but has no body in auto mode', async () => {
@@ -200,7 +279,7 @@ describe('readReleaseNotes', () => {
       issueKeys: ['CCM-300'],
       source: 'tag-annotation',
       text: 'CCM-300 tag notes',
-      warnings: ['No GitHub release body found for tag 0.1.0; falling back.'],
+      warnings: ['No GitHub release body found for tag 0.1.0. Falling back.'],
     });
   });
 
