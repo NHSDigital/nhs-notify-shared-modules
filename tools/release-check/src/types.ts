@@ -38,7 +38,13 @@ export type ReleaseNotesSource = 'auto' | 'github' | 'tag' | 'none';
 export type ReleaseNotesLookupSource =
   'github-release' | 'mixed' | 'none' | 'tag-annotation';
 
+export type ReleaseNoteEntry = {
+  issueKeys: string[];
+  pullRequestNumber: number | null;
+};
+
 export type ReleaseNotes = {
+  entries: ReleaseNoteEntry[];
   issueKeys: string[];
   source: ReleaseNotesLookupSource;
   text: string | null;

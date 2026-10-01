@@ -16,7 +16,10 @@ import {
   resolveGitTags,
   resolveRepoPath,
 } from './git';
-import { readReleaseNotesForTags } from './github-release';
+import {
+  applyCommitMappingsToReleaseNotes,
+  readReleaseNotesForTags,
+} from './github-release';
 import {
   fetchJiraIssues,
   fetchJiraIssuesByKeys,
@@ -619,10 +622,13 @@ export const run = async (argv: string[]): Promise<void> => {
     jiraIssuesByVersion.flat(),
     (issue: JiraIssue) => issue.key,
   );
-  const releaseNotes = await readReleaseNotesForTags(
-    repoRoot,
-    selectedGitTags.map(({ gitTag }) => gitTag),
-    options.releaseNotesSource,
+  const releaseNotes = applyCommitMappingsToReleaseNotes(
+    await readReleaseNotesForTags(
+      repoRoot,
+      selectedGitTags.map(({ gitTag }) => gitTag),
+      options.releaseNotesSource,
+    ),
+    commits,
   );
   const comparison = compareRelease(
     commits,

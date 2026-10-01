@@ -32,6 +32,7 @@ jest.mock('../jira', () => ({
 }));
 
 jest.mock('../github-release', () => ({
+  applyCommitMappingsToReleaseNotes: jest.fn(),
   readReleaseNotesForTags: jest.fn(),
 }));
 
@@ -111,6 +112,10 @@ const mockedUpdateJiraIssueClinicalReviewStatus =
 const mockedUpdateJiraIssueFixVersions =
   jira.updateJiraIssueFixVersions as jest.MockedFunction<
     typeof jira.updateJiraIssueFixVersions
+  >;
+const mockedApplyCommitMappingsToReleaseNotes =
+  notes.applyCommitMappingsToReleaseNotes as jest.MockedFunction<
+    typeof notes.applyCommitMappingsToReleaseNotes
   >;
 const mockedReadReleaseNotesForTags =
   notes.readReleaseNotesForTags as jest.MockedFunction<
@@ -197,7 +202,11 @@ describe('run', () => {
     mockedFetchJiraIssuesByKeys.mockResolvedValue([]);
     mockedUpdateJiraIssueClinicalReviewStatus.mockResolvedValue(undefined);
     mockedUpdateJiraIssueFixVersions.mockResolvedValue(undefined);
+    mockedApplyCommitMappingsToReleaseNotes.mockImplementation(
+      (releaseNotes) => releaseNotes,
+    );
     mockedReadReleaseNotesForTags.mockResolvedValue({
+      entries: [],
       issueKeys: [],
       source: 'none',
       text: null,
