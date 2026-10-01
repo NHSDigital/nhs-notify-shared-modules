@@ -106,6 +106,7 @@ describe('renderReport', () => {
         gitReferencedIssueKeys: ['CCM-100'],
         jiraIssuesMissingClinicalLead: [
           {
+            issueType: 'Story',
             key: 'CCM-104',
             summary: 'Missing clinical lead',
             status: 'Done',
@@ -117,6 +118,7 @@ describe('renderReport', () => {
         ],
         jiraIssuesMissingClinicalSafetyCategory: [
           {
+            issueType: 'Story',
             key: 'CCM-103',
             summary: 'Missing clinical safety category',
             status: 'Done',
@@ -128,6 +130,7 @@ describe('renderReport', () => {
         ],
         jiraIssuesMissingFromGit: [
           {
+            issueType: 'Story',
             key: 'CCM-101',
             summary: 'Missing from git',
             status: 'Done',
@@ -139,6 +142,7 @@ describe('renderReport', () => {
         ],
         jiraIssuesMissingFromReleaseNotes: [
           {
+            issueType: 'Story',
             key: 'CCM-102',
             summary: 'Missing from notes',
             status: 'Done',
@@ -151,6 +155,7 @@ describe('renderReport', () => {
         notesReferencedIssueKeys: ['CCM-100'],
         releaseReferencedIssuesNotDone: [
           {
+            issueType: 'Story',
             key: 'CCM-100',
             summary: 'Referenced and not done',
             status: 'In Progress',

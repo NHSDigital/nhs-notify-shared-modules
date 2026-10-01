@@ -129,6 +129,7 @@ describe('run', () => {
       gitReferencedIssueKeys: [],
       jiraIssuesMissingClinicalLead: [
         {
+          issueType: 'Story',
           clinicalLead: '',
           clinicalReviewStatus: 'Pending',
           components: [],
@@ -140,6 +141,7 @@ describe('run', () => {
       ],
       jiraIssuesMissingClinicalSafetyCategory: [
         {
+          issueType: 'Story',
           clinicalLead: '',
           clinicalReviewStatus: 'Pending',
           components: [],
