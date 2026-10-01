@@ -60,6 +60,7 @@ const JIRA_SEARCH_FIELDS = [
   'status',
   'issuetype',
   'components',
+  'fixVersions',
   CLINICAL_LEAD_FIELD_ID,
   MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID,
   CLINICAL_REVIEW_STATUS_FIELD_ID,
@@ -145,9 +146,9 @@ const fetchJiraSearchPage = async (
   }>;
 };
 
-const toJiraIssueFixDetails = (
+function toJiraIssueFixDetails(
   issue: JiraSearchIssueResponse,
-): JiraIssueFixDetails => {
+): JiraIssueFixDetails {
   const {
     components,
     customfield_10523: clinicalLeadField,
@@ -175,6 +176,36 @@ const toJiraIssueFixDetails = (
     status: status.name,
     summary,
   };
+}
+
+const fetchJiraIssueByKey = async (
+  jiraBaseUrl: string,
+  issueKey: string,
+): Promise<JiraIssueFixDetails | undefined> => {
+  const fields = encodeURIComponent(JIRA_SEARCH_FIELDS.join(','));
+  const response = await fetch(
+    `${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}?fields=${fields}`,
+    {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${getJiraToken()}`,
+      },
+    },
+  );
+
+  if (response.status === 404) {
+    return undefined;
+  }
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Jira request failed (${response.status} ${response.statusText}) for ${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}: ${detail}`,
+    );
+  }
+
+  const issue = (await response.json()) as JiraSearchIssueResponse;
+  return toJiraIssueFixDetails(issue);
 };
 
 const searchJiraIssues = async (
@@ -315,6 +346,11 @@ export const resolveJiraVersion = async (
   return version;
 };
 
+export const listJiraVersions = async (
+  jiraBaseUrl: string,
+  jiraProject: string,
+): Promise<JiraVersion[]> => fetchProjectVersions(jiraBaseUrl, jiraProject);
+
 export const fetchJiraIssues = async (
   jiraBaseUrl: string,
   jiraProject: string,
@@ -337,13 +373,11 @@ export const fetchJiraIssuesByKeys = async (
 
   const issues: JiraIssueFixDetails[] = [];
 
-  for (let index = 0; index < uniqueIssueKeys.length; index += 100) {
-    const batch = uniqueIssueKeys
-      .slice(index, index + 100)
-      .map((issueKey) => `"${issueKey}"`)
-      .join(', ');
-    const jql = `project = ${jiraProject} AND key in (${batch}) ORDER BY key ASC`;
-    issues.push(...(await searchJiraIssues(jiraBaseUrl, jql)));
+  for (const issueKey of uniqueIssueKeys) {
+    const issue = await fetchJiraIssueByKey(jiraBaseUrl, issueKey);
+    if (issue && issue.key.startsWith(`${jiraProject}-`)) {
+      issues.push(issue);
+    }
   }
 
   return issues;
