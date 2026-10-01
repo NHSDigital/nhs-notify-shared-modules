@@ -67,18 +67,21 @@ const formatRepresentativeCommit = (
   return `\`${formatCommit(commits[0])}\` _(${totalLabel})_`;
 };
 
-const formatRepresentativeCommitText = (
+const formatAllCommits = (
   commits: MatchedCommit[],
   emptyLabel = 'No matching commit',
-): string => {
-  if (commits.length === 0) {
-    return emptyLabel;
-  }
+): string =>
+  commits.length === 0
+    ? emptyLabel
+    : commits.map((commit) => `\`${formatCommit(commit)}\``).join('\n');
 
-  const totalLabel =
-    commits.length === 1 ? '1 commit total' : `${commits.length} commits total`;
-  return `${formatCommit(commits[0])} (${totalLabel})`;
-};
+const formatAllCommitsText = (
+  commits: MatchedCommit[],
+  emptyLabel = 'No matching commit',
+): string =>
+  commits.length === 0
+    ? emptyLabel
+    : commits.map((commit) => formatCommit(commit)).join('\n');
 
 const formatFixVersions = (fixVersions?: JiraFixVersion[]): string => {
   if (!fixVersions || fixVersions.length === 0) {
@@ -168,6 +171,9 @@ const formatIssueFixVersions = (issue?: JiraIssue): string =>
 const compareStrings = (left: string, right: string): number =>
   left.localeCompare(right);
 
+const hasReleaseNotes = (releaseNotes: ReleaseNotes): boolean =>
+  releaseNotes.source !== 'none';
+
 const formatSelectedGitTagLabel = ({
   gitTag,
   rangeEndTag,
@@ -189,7 +195,11 @@ function formatFixCommand({
   jiraVersion: string;
   repoRoot: string;
 }): string {
-  return `npm run check -- --repo ${quoteShellArg(repoRoot)} --git-tag ${quoteShellArg(gitTag)} --jira-version ${quoteShellArg(jiraVersion)} --fix ${action} --fix-component ${quoteShellArg(component)}`;
+  // A wrapper can set RELEASE_CHECK_COMMAND to the command users run locally; it is expected to supply --repo itself
+  const wrapperCommand = process.env.RELEASE_CHECK_COMMAND?.trim();
+  const commandPrefix =
+    wrapperCommand || `npm run check -- --repo ${quoteShellArg(repoRoot)}`;
+  return `${commandPrefix} --git-tag ${quoteShellArg(gitTag)} --jira-version ${quoteShellArg(jiraVersion)} --fix ${action} --fix-component ${quoteShellArg(component)}`;
 }
 
 const getIssueReleaseTags = (
@@ -324,36 +334,40 @@ const renderTerminalTable = (
   rows: string[][],
   maxColumnWidths = getTerminalColumnMaxWidths(headers.length),
 ): string => {
-  const truncatedHeaders = headers.map((header, index) =>
-    truncateTerminalCell(
-      header,
-      maxColumnWidths[index] ?? DEFAULT_TERMINAL_COLUMN_WIDTH,
-    ),
+  const maxWidthFor = (index: number): number =>
+    maxColumnWidths[index] ?? DEFAULT_TERMINAL_COLUMN_WIDTH;
+  const toCellLines = (cell: string | undefined, index: number): string[] =>
+    (cell ?? '')
+      .split('\n')
+      .map((line) => truncateTerminalCell(line, maxWidthFor(index)));
+  const headerCells = headers.map((header, index) =>
+    toCellLines(header, index),
   );
-  const truncatedRows = rows.map((row) =>
-    row.map((cell, index) =>
-      truncateTerminalCell(
-        cell ?? '',
-        maxColumnWidths[index] ?? DEFAULT_TERMINAL_COLUMN_WIDTH,
-      ),
-    ),
+  const rowCells = rows.map((row) =>
+    headers.map((_, index) => toCellLines(row[index], index)),
   );
-  const columnWidths = headers.map((header, index) =>
+  const columnWidths = headers.map((_, index) =>
     Math.max(
-      truncatedHeaders[index]?.length ?? header.length,
-      ...truncatedRows.map((row) => (row[index] ?? '').length),
+      ...headerCells[index].map((line) => line.length),
+      ...rowCells.flatMap((row) => row[index].map((line) => line.length)),
     ),
   );
-  const formatRow = (row: string[]): string =>
-    row
-      .map((cell, index) => (cell ?? '').padEnd(columnWidths[index]))
-      .join(' | ');
+  const formatRow = (cells: string[][]): string =>
+    Array.from(
+      { length: Math.max(...cells.map((cell) => cell.length)) },
+      (_, lineIndex) =>
+        cells
+          .map((cell, index) =>
+            (cell[lineIndex] ?? '').padEnd(columnWidths[index]),
+          )
+          .join(' | '),
+    ).join('\n');
   const separator = columnWidths.map((width) => '-'.repeat(width)).join('-+-');
 
   return [
-    formatRow(truncatedHeaders),
+    formatRow(headerCells),
     separator,
-    ...truncatedRows.map((row) => formatRow(row)),
+    ...rowCells.map((row) => formatRow(row)),
   ].join('\n');
 };
 
@@ -420,7 +434,7 @@ const renderFixProposalSection = (
       escapeMarkdownCell(
         formatIssueHeading(jiraBaseUrl, proposal.issue.key, proposal.issue),
       ),
-      escapeMarkdownCell(formatRepresentativeCommit(commits)),
+      escapeMarkdownCell(formatAllCommits(commits)),
     ];
 
     if (showReleaseRangeComparison) {
@@ -459,7 +473,7 @@ const renderFixProposalTerminalSection = (
 
     return [
       formatPlainIssueHeading(proposal.issue.key, proposal.issue),
-      formatRepresentativeCommitText(commits),
+      formatAllCommitsText(commits),
       proposal.proposedUpdateSummary ??
         `${proposal.currentValueSummary} -> ${proposal.targetValueSummary}`,
     ];
@@ -681,6 +695,19 @@ const formatJiraReleaseDates = (jiraVersions: JiraVersion[]): string =>
     })
     .join('; ');
 
+const renderJiraVersionMetadata = (jiraVersions: JiraVersion[]): string[] =>
+  jiraVersions.length === 1
+    ? [
+        `- **Jira version:** ${formatJiraVersion(jiraVersions[0])}`,
+        `- **Jira release date:** ${jiraVersions[0].releaseDate ?? 'unknown'}`,
+        `- **Jira version released:** ${jiraVersions[0].released ? 'yes' : 'no'}`,
+      ]
+    : [
+        `- **Jira versions selected (${jiraVersions.length}):** ${jiraVersions.map((jiraVersion) => formatJiraVersion(jiraVersion)).join(', ')}`,
+        `- **Jira release dates:** ${formatJiraReleaseDates(jiraVersions)}`,
+        `- **Jira versions released:** ${jiraVersions.filter((version) => version.released).length}/${jiraVersions.length}`,
+      ];
+
 export const defaultReportPath = (
   repoName: string,
   gitTags: string[],
@@ -723,6 +750,7 @@ export const renderReport = ({
   totalJiraIssues: number;
 }): string => {
   const { warnings } = releaseNotes;
+  const releaseNotesAvailable = hasReleaseNotes(releaseNotes);
   const singleGitTag = gitTags.length === 1;
   const singleJiraVersion = jiraVersions.length === 1;
   const jiraScopeLabel = singleJiraVersion
@@ -735,6 +763,13 @@ export const renderReport = ({
     comparison.commitsWithIssueKeysOutsideRelease,
   );
   const showReleaseRangeComparison = gitTags.length > 1;
+  const releaseNotesSummaryLines = releaseNotesAvailable
+    ? [
+        `- Jira issues referenced in release notes: ${comparison.notesReferencedIssueKeys.length}`,
+        `- Jira issues missing from release notes: ${comparison.jiraIssuesMissingFromReleaseNotes.length}`,
+        `- Release-note issue keys outside Jira release: ${comparison.releaseNotesIssueKeysOutsideRelease.length}`,
+      ]
+    : [];
   const sections = [
     '# Release check report',
     '',
@@ -747,33 +782,20 @@ export const renderReport = ({
       ? `- **Comparison base:** ${gitTags[0].previousTag ?? 'repository start'}`
       : `- **Comparison bases:** ${formatComparisonBaseSummary(gitTags)}`,
     `- **Jira project:** ${jiraProject}`,
-    singleJiraVersion
-      ? `- **Jira version:** ${formatJiraVersion(jiraVersions[0])}`
-      : `- **Jira versions selected (${jiraVersions.length}):** ${jiraVersions.map((jiraVersion) => formatJiraVersion(jiraVersion)).join(', ')}`,
-    ...(singleJiraVersion
-      ? [
-          `- **Jira release date:** ${jiraVersions[0].releaseDate ?? 'unknown'}`,
-          `- **Jira version released:** ${jiraVersions[0].released ? 'yes' : 'no'}`,
-        ]
-      : [
-          `- **Jira release dates:** ${formatJiraReleaseDates(jiraVersions)}`,
-          `- **Jira versions released:** ${jiraVersions.filter((version) => version.released).length}/${jiraVersions.length}`,
-        ]),
+    ...renderJiraVersionMetadata(jiraVersions),
     `- **Release notes source:** ${releaseNotes.source}`,
     '',
     '## Summary',
     '',
     `- Jira issues in ${singleJiraVersion ? 'release' : 'selected releases'}: ${totalJiraIssues}`,
     `- Jira issues referenced in git: ${comparison.gitReferencedIssueKeys.length}`,
-    `- Jira issues referenced in release notes: ${comparison.notesReferencedIssueKeys.length}`,
     `- Jira issues missing from git: ${comparison.jiraIssuesMissingFromGit.length}`,
-    `- Jira issues missing from release notes: ${comparison.jiraIssuesMissingFromReleaseNotes.length}`,
     `- Git-referenced Jira issues outside Jira release: ${outsideReleaseIssueKeys.length}`,
-    `- Release-note issue keys outside Jira release: ${comparison.releaseNotesIssueKeysOutsideRelease.length}`,
     `- Referenced Jira issues not done: ${comparison.releaseReferencedIssuesNotDone.length}`,
     `- Jira issues missing clinical safety category: ${comparison.jiraIssuesMissingClinicalSafetyCategory.length}`,
     `- Jira issues missing clinical lead: ${comparison.jiraIssuesMissingClinicalLead.length}`,
     `- Commits without Jira matches: ${comparison.commitsWithoutMatches.length}`,
+    ...releaseNotesSummaryLines,
     ...renderGitRangeMappings(gitTags, jiraVersions),
     '',
   ];
@@ -785,25 +807,41 @@ export const renderReport = ({
   const selectedIssuesByKey = new Map(
     [
       ...comparison.jiraIssuesMissingFromGit,
-      ...comparison.jiraIssuesMissingFromReleaseNotes,
+      ...(releaseNotesAvailable
+        ? comparison.jiraIssuesMissingFromReleaseNotes
+        : []),
       ...comparison.releaseReferencedIssuesNotDone,
       ...comparison.jiraIssuesMissingClinicalSafetyCategory,
       ...comparison.jiraIssuesMissingClinicalLead,
     ].map((issue) => [issue.key, issue]),
   );
+  const releaseNoteSections = releaseNotesAvailable
+    ? [
+        renderIssueSection(
+          `Jira issues in ${jiraScopeLabel} with no matching release-note reference`,
+          comparison.jiraIssuesMissingFromReleaseNotes.map(
+            (issue) => issue.key,
+          ),
+          selectedIssuesByKey,
+          comparison.commitsByIssueKey,
+          showReleaseRangeComparison,
+          jiraBaseUrl,
+        ),
+        renderIssueSection(
+          `Release-note Jira issues missing from ${jiraVersionScopeLabel}`,
+          comparison.releaseNotesIssueKeysOutsideRelease,
+          outsideReleaseIssuesByKey,
+          comparison.commitsByIssueKey,
+          showReleaseRangeComparison,
+          jiraBaseUrl,
+        ),
+      ]
+    : [];
 
   sections.push(
     renderIssueSection(
       `Jira issues in ${jiraScopeLabel} with no matching git reference`,
       comparison.jiraIssuesMissingFromGit.map((issue) => issue.key),
-      selectedIssuesByKey,
-      comparison.commitsByIssueKey,
-      showReleaseRangeComparison,
-      jiraBaseUrl,
-    ),
-    renderIssueSection(
-      `Jira issues in ${jiraScopeLabel} with no matching release-note reference`,
-      comparison.jiraIssuesMissingFromReleaseNotes.map((issue) => issue.key),
       selectedIssuesByKey,
       comparison.commitsByIssueKey,
       showReleaseRangeComparison,
@@ -857,14 +895,7 @@ export const renderReport = ({
       outsideReleaseIssuesByKey,
       repoRoot,
     }),
-    renderIssueSection(
-      `Release-note Jira issues missing from ${jiraVersionScopeLabel}`,
-      comparison.releaseNotesIssueKeysOutsideRelease,
-      outsideReleaseIssuesByKey,
-      comparison.commitsByIssueKey,
-      showReleaseRangeComparison,
-      jiraBaseUrl,
-    ),
+    ...releaseNoteSections,
     ...(fixAction && fixComponent && fixProposals
       ? [
           renderFixProposalSection(
