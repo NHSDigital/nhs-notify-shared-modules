@@ -4,6 +4,7 @@ import type { GitCommit, JiraIssue } from '../types';
 
 const issues: JiraIssue[] = [
   {
+    issueType: 'Story',
     clinicalLead: '',
     clinicalReviewStatus: 'Review required',
     key: 'CCM-100',
@@ -13,6 +14,7 @@ const issues: JiraIssue[] = [
     components: ['Platform'],
   },
   {
+    issueType: 'Story',
     clinicalLead: 'Dr Test',
     clinicalReviewStatus: 'In review',
     key: 'CCM-101',
@@ -22,6 +24,7 @@ const issues: JiraIssue[] = [
     components: ['Platform'],
   },
   {
+    issueType: 'Story',
     clinicalLead: '',
     clinicalReviewStatus: 'Review not needed',
     key: 'CCM-102',
