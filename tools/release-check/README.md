@@ -26,7 +26,7 @@ pnpm --filter @nhsdigital/nhs-notify-release-check run check -- --repo ../nhs-no
 
 ## Optional environment
 
-- `GITHUB_TOKEN` or `GH_TOKEN` for fetching GitHub release notes from private repositories
+- `GITHUB_TOKEN` or `GH_TOKEN` for fetching GitHub release notes from private repositories (without one, GitHub returns a 404 for releases in private repositories and release-check falls back to annotated tags)
 
 ## Notes
 
