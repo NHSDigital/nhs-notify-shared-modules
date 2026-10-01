@@ -238,6 +238,7 @@ describe('run', () => {
     mockedFetchJiraIssues
       .mockResolvedValueOnce([
         {
+          issueType: 'Story',
           key: 'CCM-1',
           clinicalLead: '',
           clinicalReviewStatus: '',
@@ -249,6 +250,7 @@ describe('run', () => {
       ])
       .mockResolvedValueOnce([
         {
+          issueType: 'Story',
           key: 'CCM-1',
           clinicalLead: '',
           clinicalReviewStatus: '',

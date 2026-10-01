@@ -357,7 +357,7 @@ describe('readReleaseNotes', () => {
       source: 'mixed',
       text: null,
       warnings: [
-        '[0.2.0] No GitHub release body found for tag 0.2.0; falling back.',
+        '[0.2.0] No GitHub release body found for tag 0.2.0. Falling back.',
       ],
     });
   });
