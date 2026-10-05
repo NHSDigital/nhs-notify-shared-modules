@@ -79,3 +79,8 @@ repos:
         language: script
         pass_filenames: false
         stages: [manual]
+      - id: terraform-fmt
+        name: Format Terraform files
+        entry: make terraform-fmt
+        language: system
+        pass_filenames: false
