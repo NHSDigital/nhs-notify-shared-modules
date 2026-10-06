@@ -31,43 +31,35 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
+        EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        REF: ${{ github.ref }}
+        SKIP_LABEL: ${{ inputs.skip_if_pr_has_label }}
       run: |
         SHOULD_SKIP="false"
+        PR_NUMBER="${EVENT_PR_NUMBER:-}"
 
-        # Only check labels if a skip label is configured
-        if [[ -n "${{ inputs.skip_if_pr_has_label }}" ]]; then
-          PR_NUMBER=""
-
-          # Try to get PR number from event context first (for direct PR triggers)
-          if [[ -n "${{ github.event.pull_request.number }}" ]]; then
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-          fi
-
-          # If no PR number from event, try to find it from the branch (for workflow_call context)
-          if [[ -z "${PR_NUMBER}" ]]; then
-            REF="${{ github.ref }}"
-            if [[ "${REF}" == refs/heads/* ]]; then
-              BRANCH_NAME="${REF#refs/heads/}"
-              # Find PR for this branch
-              RESULT=$(gh pr list --head "${BRANCH_NAME}" --limit 1 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-              if [[ -n "${RESULT}" && "${RESULT}" != "null" ]]; then
-                PR_NUMBER="${RESULT}"
-              fi
-            elif [[ "${REF}" == refs/pull/* ]]; then
-              PR_NUMBER="${REF#refs/pull/}"
-              PR_NUMBER="${PR_NUMBER%%/*}"
+        # Fall back to branch lookup for workflow_call / push contexts
+        if [[ -z "${PR_NUMBER}" ]]; then
+          if [[ "${REF}" == refs/heads/* ]]; then
+            BRANCH_NAME="${REF#refs/heads/}"
+            RESULT=$(gh pr list --head "${BRANCH_NAME}" --limit 1 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [[ -n "${RESULT}" && "${RESULT}" != "null" ]]; then
+              PR_NUMBER="${RESULT}"
             fi
+          elif [[ "${REF}" == refs/pull/* ]]; then
+            PR_NUMBER="${REF#refs/pull/}"
+            PR_NUMBER="${PR_NUMBER%%/*}"
           fi
+        fi
 
-          # If we have a PR number, query its labels
-          if [[ -n "${PR_NUMBER}" ]]; then
-            if gh pr view "${PR_NUMBER}" --json labels --jq '.labels[].name' | grep -Fxq "${{ inputs.skip_if_pr_has_label }}"; then
-              SHOULD_SKIP="true"
-            fi
+        if [[ -n "${SKIP_LABEL}" && -n "${PR_NUMBER}" ]]; then
+          if gh pr view "${PR_NUMBER}" --json labels --jq '.labels[].name' | grep -Fxq "${SKIP_LABEL}"; then
+            SHOULD_SKIP="true"
           fi
         fi
 
         echo "should_skip=${SHOULD_SKIP}" >> "$GITHUB_OUTPUT"
+        echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
     - name: "Generate SBOM"
       shell: bash
       run: |
@@ -120,13 +112,20 @@ runs:
         retention-days: 21
     - name: "Fail if Critical or High vulnerabilities found"
       shell: bash
+      env:
+        SHOULD_SKIP: ${{ steps.skip-check.outputs.should_skip }}
+        PR_NUMBER: ${{ steps.skip-check.outputs.pr_number }}
+        SKIP_LABEL: ${{ inputs.skip_if_pr_has_label }}
       run: |
         CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' vulnerabilities-repository-report.json)
         HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High") | {id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique_by([.id, .package, .version]) | length' vulnerabilities-repository-report.json)
         echo "Critical: $CRITICAL_COUNT, High: $HIGH_COUNT"
         if [[ "$CRITICAL_COUNT" -gt 0 || "$HIGH_COUNT" -gt 0 ]]; then
-          if [[ "${{ steps.skip-check.outputs.should_skip }}" == "true" ]]; then
-            echo "Bypassing blocking dependency scan failure because PR has label '${{ inputs.skip_if_pr_has_label }}'."
+          if [[ -z "$PR_NUMBER" ]]; then
+            # Gate is enforced at PR time; post-merge runs only report.
+            echo "::warning::Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities (not blocking outside a pull request)"
+          elif [[ "$SHOULD_SKIP" == "true" ]]; then
+            echo "Bypassing blocking dependency scan failure because PR has label '$SKIP_LABEL'."
           else
             echo "::error::Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities"
             exit 1
