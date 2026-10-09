@@ -288,7 +288,7 @@ variable "system_log_level" {
 variable "enable_lambda_insights" {
   type        = bool
   description = "Enable the lambda insights layer, this must be disabled for lambda@edge usage"
-  default     = true
+  default     = false
 }
 
 variable "enable_xray_tracing" {

@@ -40,7 +40,7 @@ output "processor_lambda_error_rate_alarm_arn" {
 | <a name="input_enable_dlq_messages_alarm"></a> [enable\_dlq\_messages\_alarm](#input\_enable\_dlq\_messages\_alarm) | Create a CloudWatch alarm when visible messages are present in the Lambda DLQ | `bool` | `true` | no |
 | <a name="input_enable_duration_alarm"></a> [enable\_duration\_alarm](#input\_enable\_duration\_alarm) | Create a CloudWatch alarm when Lambda duration percentile exceeds the configured threshold | `bool` | `true` | no |
 | <a name="input_enable_error_rate_alarm"></a> [enable\_error\_rate\_alarm](#input\_enable\_error\_rate\_alarm) | Create a CloudWatch alarm when Lambda error rate exceeds the configured percentage threshold | `bool` | `true` | no |
-| <a name="input_enable_lambda_insights"></a> [enable\_lambda\_insights](#input\_enable\_lambda\_insights) | Enable the lambda insights layer, this must be disabled for lambda@edge usage | `bool` | `true` | no |
+| <a name="input_enable_lambda_insights"></a> [enable\_lambda\_insights](#input\_enable\_lambda\_insights) | Enable the lambda insights layer, this must be disabled for lambda@edge usage | `bool` | `false` | no |
 | <a name="input_enable_throttles_alarm"></a> [enable\_throttles\_alarm](#input\_enable\_throttles\_alarm) | Create a CloudWatch alarm when Lambda throttles exceed the configured threshold | `bool` | `true` | no |
 | <a name="input_enable_xray_tracing"></a> [enable\_xray\_tracing](#input\_enable\_xray\_tracing) | Enable AWS X-Ray active tracing for the Lambda function. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the tfscaffold environment | `string` | n/a | yes |
