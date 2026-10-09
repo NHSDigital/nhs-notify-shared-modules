@@ -102,6 +102,33 @@ describe('compareRelease', () => {
     ).toEqual(['cccccccc']);
   });
 
+  it('excludes bugs from clinical review checks', () => {
+    const result = compareRelease(
+      commits,
+      [
+        ...issues,
+        {
+          clinicalLead: '',
+          clinicalReviewStatus: 'Review required',
+          components: ['Platform'],
+          issueType: 'Bug',
+          key: 'CCM-103',
+          medicalClinicalSafetyCategory: '',
+          status: 'Done',
+          summary: 'Bug fix',
+        },
+      ],
+      [],
+    );
+
+    expect(
+      result.jiraIssuesMissingClinicalSafetyCategory.map((issue) => issue.key),
+    ).not.toContain('CCM-103');
+    expect(
+      result.jiraIssuesMissingClinicalLead.map((issue) => issue.key),
+    ).not.toContain('CCM-103');
+  });
+
   it('treats punctuation-only subjects as unmatched when no Jira key is present', () => {
     const result = compareRelease(
       [
