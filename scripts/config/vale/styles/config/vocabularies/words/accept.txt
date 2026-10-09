@@ -1,7 +1,4 @@
 [Bb]undler
-[Pp]npm
-[Rr]epo
-[Tt]erraform
 Bitwarden
 bot
 Cognito
@@ -30,9 +27,11 @@ OAuth
 Octokit
 onboarding
 Podman
+[Pp]npm
 Python
 rawContent
 relative_url
+[Rr]epo
 sed
 simplifiable
 sublicense
@@ -40,3 +39,4 @@ Syft
 toolchain
 Trivy
 Trufflehog
+[Tt]erraform
