@@ -8,13 +8,13 @@ Compares a local repository release tag, or a selected set of release tags, agai
 
 ## Usage
 
-From the shared-modules repository root:
+From the shared-modules repository root, using the workspace script:
 
 ```bash
 pnpm release-check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
 ```
 
-Or directly:
+Or directly from the package, using its local `check` script:
 
 ```bash
 pnpm --filter @nhsdigital/nhs-notify-release-check run check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
@@ -94,10 +94,13 @@ Notes for fix mode:
 
 ## Notes
 
+- Example fix commands in reports default to `npm run check -- --repo <repo> ...`. Wrapper scripts can set `RELEASE_CHECK_COMMAND` (for example `pnpm run release-check --`) so reports show the exact command users run locally. The wrapper is expected to supply `--repo` itself, so it is omitted from the generated commands.
 - The tool auto-detects the previous tag using `git describe --tags --abbrev=0 <tag>^`.
 - When GitHub release notes are unavailable, auto mode falls back to annotated tag notes if the tag is annotated.
-- Reports default to `.tmp/release-check/<repo>-<tag>.md` for single-release checks.
-- Multi-release reports default to `.tmp/release-check/<repo>-<first-tag>-to-<last-tag>-<count>-tags.md`.
+- When no release notes are available from either source, release-note mismatch sections are omitted from the report so it does not imply a comparison was made.
+- Reports default to `.reports/release-check/<repo>-<tag>.md` for single-release checks.
+- Multi-release reports default to `.reports/release-check/<repo>-<first-tag>-to-<last-tag>-<count>-tags.md`.
+- Epic issues are labelled as `[Epic]` in report rows so they are visible in the same tables as other Jira issues.
 - Reports are emitted as Markdown so they can be inspected in a Markdown preview.
 
 ## Publishing
@@ -117,9 +120,9 @@ Add this to the consuming repository's `.npmrc`:
 @nhsdigital:registry=https://npm.pkg.github.com
 ```
 
-Then install and use the CLI:
+Then install and use the published CLI binary:
 
 ```bash
 pnpm add -D @nhsdigital/nhs-notify-release-check
-pnpm release-check --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
+pnpm exec release-check --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260
 ```
