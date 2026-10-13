@@ -51,6 +51,7 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
   const { values } = parseArgs({
     args: argv,
     options: {
+      'commit-mapping-file': { type: 'string' },
       fix: { type: 'string' },
       'fix-component': { type: 'string' },
       repo: { type: 'string' },
@@ -91,6 +92,7 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
   }
 
   return {
+    commitMappingFile: values['commit-mapping-file'],
     fixAction: isFixAction(fixAction) ? fixAction : undefined,
     fixComponent: values['fix-component'],
     repo: values.repo,
