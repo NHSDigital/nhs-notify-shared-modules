@@ -1,0 +1,117 @@
+name: "Scan container images"
+description: "Scan locally built container images for vulnerabilities with grype"
+
+inputs:
+  images:
+    description: "Newline-separated list of local container image references to scan"
+    required: true
+  skip_if_pr_has_label:
+    description: "Skip failing the container scan when the triggering PR has this label"
+    required: false
+    default: "skip-dependencies-check"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Check if container scan should be skipped"
+      id: skip-check
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        REF: ${{ github.ref }}
+        SKIP_LABEL: ${{ inputs.skip_if_pr_has_label }}
+      run: |
+        SHOULD_SKIP="false"
+        PR_NUMBER="${EVENT_PR_NUMBER:-}"
+
+        # Fall back to branch lookup for workflow_call / push contexts
+        if [[ -z "${PR_NUMBER}" ]]; then
+          if [[ "${REF}" == refs/heads/* ]]; then
+            BRANCH_NAME="${REF#refs/heads/}"
+            RESULT=$(gh pr list --head "${BRANCH_NAME}" --limit 1 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [[ -n "${RESULT}" && "${RESULT}" != "null" ]]; then
+              PR_NUMBER="${RESULT}"
+            fi
+          elif [[ "${REF}" == refs/pull/* ]]; then
+            PR_NUMBER="${REF#refs/pull/}"
+            PR_NUMBER="${PR_NUMBER%%/*}"
+          fi
+        fi
+
+        if [[ -n "${SKIP_LABEL}" && -n "${PR_NUMBER}" ]]; then
+          if gh pr view "${PR_NUMBER}" --json labels --jq '.labels[].name' | grep -Fxq "${SKIP_LABEL}"; then
+            SHOULD_SKIP="true"
+          fi
+        fi
+
+        echo "should_skip=${SHOULD_SKIP}" >> "$GITHUB_OUTPUT"
+        echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+    - name: "Get grype database cache key"
+      id: grype-db-key
+      shell: bash
+      run: echo "date=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
+    - name: "Restore grype database cache"
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ runner.temp }}/grype-db
+        key: grype-db-${{ steps.grype-db-key.outputs.date }}
+        restore-keys: grype-db-
+
+    - name: "Scan container images"
+      shell: bash
+      env:
+        IMAGES: ${{ inputs.images }}
+        GRYPE_DB_CACHE_DIR: ${{ runner.temp }}/grype-db
+      run: |
+        ACTION_ROOT="$(cd "${GITHUB_ACTION_PATH}/../../.." && pwd)"
+        export TOOLING_ROOT="${ACTION_ROOT}"
+        mkdir -p container-scan-reports
+        while IFS= read -r image; do
+          [[ -z "${image}" ]] && continue
+          report="container-scan-reports/$(echo "${image}" | tr -c 'a-zA-Z0-9._-' '-').json"
+          echo "Scanning ${image}"
+          IMAGE="${image}" REPORT_FILE="${report}" "${ACTION_ROOT}/scripts/reports/scan-container-image.sh"
+          {
+            echo "# ${image}"
+            "${ACTION_ROOT}/scripts/reports/parse-vulnerabilities.sh" "${report}"
+          } | tee -a container-scan-summary.md
+        done <<< "${IMAGES}"
+        if [[ -n "${GITHUB_STEP_SUMMARY:-}" && -f container-scan-summary.md ]]; then
+          cat container-scan-summary.md >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: "Upload container scan reports as an artefact"
+      if: ${{ !env.ACT }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: container-scan-reports
+        path: |
+          ./container-scan-reports/
+          ./container-scan-summary.md
+        retention-days: 21
+
+    - name: "Fail if Critical or High vulnerabilities found"
+      shell: bash
+      env:
+        SHOULD_SKIP: ${{ steps.skip-check.outputs.should_skip }}
+        PR_NUMBER: ${{ steps.skip-check.outputs.pr_number }}
+        SKIP_LABEL: ${{ inputs.skip_if_pr_has_label }}
+      run: |
+        COUNTS=$(jq -s '[.[].matches[] | select(.vulnerability.severity == "Critical" or .vulnerability.severity == "High") | {severity: .vulnerability.severity, id: .vulnerability.id, package: .artifact.name, version: .artifact.version}] | unique | group_by(.severity) | map({(.[0].severity): length}) | add // {}' container-scan-reports/*.json)
+        CRITICAL_COUNT=$(jq '.Critical // 0' <<< "$COUNTS")
+        HIGH_COUNT=$(jq '.High // 0' <<< "$COUNTS")
+        echo "Critical: $CRITICAL_COUNT, High: $HIGH_COUNT"
+        if [[ "$CRITICAL_COUNT" -gt 0 || "$HIGH_COUNT" -gt 0 ]]; then
+          if [[ -z "$PR_NUMBER" ]]; then
+            # Gate is enforced at PR time; post-merge runs only report.
+            echo "::warning::Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities in container images (not blocking outside a pull request)"
+          elif [[ "$SHOULD_SKIP" == "true" ]]; then
+            echo "Bypassing blocking container scan failure because PR has label '$SKIP_LABEL'."
+          else
+            echo "::error::Found $CRITICAL_COUNT Critical and $HIGH_COUNT High severity vulnerabilities in container images"
+            exit 1
+          fi
+        fi
