@@ -5,6 +5,7 @@ import type { CliOptions, FixAction, ReleaseNotesSource } from './types';
 
 const DEFAULT_JIRA_BASE_URL = 'https://nhsd-jira.digital.nhs.uk';
 const DEFAULT_JIRA_PROJECT = 'CCM';
+const DEFAULT_NWR_KEY = 'NWR-2198';
 
 const trimTrailingSlashes = (value: string): string => {
   let end = value.length;
@@ -20,7 +21,22 @@ const isReleaseNotesSource = (
   value === 'auto' || value === 'github' || value === 'tag' || value === 'none';
 
 const isFixAction = (value: string | undefined): value is FixAction =>
-  value === 'fix-version' || value === 'clinical-review-not-needed';
+  value === 'fix-version' ||
+  value === 'clinical-review-not-needed' ||
+  value === 'link-nwr' ||
+  value === 'assign-epic';
+
+const ISSUE_KEY_PATTERN = /^[A-Z][A-Z0-9]*-\d+$/;
+
+const parseIssueKey = (value: string, option: string): string => {
+  const key = value.trim();
+  if (!ISSUE_KEY_PATTERN.test(key)) {
+    throw new Error(
+      `Invalid --${option} value "${key}". Expected a Jira key such as CCM-123`,
+    );
+  }
+  return key;
+};
 
 const parseSelectors = (
   single: string | undefined,
@@ -47,11 +63,38 @@ const parseSelectors = (
   );
 };
 
+const validateFixOptions = (
+  fixAction: string | undefined,
+  values: { epic?: string; 'fix-component'?: string; tickets?: string },
+): void => {
+  const assignsEpic = fixAction === 'assign-epic';
+  const componentOptional = assignsEpic || fixAction === 'link-nwr';
+
+  if (fixAction && !componentOptional && !values['fix-component']) {
+    throw new Error('Option --fix requires --fix-component');
+  }
+  if (!fixAction && values['fix-component']) {
+    throw new Error('Option --fix-component requires --fix');
+  }
+  if (assignsEpic && values['fix-component']) {
+    throw new Error(
+      'Option --fix-component cannot be used with --fix assign-epic',
+    );
+  }
+  if (assignsEpic && (!values.epic || !values.tickets)) {
+    throw new Error('Option --fix assign-epic requires --epic and --tickets');
+  }
+  if (!assignsEpic && (values.epic || values.tickets)) {
+    throw new Error('Options --epic and --tickets require --fix assign-epic');
+  }
+};
+
 export const parseCliArgs = (argv: string[]): CliOptions => {
   const { values } = parseArgs({
     args: argv,
     options: {
       'commit-mapping-file': { type: 'string' },
+      epic: { type: 'string' },
       fix: { type: 'string' },
       'fix-component': { type: 'string' },
       repo: { type: 'string' },
@@ -62,8 +105,10 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
       'jira-project': { type: 'string', default: DEFAULT_JIRA_PROJECT },
       'jira-base-url': { type: 'string', default: DEFAULT_JIRA_BASE_URL },
       'previous-tag': { type: 'string' },
+      'nwr-key': { type: 'string', default: DEFAULT_NWR_KEY },
       output: { type: 'string' },
       'release-notes-source': { type: 'string', default: 'auto' },
+      tickets: { type: 'string' },
       yes: { type: 'boolean', default: false },
     },
     allowPositionals: false,
@@ -81,18 +126,14 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
   }
   if (fixAction && !isFixAction(fixAction)) {
     throw new Error(
-      'Invalid --fix. Expected one of: fix-version, clinical-review-not-needed',
+      'Invalid --fix. Expected one of: fix-version, clinical-review-not-needed, link-nwr, assign-epic',
     );
   }
-  if (fixAction && !values['fix-component']) {
-    throw new Error('Option --fix requires --fix-component');
-  }
-  if (!fixAction && values['fix-component']) {
-    throw new Error('Option --fix-component requires --fix');
-  }
+  validateFixOptions(fixAction, values);
 
   return {
     commitMappingFile: values['commit-mapping-file'],
+    epicKey: values.epic ? parseIssueKey(values.epic, 'epic') : undefined,
     fixAction: isFixAction(fixAction) ? fixAction : undefined,
     fixComponent: values['fix-component'],
     repo: values.repo,
@@ -110,9 +151,19 @@ export const parseCliArgs = (argv: string[]): CliOptions => {
     ),
     jiraProject: values['jira-project'],
     jiraBaseUrl: trimTrailingSlashes(values['jira-base-url']),
+    nwrKey: values['nwr-key'].trim(),
     previousTag: values['previous-tag'],
     output: values.output,
     releaseNotesSource: values['release-notes-source'],
+    ticketKeys: values.tickets
+      ? [
+          ...new Set(
+            parseSelectorList(values.tickets).map((key) =>
+              parseIssueKey(key, 'tickets'),
+            ),
+          ),
+        ]
+      : [],
     yes: values.yes ?? false,
   };
 };

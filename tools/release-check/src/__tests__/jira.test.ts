@@ -1,10 +1,12 @@
 import {
   fetchJiraIssues,
   fetchJiraIssuesByKeys,
+  linkJiraEpicToNwr,
   listJiraVersions,
   resolveJiraVersion,
   resolveJiraVersions,
   updateJiraIssueClinicalReviewStatus,
+  updateJiraIssueEpicLink,
   updateJiraIssueFixVersions,
 } from '../jira';
 
@@ -195,6 +197,16 @@ describe('jira issue operations', () => {
                 customfield_15200: { value: 'Cat 1' },
                 customfield_16657: { value: 'Review required' },
                 issuetype: { name: 'Epic' },
+                issuelinks: [
+                  {
+                    type: { name: 'NWR' },
+                    inwardIssue: { key: 'NWR-2198' },
+                  },
+                  {
+                    type: { name: 'Blocks' },
+                    outwardIssue: { key: 'CCM-9' },
+                  },
+                ],
                 fixVersions: [{ id: 71_260, name: 'client-config-0.1.0' }],
                 summary: 'First',
                 status: { name: 'Done' },
@@ -212,6 +224,7 @@ describe('jira issue operations', () => {
             {
               key: 'CCM-2',
               fields: {
+                customfield_10005: 'CCM-1',
                 customfield_10523: null,
                 customfield_15200: ['Cat 2', { value: 'Cat 3' }],
                 customfield_16657: 'Review not needed',
@@ -244,6 +257,8 @@ describe('jira issue operations', () => {
         medicalClinicalSafetyCategory: 'Cat 1',
         status: 'Done',
         components: ['Platform'],
+        epicKey: '',
+        nwrLinks: ['NWR-2198'],
       },
       {
         key: 'CCM-2',
@@ -255,6 +270,8 @@ describe('jira issue operations', () => {
         medicalClinicalSafetyCategory: 'Cat 2|Cat 3',
         status: 'In Progress',
         components: [],
+        epicKey: 'CCM-1',
+        nwrLinks: [],
       },
     ]);
 
@@ -268,6 +285,8 @@ describe('jira issue operations', () => {
             'issuetype',
             'components',
             'fixVersions',
+            'issuelinks',
+            'customfield_10005',
             'customfield_10523',
             'customfield_15200',
             'customfield_16657',
@@ -311,6 +330,8 @@ describe('jira issue operations', () => {
         medicalClinicalSafetyCategory: 'Cat 1',
         status: 'Done',
         components: ['Platform'],
+        epicKey: '',
+        nwrLinks: [],
       },
     ]);
   });
@@ -356,6 +377,8 @@ describe('jira issue operations', () => {
         medicalClinicalSafetyCategory: 'Cat 1',
         status: 'Done',
         components: ['Platform'],
+        epicKey: '',
+        nwrLinks: [],
       },
     ]);
   });
@@ -490,6 +513,75 @@ describe('jira issue operations', () => {
       updateJiraIssueClinicalReviewStatus('https://jira.example.com', 'CCM-42'),
     ).rejects.toThrow(
       'Jira request failed (403 Forbidden) for https://jira.example.com/rest/api/2/issue/CCM-42: not allowed',
+    );
+  });
+
+  it('links an epic to an NWR with the NWR link type', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () => '',
+    });
+
+    await expect(
+      linkJiraEpicToNwr('https://jira.example.com', 'CCM-42', 'NWR-2198'),
+    ).resolves.toBeUndefined();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://jira.example.com/rest/api/2/issueLink',
+      expect.objectContaining({
+        body: JSON.stringify({
+          inwardIssue: { key: 'NWR-2198' },
+          outwardIssue: { key: 'CCM-42' },
+          type: { name: 'NWR' },
+        }),
+        method: 'POST',
+      }),
+    );
+  });
+
+  it('surfaces NWR link failures', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: async () => 'not allowed',
+    });
+
+    await expect(
+      linkJiraEpicToNwr('https://jira.example.com', 'CCM-42', 'NWR-2198'),
+    ).rejects.toThrow(
+      'Jira request failed (403 Forbidden) for https://jira.example.com/rest/api/2/issueLink: not allowed',
+    );
+  });
+
+  it('sets the epic link on an issue', async () => {
+    mockFetch.mockResolvedValue({ ok: true, text: async () => '' });
+
+    await expect(
+      updateJiraIssueEpicLink('https://jira.example.com', 'CCM-42', 'CCM-10'),
+    ).resolves.toBeUndefined();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://jira.example.com/rest/api/2/issue/CCM-42',
+      expect.objectContaining({
+        body: JSON.stringify({ fields: { customfield_10005: 'CCM-10' } }),
+        method: 'PUT',
+      }),
+    );
+  });
+
+  it('surfaces epic link update failures', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      text: async () => 'bad epic',
+    });
+
+    await expect(
+      updateJiraIssueEpicLink('https://jira.example.com', 'CCM-42', 'CCM-10'),
+    ).rejects.toThrow(
+      'Jira request failed (400 Bad Request) for https://jira.example.com/rest/api/2/issue/CCM-42: bad epic',
     );
   });
 });

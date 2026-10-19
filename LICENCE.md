@@ -1,5 +1,7 @@
 # MIT Licence
 
+<!-- vale off -->
+
 Copyright (c) 2026 Crown Copyright NHS England.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
