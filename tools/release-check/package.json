@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "check": "tsx ./src/index.ts",
+    "check": "tsx ./src/cli.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prebuild": "rm -rf dist",

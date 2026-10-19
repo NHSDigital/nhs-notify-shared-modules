@@ -9,6 +9,15 @@ export type JiraIssue = {
   summary: string;
 };
 
+export type JiraFixVersion = {
+  id: string;
+  name: string;
+};
+
+export type JiraIssueFixDetails = JiraIssue & {
+  fixVersions: JiraFixVersion[];
+};
+
 export type GitCommit = {
   body: string;
   explicitIssueKeys: string[];
@@ -58,6 +67,8 @@ export type ComparisonResult = {
 };
 
 export type CliOptions = {
+  fixAction?: FixAction;
+  fixComponent?: string;
   gitTagSelectors: string[];
   jiraBaseUrl: string;
   jiraProject: string;
@@ -66,6 +77,15 @@ export type CliOptions = {
   previousTag?: string;
   releaseNotesSource: ReleaseNotesSource;
   repo: string;
+  yes: boolean;
+};
+
+export type FixAction = 'fix-version' | 'clinical-review-not-needed';
+
+export type FixProposal = {
+  currentValueSummary: string;
+  issue: JiraIssueFixDetails;
+  targetValueSummary: string;
 };
 
 export type SelectedGitTag = {
