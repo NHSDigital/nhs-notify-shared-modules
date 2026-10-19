@@ -53,16 +53,37 @@ const findSummaryMatches = (subject: string, issues: JiraIssue[]): string[] => {
     .map((issue) => issue.key);
 };
 
-const matchCommit = (
-  commit: GitCommit,
-  issues: JiraIssue[],
-): MatchedCommit => ({
-  ...commit,
-  matchedIssueKeys:
+const matchCommit = (commit: GitCommit, issues: JiraIssue[]): MatchedCommit => {
+  const detectedIssueKeys =
     commit.explicitIssueKeys.length > 0
       ? commit.explicitIssueKeys
-      : findSummaryMatches(commit.subject, issues),
-});
+      : findSummaryMatches(commit.subject, issues);
+  let issueKeySource: MatchedCommit['issueKeySource'];
+
+  if (commit.explicitIssueKeys.length > 0) {
+    issueKeySource = 'explicit';
+  } else if (detectedIssueKeys.length > 0) {
+    issueKeySource = 'summary';
+  } else {
+    issueKeySource = 'none';
+  }
+
+  if (commit.issueKeyOverride) {
+    return {
+      ...commit,
+      detectedIssueKeys,
+      issueKeySource: 'mapped',
+      matchedIssueKeys: [commit.issueKeyOverride.issueKey],
+    };
+  }
+
+  return {
+    ...commit,
+    detectedIssueKeys,
+    issueKeySource,
+    matchedIssueKeys: detectedIssueKeys,
+  };
+};
 
 export const compareRelease = (
   commits: GitCommit[],
