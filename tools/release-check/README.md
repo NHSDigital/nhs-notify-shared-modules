@@ -5,6 +5,7 @@ Compares a local repository release tag, or a selected set of release tags, agai
 - git commit history for the selected release ranges
 - Jira issues assigned to the selected release versions
 - release notes, using the GitHub release body when available
+- Jira ticket hygiene: every ticket is assigned to an epic, and every epic is linked to the expected NWR
 
 ## Usage
 
@@ -80,6 +81,69 @@ Notes for commit mappings:
 - The mapped Jira key replaces the detected key for reporting and fix workflows.
 - Reports mark mapped commits explicitly so reviewers can see where a substitution was applied.
 
+## Epic and NWR checks
+
+Every report also validates the Jira tickets in the selected release(s) against the CCM ticket creation rules in `co-jira`:
+
+- every ticket must have an Epic Link (`customfield_10005`); `Epic` and `Sub-task` issue types are exempt
+- every epic must be linked to the NWR ticket using the `NWR` issue link type (`jira issue link NWR-2198 <EPIC> "NWR"`)
+
+Epics are checked whether they are in the release or only referenced by a release ticket (the latter are fetched from Jira). An epic is reported when it cannot be found, when the Epic Link points at a non-epic, when it has no `NWR` link, or when it is only linked to a different NWR.
+
+The expected NWR defaults to `NWR-2198`. Override it with `--nwr-key`:
+
+```bash
+pnpm release-check -- --repo ../nhs-notify-client-config --git-tag 0.1.0 --jira-version 71260 --nwr-key NWR-2198
+```
+
+### Linking epics to the NWR
+
+`--fix link-nwr` adds the `NWR` link to every epic the report lists as having no NWR link. The target is the `--nwr-key` ticket (default `NWR-2198`), so one run fixes them all:
+
+```bash
+pnpm release-check -- \
+  --repo ../nhs-notify-client-config \
+  --git-tag v0.2.0 \
+  --jira-version client-config-0.2.0 \
+  --fix link-nwr
+```
+
+Example output (confirm with `y`, or add `--yes` to skip the prompt):
+
+```text
+Proposed NWR link updates
+
+Issue                                      Commit  Proposed update
+CCM-24285: [Platform] Client config prod   -       no NWR link -> linked to NWR-2198
+CCM-24286: [Platform] Provide non-prod...  -       no NWR link -> linked to NWR-2198
+
+Apply NWR link updates? [y/N] y
+Applied NWR link updates to 2 issue(s).
+```
+
+- Only epics with no NWR link are proposed; epics linked to a different NWR are reported but never changed.
+- Add `--fix-component <component>` to limit the run to epics carrying that component.
+- Multiple git tags and Jira versions are accepted, so the whole set of epics from a multi-release check can be fixed in one go.
+- The report prints this command, ready to run, under "Example link-nwr command".
+
+### Assigning tickets to an epic
+
+The report lists every epic used by the release tickets under "Epics used by Jira tickets", and prints an editable `assign-epic` command for the tickets that have no epic. `--fix assign-epic` sets the epic on a list of tickets you choose:
+
+```bash
+pnpm release-check -- \
+  --repo ../nhs-notify-client-config \
+  --git-tag v0.2.0 \
+  --jira-version client-config-0.2.0 \
+  --fix assign-epic \
+  --tickets CCM-101,CCM-102 \
+  --epic CCM-24285
+```
+
+- `--tickets` and `--epic` are the last options so they are easy to edit; the report pre-fills `--tickets` with the unassigned tickets and uses the placeholder `CCM-XXXXX` for `--epic`, which is rejected until you replace it.
+- `--fix-component` is not used. Tickets may be in the release or elsewhere in the Jira project.
+- The epic must exist and be an `Epic`. `Epic` and `Sub-task` tickets cannot be assigned, and tickets already in the epic are skipped.
+
 ## Required environment
 
 - `JIRA_API_TOKEN` or `JIRA_PERSONAL_TOKEN` or `JIRA_TOKEN`
@@ -117,9 +181,9 @@ pnpm release-check -- \
 
 Notes for fix mode:
 
-- `--fix` accepts `fix-version` or `clinical-review-not-needed`.
-- `--fix-component` is required and scopes the proposed Jira updates.
-- Fix mode currently requires exactly one resolved git tag and one resolved Jira version.
+- `--fix` accepts `fix-version`, `clinical-review-not-needed`, `link-nwr` or `assign-epic`.
+- `--fix-component` is required for `fix-version` and `clinical-review-not-needed`, optional for `link-nwr`, and not used by `assign-epic`.
+- `fix-version` and `clinical-review-not-needed` currently require exactly one resolved git tag and one resolved Jira version.
 - The CLI prints the full issue and representative commit list before applying updates.
 - By default the CLI asks for confirmation before changing Jira.
 - Use `--yes` to skip the confirmation prompt in non-interactive automation.

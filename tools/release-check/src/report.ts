@@ -2,6 +2,10 @@ import path from 'node:path';
 
 import type {
   ComparisonResult,
+  EpicCheckResult,
+  EpicNwrFinding,
+  EpicNwrProblem,
+  EpicUsage,
   FixProposal,
   JiraFixVersion,
   JiraIssue,
@@ -221,6 +225,30 @@ const formatSelectedGitTagLabel = ({
     ? `${gitTag} (+ patches through ${rangeEndTag})`
     : gitTag;
 
+function formatReleaseCommandPrefix({
+  gitTags,
+  jiraVersions,
+  repoRoot,
+}: {
+  gitTags: string[];
+  jiraVersions: string[];
+  repoRoot: string;
+}): string {
+  // A wrapper can set RELEASE_CHECK_COMMAND to the command users run locally; it is expected to supply --repo itself
+  const wrapperCommand = process.env.RELEASE_CHECK_COMMAND?.trim();
+  const commandPrefix =
+    wrapperCommand || `npm run check -- --repo ${quoteShellArg(repoRoot)}`;
+  const gitTagOption =
+    gitTags.length === 1
+      ? `--git-tag ${quoteShellArg(gitTags[0])}`
+      : `--git-tags ${quoteShellArg(gitTags.join(','))}`;
+  const jiraVersionOption =
+    jiraVersions.length === 1
+      ? `--jira-version ${quoteShellArg(jiraVersions[0])}`
+      : `--jira-versions ${quoteShellArg(jiraVersions.join(','))}`;
+  return `${commandPrefix} ${gitTagOption} ${jiraVersionOption}`;
+}
+
 function formatFixCommand({
   action,
   component,
@@ -234,11 +262,7 @@ function formatFixCommand({
   jiraVersion: string;
   repoRoot: string;
 }): string {
-  // A wrapper can set RELEASE_CHECK_COMMAND to the command users run locally; it is expected to supply --repo itself
-  const wrapperCommand = process.env.RELEASE_CHECK_COMMAND?.trim();
-  const commandPrefix =
-    wrapperCommand || `npm run check -- --repo ${quoteShellArg(repoRoot)}`;
-  return `${commandPrefix} --git-tag ${quoteShellArg(gitTag)} --jira-version ${quoteShellArg(jiraVersion)} --fix ${action} --fix-component ${quoteShellArg(component)}`;
+  return `${formatReleaseCommandPrefix({ gitTags: [gitTag], jiraVersions: [jiraVersion], repoRoot })} --fix ${action} --fix-component ${quoteShellArg(component)}`;
 }
 
 const getIssueReleaseTags = (
@@ -448,6 +472,142 @@ const renderIssueSection = (
   return `## ${title}\n\n${renderTable(headers, rows)}\n`;
 };
 
+const EPIC_NWR_PROBLEM_LABELS: Record<EpicNwrProblem, string> = {
+  'epic-not-found': 'Epic not found in Jira',
+  'no-nwr-link': 'No NWR link',
+  'not-an-epic': 'Epic Link points at a ticket that is not an epic',
+  'wrong-nwr-link': 'Linked to a different NWR',
+};
+
+const renderEpicNwrSection = (
+  findings: EpicNwrFinding[],
+  nwrKey: string,
+  jiraBaseUrl: string,
+): string => {
+  const title = `Epics not linked to ${nwrKey}`;
+
+  if (findings.length === 0) {
+    return `## ${title}\n\n- none\n`;
+  }
+
+  const rows = findings.map((finding) => [
+    escapeMarkdownCell(
+      formatIssueHeading(jiraBaseUrl, finding.epicKey, finding.epic),
+    ),
+    escapeMarkdownCell(
+      finding.linkedNwrKeys.length > 0
+        ? `${EPIC_NWR_PROBLEM_LABELS[finding.problem]} (${finding.linkedNwrKeys.join(', ')})`
+        : EPIC_NWR_PROBLEM_LABELS[finding.problem],
+    ),
+    escapeMarkdownCell(
+      finding.referencedBy.length > 0
+        ? finding.referencedBy
+            .map((key) => formatJiraIssueLink(jiraBaseUrl, key))
+            .join(', ')
+        : 'epic is in the release',
+    ),
+  ]);
+
+  return `## ${title}\n\n${renderTable(['Epic', 'Problem', 'Release tickets'], rows)}\n`;
+};
+
+const EPIC_PLACEHOLDER = 'CCM-XXXXX';
+
+const renderEpicsInUseSection = (
+  epicsInUse: EpicUsage[],
+  jiraBaseUrl: string,
+): string => {
+  const title = 'Epics used by Jira tickets';
+
+  if (epicsInUse.length === 0) {
+    return `## ${title}\n\n- none\n`;
+  }
+
+  const rows = epicsInUse.map(({ epic, epicKey, issueKeys }) => [
+    escapeMarkdownCell(formatIssueHeading(jiraBaseUrl, epicKey, epic)),
+    escapeMarkdownCell(String(issueKeys.length)),
+    escapeMarkdownCell(epic?.nwrLinks?.join(', ') || 'none'),
+  ]);
+
+  return `## ${title}\n\n${renderTable(['Epic', 'Release tickets', 'NWR links'], rows)}\n`;
+};
+
+const renderAssignEpicCommandExample = ({
+  gitTags,
+  issueKeys,
+  jiraVersions,
+  repoRoot,
+}: {
+  gitTags: SelectedGitTag[];
+  issueKeys: string[];
+  jiraVersions: JiraVersion[];
+  repoRoot: string;
+}): string => {
+  if (
+    issueKeys.length === 0 ||
+    gitTags.length === 0 ||
+    jiraVersions.length === 0
+  ) {
+    return '';
+  }
+
+  const command = formatReleaseCommandPrefix({
+    gitTags: gitTags.map(({ gitTag }) => gitTag),
+    jiraVersions: jiraVersions.map(({ name }) => name),
+    repoRoot,
+  });
+
+  return [
+    '### Example assign-epic command',
+    '',
+    `Edit \`--tickets\` and replace \`${EPIC_PLACEHOLDER}\` with one of the epics listed above.`,
+    '',
+    '```bash',
+    `${command} --fix assign-epic --tickets ${quoteShellArg(issueKeys.toSorted(compareStrings).join(','))} --epic ${quoteShellArg(EPIC_PLACEHOLDER)}`,
+    '```',
+    '',
+  ].join('\n');
+};
+
+const renderLinkNwrCommandExample = ({
+  findings,
+  gitTags,
+  jiraVersions,
+  nwrKey,
+  repoRoot,
+}: {
+  findings: EpicNwrFinding[];
+  gitTags: SelectedGitTag[];
+  jiraVersions: JiraVersion[];
+  nwrKey: string;
+  repoRoot: string;
+}): string => {
+  const missingLinkCount = findings.filter(
+    ({ epic, problem }) => epic && problem === 'no-nwr-link',
+  ).length;
+
+  if (missingLinkCount === 0) {
+    return '';
+  }
+
+  const command = formatReleaseCommandPrefix({
+    gitTags: gitTags.map(({ gitTag }) => gitTag),
+    jiraVersions: jiraVersions.map(({ name }) => name),
+    repoRoot,
+  });
+
+  return [
+    '### Example link-nwr command',
+    '',
+    `Links all ${missingLinkCount} epic(s) listed above as having no NWR link to ${nwrKey}. Epics linked to a different NWR are left alone. Add \`--fix-component <component>\` to limit it to one component.`,
+    '',
+    '```bash',
+    `${command} --fix link-nwr --nwr-key ${quoteShellArg(nwrKey)}`,
+    '```',
+    '',
+  ].join('\n');
+};
+
 const renderMappedCommitSection = ({
   commits,
   issueByKey,
@@ -483,13 +643,14 @@ const renderMappedCommitSection = ({
 
 const renderFixProposalSection = (
   fixAction: string,
-  fixComponent: string,
+  fixComponent: string | undefined,
   proposals: FixProposal[],
   commitsByIssueKey: Map<string, MatchedCommit[]>,
   showReleaseRangeComparison = false,
   jiraBaseUrl = DEFAULT_JIRA_BASE_URL,
 ): string => {
-  const title = `Proposed ${fixAction} updates for component ${fixComponent}`;
+  const scope = fixComponent ? ` for component ${fixComponent}` : '';
+  const title = `Proposed ${fixAction} updates${scope}`;
   if (proposals.length === 0) {
     return `## ${title}\n\n- none\n`;
   }
@@ -531,11 +692,12 @@ const renderFixProposalSection = (
 
 const renderFixProposalTerminalSection = (
   fixAction: string,
-  fixComponent: string,
+  fixComponent: string | undefined,
   proposals: FixProposal[],
   commitsByIssueKey: Map<string, MatchedCommit[]>,
 ): string => {
-  const title = `Proposed ${fixAction} updates for component ${fixComponent}`;
+  const scope = fixComponent ? ` for component ${fixComponent}` : '';
+  const title = `Proposed ${fixAction} updates${scope}`;
   if (proposals.length === 0) {
     return `${title}\n\nnone\n`;
   }
@@ -794,6 +956,7 @@ export const defaultReportPath = (
 
 export const renderReport = ({
   comparison,
+  epicCheck,
   fixAction,
   fixComponent,
   fixProposals,
@@ -809,6 +972,7 @@ export const renderReport = ({
   totalJiraIssues,
 }: {
   comparison: ComparisonResult;
+  epicCheck?: EpicCheckResult;
   fixAction?: string;
   fixComponent?: string;
   fixProposals?: FixProposal[];
@@ -869,6 +1033,12 @@ export const renderReport = ({
     `- Referenced Jira issues not done: ${comparison.releaseReferencedIssuesNotDone.length}`,
     `- Jira issues missing clinical safety category: ${comparison.jiraIssuesMissingClinicalSafetyCategory.length}`,
     `- Jira issues missing clinical lead: ${comparison.jiraIssuesMissingClinicalLead.length}`,
+    ...(epicCheck
+      ? [
+          `- Jira issues not assigned to an epic: ${epicCheck.issuesWithoutEpic.length}`,
+          `- Epics not linked to ${epicCheck.nwrKey}: ${epicCheck.epicsWithNwrProblems.length}`,
+        ]
+      : []),
     `- Commits without Jira matches: ${comparison.commitsWithoutMatches.length}`,
     `- Commit ticket mappings applied: ${mappedCommits.length}`,
     ...releaseNotesSummaryLines,
@@ -960,6 +1130,39 @@ export const renderReport = ({
       showReleaseRangeComparison,
       jiraBaseUrl,
     ),
+    ...(epicCheck
+      ? [
+          renderIssueSection(
+            'Jira issues not assigned to an epic',
+            epicCheck.issuesWithoutEpic.map((issue) => issue.key),
+            new Map(
+              epicCheck.issuesWithoutEpic.map((issue) => [issue.key, issue]),
+            ),
+            comparison.commitsByIssueKey,
+            showReleaseRangeComparison,
+            jiraBaseUrl,
+          ),
+          renderEpicsInUseSection(epicCheck.epicsInUse, jiraBaseUrl),
+          renderAssignEpicCommandExample({
+            gitTags,
+            issueKeys: epicCheck.issuesWithoutEpic.map((issue) => issue.key),
+            jiraVersions,
+            repoRoot,
+          }),
+          renderEpicNwrSection(
+            epicCheck.epicsWithNwrProblems,
+            epicCheck.nwrKey,
+            jiraBaseUrl,
+          ),
+          renderLinkNwrCommandExample({
+            findings: epicCheck.epicsWithNwrProblems,
+            gitTags,
+            jiraVersions,
+            nwrKey: epicCheck.nwrKey,
+            repoRoot,
+          }),
+        ]
+      : []),
     renderIssueSection(
       `Git-referenced Jira issues missing from ${jiraVersionScopeLabel}`,
       outsideReleaseIssueKeys,
