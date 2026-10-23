@@ -131,7 +131,7 @@ Runs the same SBOM and Grype dependency scan used in CI and prints the markdown 
 Run it manually when needed:
 
 ```bash
-pre-commit run --config scripts/config/pre-commit.yaml --hook-stage manual scan-dependencies
+prek run --config scripts/config/pre-commit.yaml --hook-stage manual scan-dependencies
 ```
 
 ## Setup in Your Repository
@@ -154,7 +154,7 @@ repos:
 Then install:
 
 ```bash
-pre-commit install
+prek install
 ```
 
 ## Notes
