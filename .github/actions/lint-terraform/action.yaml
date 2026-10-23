@@ -10,8 +10,7 @@ runs:
     - name: "Install Terraform binary"
       shell: bash
       run: |
-        asdf plugin add terraform || true
-        asdf install terraform || true
+        MISE_LOCKED=1 mise install terraform
     - name: "Check Terraform format"
       shell: bash
       run: |
