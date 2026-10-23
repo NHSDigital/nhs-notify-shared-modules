@@ -37,6 +37,5 @@ simplifiable
 sublicense
 Syft
 toolchain
-Trivy
 Trufflehog
 [Tt]erraform
