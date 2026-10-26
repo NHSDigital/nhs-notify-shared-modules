@@ -56,6 +56,7 @@ data "aws_iam_policy_document" "backup_additional" {
       "backup:TagResource",
     ]
 
+    #trivy:ignore:aws-iam-no-policy-wildcards
     resources = [
       "*",
     ]

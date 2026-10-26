@@ -34,8 +34,8 @@ jobs:
       - name: "Set CI/CD variables"
         id: variables
         run: |
-          echo "nodejs_version=$(grep -E '^node\s*=' mise.toml | cut -d'"' -f2)" >> $GITHUB_OUTPUT
-          echo "pnpm_version=$(grep -E '^pnpm\s*=' mise.toml | cut -d'"' -f2)" >> $GITHUB_OUTPUT
+          echo "nodejs_version=$(grep "^nodejs\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
+          echo "pnpm_version=$(grep "^pnpm\s" .tool-versions | cut -f2 -d' ')" >> $GITHUB_OUTPUT
   deploy-main:
     name: Package and Publish Terraform Modules to GitHub Releases assets
     runs-on: ubuntu-latest

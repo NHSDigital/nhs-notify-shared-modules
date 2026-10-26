@@ -39,7 +39,7 @@ jobs:
 
 ### What Gets Installed
 
-- mise tools from `mise.toml`, verified against `mise.lock`
+- asdf/mise tools from `.tool-versions`
 - Ruby gems via Bundler
 - Node packages via npm/pnpm
 - Python packages via pip
