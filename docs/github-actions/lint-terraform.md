@@ -32,7 +32,7 @@ jobs:
 
 ### Details
 
-- Requires: `mise` on the runner's `PATH` and Terraform pinned in the repository's `mise.toml` and `mise.lock`
+- Uses mise and the repository's `mise.lock` when available; falls back to the legacy version manager for repositories not yet migrated
 - Tool: `terraform fmt`
 - Checks: Terraform code formatting
 - Validates: HCL syntax and style
