@@ -167,7 +167,7 @@ variable "access_logging_bucket" {
 }
 
 variable "lifecycle_rules_eventpub_event_cache" {
-  type        = list(map(any))
+  type        = list(any)
   description = "Lifecycle rules for the event cache S3 bucket"
   default     = []
 }
