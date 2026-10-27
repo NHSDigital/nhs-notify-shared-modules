@@ -16,7 +16,7 @@ module "s3bucket_event_cache" {
   versioning    = true
   enable_abac   = var.event_cache_restrict_data_access
 
-  lifecycle_rules = [
+  lifecycle_rules = var.lifecycle_rules_eventpub_event_cache == [] ? [
     {
       enabled = true
 
@@ -35,7 +35,7 @@ module "s3bucket_event_cache" {
         days = "1"
       }
     }
-  ]
+  ] : var.lifecycle_rules_eventpub_event_cache
 
   policy_documents = concat(
     [data.aws_iam_policy_document.s3bucket_event_cache[0].json],

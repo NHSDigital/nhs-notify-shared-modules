@@ -158,3 +158,9 @@ variable "access_logging_bucket" {
   description = "Name of S3 bucket to use for access logging"
   default     = ""
 }
+
+variable "lifecycle_rules_eventsub_event_cache" {
+  type        = list(map(any))
+  description = "Lifecycle rules for the event cache S3 bucket"
+  default     = []
+}

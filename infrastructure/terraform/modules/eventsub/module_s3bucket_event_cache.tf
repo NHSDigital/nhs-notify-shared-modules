@@ -15,7 +15,7 @@ module "s3bucket_event_cache" {
   force_destroy = var.force_destroy
   versioning    = true
 
-  lifecycle_rules = [
+  lifecycle_rules = var.lifecycle_rules_eventsub_event_cache == [] ? [
     {
       enabled = true
 
@@ -34,7 +34,7 @@ module "s3bucket_event_cache" {
         days = "1"
       }
     }
-  ]
+  ] : var.lifecycle_rules_eventsub_event_cache
 
   policy_documents = [
     data.aws_iam_policy_document.s3bucket_event_cache[0].json
