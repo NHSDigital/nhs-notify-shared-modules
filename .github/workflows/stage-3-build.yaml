@@ -52,6 +52,9 @@ jobs:
         uses: ./.github/actions/build-docs
         with:
           version: "${{ inputs.version }}"
+          node_version: "${{ inputs.nodejs_version }}"
+          pnpm_version: "${{ inputs.pnpm_version }}"
+
   artefact-1:
     name: "Artefact 1"
     runs-on: ubuntu-latest
