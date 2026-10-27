@@ -160,7 +160,34 @@ variable "access_logging_bucket" {
 }
 
 variable "lifecycle_rules_eventsub_event_cache" {
-  type        = list(any)
-  description = "Lifecycle rules for the event cache S3 bucket"
+  type = list(object({
+    enabled = optional(bool, true)
+    prefix  = optional(string, "")
+
+    expiration = optional(object({
+      days = number
+    }))
+
+    transition = optional(list(object({
+      days          = number
+      storage_class = string
+    })), [])
+
+    noncurrent_version_transition = optional(list(object({
+      noncurrent_days = number
+      storage_class   = string
+    })), [])
+
+    noncurrent_version_expiration = optional(object({
+      days            = optional(number)
+      noncurrent_days = optional(number)
+    }))
+
+    abort_incomplete_multipart_upload = optional(object({
+      days                  = optional(number)
+      days_after_initiation = optional(number)
+    }))
+  }))
+  description = "Lifecycle rules for the event cache S3 bucket. Defaults to a rule transitioning noncurrent versions to STANDARD_IA after 30 days, expiring them after 90 and aborting incomplete multipart uploads after 1 day. For noncurrent_version_expiration, days and noncurrent_days are equivalent; for abort_incomplete_multipart_upload, days and days_after_initiation are equivalent."
   default     = []
 }

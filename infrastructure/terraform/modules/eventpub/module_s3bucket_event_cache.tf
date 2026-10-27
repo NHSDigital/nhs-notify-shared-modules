@@ -16,31 +16,7 @@ module "s3bucket_event_cache" {
   versioning    = true
   enable_abac   = var.event_cache_restrict_data_access
 
-  # Default rule applies only when no rules are supplied; a for expression avoids
-  # a conditional between differently-typed values.
-  lifecycle_rules = concat(
-    [
-      for default_rule in [1] : {
-        enabled = true
-
-        noncurrent_version_transition = [
-          {
-            noncurrent_days = "30"
-            storage_class   = "STANDARD_IA"
-          }
-        ]
-
-        noncurrent_version_expiration = {
-          noncurrent_days = "90"
-        }
-
-        abort_incomplete_multipart_upload = {
-          days = "1"
-        }
-      } if length(var.lifecycle_rules_eventpub_event_cache) == 0
-    ],
-    var.lifecycle_rules_eventpub_event_cache
-  )
+  lifecycle_rules = local.event_cache_lifecycle_rules
 
   policy_documents = concat(
     [data.aws_iam_policy_document.s3bucket_event_cache[0].json],
