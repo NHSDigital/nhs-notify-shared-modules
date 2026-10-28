@@ -37,7 +37,7 @@
     "typescript-eslint": "catalog:lint"
   },
   "name": "nhs-notify-digital-letters",
-  "packageManager": "pnpm@11.15.1",
+  "packageManager": "pnpm@11.28.5",
   "scripts": {
     "clean": "pnpm -r run --if-present clean",
     "lint": "turbo run lint",
