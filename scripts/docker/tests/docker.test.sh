@@ -75,12 +75,19 @@ function test-docker-build() {
 function test-docker-image-from-signature() {
 
   # Arrange
-  TOOL_VERSIONS="$(git rev-parse --show-toplevel)/scripts/docker/tests/.tool-versions.test"
+  local test_root
+  local result=0
+  test_root=$(mktemp -d)
+  cp .tool-versions.test "$test_root/.docker-versions.test"
   cp Dockerfile Dockerfile.effective
   # Act
-  _replace-image-latest-by-specific-version
+  TOOL_VERSIONS="$test_root/.docker-versions.test" _replace-image-latest-by-specific-version || result=$?
   # Assert
-  grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective && return 0 || return 1
+  if [ "$result" -eq 0 ]; then
+    grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective || result=$?
+  fi
+  rm -rf "$test_root"
+  return "$result"
 }
 
 function test-docker-legacy-tool-versions() {
