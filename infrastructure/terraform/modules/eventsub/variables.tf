@@ -179,15 +179,13 @@ variable "lifecycle_rules_eventsub_event_cache" {
     })), [])
 
     noncurrent_version_expiration = optional(object({
-      days            = optional(number)
-      noncurrent_days = optional(number)
+      noncurrent_days = number
     }))
 
     abort_incomplete_multipart_upload = optional(object({
-      days                  = optional(number)
-      days_after_initiation = optional(number)
+      days_after_initiation = number
     }))
   }))
-  description = "Lifecycle rules for the event cache S3 bucket. Defaults to a rule transitioning noncurrent versions to STANDARD_IA after 30 days, expiring them after 90 and aborting incomplete multipart uploads after 1 day. For noncurrent_version_expiration, days and noncurrent_days are equivalent; for abort_incomplete_multipart_upload, days and days_after_initiation are equivalent."
+  description = "Lifecycle rules for the event cache S3 bucket. Defaults to a rule transitioning noncurrent versions to STANDARD_IA after 30 days, expiring them after 90 and aborting incomplete multipart uploads after 1 day."
   default     = []
 }
