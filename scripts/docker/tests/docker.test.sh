@@ -75,7 +75,7 @@ function test-docker-build() {
 function test-docker-image-from-signature() {
 
   # Arrange
-  TOOL_VERSIONS="$(git rev-parse --show-toplevel)/scripts/docker/tests/.docker-versions.test"
+  TOOL_VERSIONS="$(git rev-parse --show-toplevel)/scripts/docker/tests/.tool-versions.test"
   cp Dockerfile Dockerfile.effective
   # Act
   _replace-image-latest-by-specific-version
@@ -90,7 +90,7 @@ function test-docker-legacy-tool-versions() {
   git -C "$legacy_root" init -q || return 1
   git -C "$legacy_root" -c user.name=test -c user.email=test@example.com commit --allow-empty -qm test || return 1
   cp Dockerfile "$legacy_root/Dockerfile"
-  cp .docker-versions.test "$legacy_root/.tool-versions"
+  cp .tool-versions.test "$legacy_root/.tool-versions"
   cp Dockerfile "$legacy_root/Dockerfile.effective"
 
   (
