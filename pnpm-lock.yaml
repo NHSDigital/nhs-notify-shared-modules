@@ -53,8 +53,8 @@ catalogs:
       specifier: ^6.10.2
       version: 6.10.2
     eslint-plugin-no-relative-import-paths:
-      specifier: ^1.6.1
-      version: 1.6.1
+      specifier: ^1.7.3
+      version: 1.7.3
     eslint-plugin-prettier:
       specifier: ^5.5.4
       version: 5.5.6
@@ -188,7 +188,7 @@ importers:
         version: 6.10.2(eslint@9.39.5(supports-color@8.1.1))
       eslint-plugin-no-relative-import-paths:
         specifier: catalog:lint
-        version: 1.6.1
+        version: 1.7.3
       eslint-plugin-prettier:
         specifier: catalog:lint
         version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(supports-color@8.1.1)))(eslint@9.39.5(supports-color@8.1.1))(prettier@3.9.6)
@@ -2348,8 +2348,8 @@ packages:
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9
 
-  eslint-plugin-no-relative-import-paths@1.6.1:
-    resolution: {integrity: sha512-YZNeOnsOrJcwhFw0X29MXjIzu2P/f5X2BZDPWw1R3VUYBRFxNIh77lyoL/XrMU9ewZNQPcEvAgL/cBOT1P330A==}
+  eslint-plugin-no-relative-import-paths@1.7.3:
+    resolution: {integrity: sha512-vEpNX0fvhoHdBu8eI05+XXYswnGHW2HJYmnJJeR8zOwgo59GgWv98z22XyZvMEHHcjSX4yGX2Ni/GyxGpBjfgw==}
 
   eslint-plugin-prettier@5.5.6:
     resolution: {integrity: sha512-ifetmTcxWfz+4qRW3pH/ujdTq2jQIj59AxJMIN26K5avYgU8dxycUETQonWiW+wPrYXA0j3Try0l1CnwVQtDqQ==}
@@ -6491,7 +6491,7 @@ snapshots:
       safe-regex-test: 1.1.0
       string.prototype.includes: 2.0.1
 
-  eslint-plugin-no-relative-import-paths@1.6.1: {}
+  eslint-plugin-no-relative-import-paths@1.7.3: {}
 
   eslint-plugin-prettier@5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(supports-color@8.1.1)))(eslint@9.39.5(supports-color@8.1.1))(prettier@3.9.6):
     dependencies:
@@ -8879,7 +8879,7 @@ time:
   eslint-plugin-jest@29.16.0: '2026-07-24T05:07:19.397Z'
   eslint-plugin-json@4.0.1: '2024-08-07T22:51:29.877Z'
   eslint-plugin-jsx-a11y@6.10.2: '2024-10-26T04:45:18.067Z'
-  eslint-plugin-no-relative-import-paths@1.6.1: '2025-01-07T15:01:05.204Z'
+  eslint-plugin-no-relative-import-paths@1.7.3: '2026-09-17T13:27:48.541Z'
   eslint-plugin-prettier@5.5.6: '2026-05-28T10:52:57.100Z'
   eslint-plugin-react-hooks@7.1.1: '2026-04-17T18:03:19.591Z'
   eslint-plugin-react@7.37.5: '2025-04-03T20:01:15.958Z'
