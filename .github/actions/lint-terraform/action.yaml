@@ -10,8 +10,22 @@ runs:
     - name: "Install Terraform binary"
       shell: bash
       run: |
-        asdf plugin add terraform || true
-        asdf install terraform || true
+        if command -v mise >/dev/null 2>&1 && [[ -f mise.toml ]]; then
+          MISE_LOCKED=1 mise install terraform
+        # TODO: CCM-25293 Remove asdf compatibility.
+        elif command -v asdf >/dev/null 2>&1; then
+          if ! asdf plugin list | grep -qx terraform; then
+            asdf plugin add terraform
+          fi
+          asdf install terraform
+        elif ! command -v terraform >/dev/null 2>&1; then
+          echo "Terraform is unavailable: configure mise or asdf, or provide terraform on PATH." >&2
+          exit 1
+        fi
+        command -v terraform >/dev/null 2>&1 || {
+          echo "Terraform installation failed; terraform is not on PATH." >&2
+          exit 1
+        }
     - name: "Check Terraform format"
       shell: bash
       run: |
