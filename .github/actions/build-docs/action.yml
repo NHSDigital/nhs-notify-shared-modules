@@ -16,6 +16,14 @@ inputs:
     description: "Additional pnpm workspace filters passed to pnpm install"
     required: false
     default: ""
+  python_version:
+    description: "Python version"
+    required: false
+    default: ""
+  poetry_version:
+    description: "Poetry version"
+    required: false
+    default: ""
   GITHUB_TOKEN:
     description: "Token for access to github package registry"
     required: false
@@ -50,6 +58,17 @@ runs:
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
         cache-version: 0 # Increment this number if you need to re-download cached gems
         working-directory: "./docs"
+    - name: "Setup Python"
+      if: ${{ inputs.python_version != '' }}
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      with:
+        python-version: "${{ inputs.python_version }}"
+        cache: "pip"
+        cache-dependency-path: "**/poetry.lock"
+    - name: "Install Poetry"
+      if: ${{ inputs.poetry_version != '' }}
+      shell: bash
+      run: pipx install "poetry==${{ inputs.poetry_version }}"
     - name: Setup Pages
       id: pages
       uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

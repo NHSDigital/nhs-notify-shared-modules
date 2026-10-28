@@ -3,7 +3,7 @@ gitleaks 8.24.0
 jq 1.6
 nodejs 22.15.1
 pre-commit 3.6.0
-pnpm 11.15.1
+pnpm 11.28.5
 terraform 1.10.1
 terraform-docs 0.24.0
 trivy 0.69.2
