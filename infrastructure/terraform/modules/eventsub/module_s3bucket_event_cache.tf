@@ -15,26 +15,7 @@ module "s3bucket_event_cache" {
   force_destroy = var.force_destroy
   versioning    = true
 
-  lifecycle_rules = [
-    {
-      enabled = true
-
-      noncurrent_version_transition = [
-        {
-          noncurrent_days = "30"
-          storage_class   = "STANDARD_IA"
-        }
-      ]
-
-      noncurrent_version_expiration = {
-        noncurrent_days = "90"
-      }
-
-      abort_incomplete_multipart_upload = {
-        days = "1"
-      }
-    }
-  ]
+  lifecycle_rules = local.event_cache_lifecycle_rules
 
   policy_documents = [
     data.aws_iam_policy_document.s3bucket_event_cache[0].json

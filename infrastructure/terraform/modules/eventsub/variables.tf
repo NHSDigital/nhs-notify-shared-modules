@@ -158,3 +158,34 @@ variable "access_logging_bucket" {
   description = "Name of S3 bucket to use for access logging"
   default     = ""
 }
+
+variable "lifecycle_rules_eventsub_event_cache" {
+  type = list(object({
+    enabled = optional(bool, true)
+    prefix  = optional(string, "")
+
+    expiration = optional(object({
+      days = number
+    }))
+
+    transition = optional(list(object({
+      days          = number
+      storage_class = string
+    })), [])
+
+    noncurrent_version_transition = optional(list(object({
+      noncurrent_days = number
+      storage_class   = string
+    })), [])
+
+    noncurrent_version_expiration = optional(object({
+      noncurrent_days = number
+    }))
+
+    abort_incomplete_multipart_upload = optional(object({
+      days_after_initiation = number
+    }))
+  }))
+  description = "Lifecycle rules for the event cache S3 bucket. Defaults to a rule transitioning noncurrent versions to STANDARD_IA after 30 days, expiring them after 90 and aborting incomplete multipart uploads after 1 day."
+  default     = []
+}
