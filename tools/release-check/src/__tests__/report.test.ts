@@ -34,6 +34,7 @@ const jiraVersion: JiraVersion = {
 };
 
 const releaseNotes: ReleaseNotes = {
+  entries: [],
   issueKeys: ['CCM-100'],
   source: 'github-release',
   text: 'CCM-100: release note entry',
@@ -163,6 +164,7 @@ describe('renderReport', () => {
       jiraVersions: [jiraVersion],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -239,6 +241,25 @@ describe('renderReport', () => {
               },
             ],
           ],
+          [
+            'CCM-12081',
+            [
+              {
+                hash: 'f'.repeat(40),
+                shortHash: 'ffffffff',
+                subject: 'CCM-999: mapped ticket',
+                body: '',
+                explicitIssueKeys: ['CCM-999'],
+                detectedIssueKeys: ['CCM-999'],
+                issueKeyOverride: {
+                  commitHash: 'fffffff',
+                  issueKey: 'CCM-12081',
+                },
+                issueKeySource: 'mapped',
+                matchedIssueKeys: ['CCM-12081'],
+              },
+            ],
+          ],
         ]),
         commitsWithIssueKeysOutsideRelease: [
           {
@@ -310,6 +331,16 @@ describe('renderReport', () => {
             clinicalReviewStatus: '',
             medicalClinicalSafetyCategory: '',
           },
+          {
+            issueType: 'Story',
+            key: 'CCM-12081',
+            summary: 'Mapped from commit override',
+            status: 'Done',
+            components: ['Platform'],
+            clinicalLead: '',
+            clinicalReviewStatus: '',
+            medicalClinicalSafetyCategory: '',
+          },
         ],
         jiraIssuesMissingFromReleaseNotes: [
           {
@@ -375,6 +406,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: ['CCM-100'],
         source: 'github-release',
         text: 'CCM-100 release note entry',
@@ -391,6 +423,9 @@ describe('renderReport', () => {
     expect(populatedReport).toContain('| Issue | Commit |');
     expect(populatedReport).toContain(
       '| [CCM-101](https://nhsd-jira.digital.nhs.uk/browse/CCM-101): [Platform] Missing from git (Done) | No matching commit |',
+    );
+    expect(populatedReport).toContain(
+      '| [CCM-12081](https://nhsd-jira.digital.nhs.uk/browse/CCM-12081): [Platform] Mapped from commit override (Done) | `ffffffff CCM-999: mapped ticket [ticket mapping: CCM-999 -> CCM-12081]` _(1 commit total)_ |',
     );
     expect(populatedReport).toContain(
       '| [CCM-100](https://nhsd-jira.digital.nhs.uk/browse/CCM-100): [Platform] Referenced and not done (In Progress) | `aaaaaaaa CCM-100: ship it` _(1 commit total)_ |',
@@ -415,6 +450,67 @@ describe('renderReport', () => {
       '## Commits without a Jira key or exact Jira-summary match',
     );
     expect(populatedReport).toContain('- eeeeeeee maintenance');
+    expect(populatedReport).toContain('- Commit ticket mappings applied: 1');
+    expect(populatedReport).toContain(
+      '## Commits with Jira ticket mappings applied',
+    );
+    expect(populatedReport).toContain(
+      '| Commit | Mapped ticket | Detected ticket |',
+    );
+    expect(populatedReport).toContain(
+      '| `ffffffff CCM-999: mapped ticket` | [CCM-12081](https://nhsd-jira.digital.nhs.uk/browse/CCM-12081): [Platform] Mapped from commit override (Done) | CCM-999 |',
+    );
+  });
+
+  it('renders mapped commits that replace a missing detected ticket', () => {
+    const report = renderReport({
+      comparison: {
+        ...comparison,
+        commitsByIssueKey: new Map([
+          [
+            'CCM-777',
+            [
+              {
+                hash: 'f'.repeat(40),
+                shortHash: 'ffffffff',
+                subject: 'release plumbing',
+                body: '',
+                explicitIssueKeys: [],
+                detectedIssueKeys: [],
+                issueKeyOverride: {
+                  commitHash: 'fffffff',
+                  issueKey: 'CCM-777',
+                },
+                issueKeySource: 'mapped',
+                matchedIssueKeys: ['CCM-777'],
+              },
+            ],
+          ],
+        ]),
+      },
+      fixAction: undefined,
+      fixComponent: undefined,
+      fixProposals: undefined,
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
+      jiraProject: 'CCM',
+      jiraVersions: [jiraVersion],
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes: {
+        entries: [],
+        issueKeys: [],
+        source: 'none',
+        text: null,
+        warnings: [],
+      },
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 0,
+    });
+
+    expect(report).toContain('## Commits with Jira ticket mappings applied');
+    expect(report).toContain(
+      '| `ffffffff release plumbing` | [CCM-777](https://nhsd-jira.digital.nhs.uk/browse/CCM-777): not found in Jira | no detected ticket |',
+    );
   });
 
   it('renders multi-release metadata when multiple tags and Jira versions are selected', () => {
@@ -439,6 +535,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: ['CCM-100'],
         source: 'mixed',
         text: null,
@@ -569,6 +666,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -679,6 +777,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -780,6 +879,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -890,6 +990,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -946,6 +1047,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -1003,6 +1105,7 @@ describe('renderReport', () => {
       jiraVersions: [jiraVersion],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -1091,6 +1194,7 @@ describe('renderReport', () => {
         ],
       ]),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,
@@ -1154,6 +1258,7 @@ describe('renderReport', () => {
       ],
       outsideReleaseIssuesByKey: new Map(),
       releaseNotes: {
+        entries: [],
         issueKeys: [],
         source: 'none',
         text: null,

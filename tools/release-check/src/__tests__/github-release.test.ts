@@ -1,8 +1,11 @@
 import {
+  applyCommitMappingsToReleaseNotes,
   parseGitHubRepositoryFromRemote,
   readReleaseNotes,
   readReleaseNotesForTags,
 } from '../github-release';
+
+import type { GitCommit } from '../types';
 
 jest.mock('../git', () => ({
   getOriginRemoteUrl: jest.fn(),
@@ -64,6 +67,7 @@ describe('readReleaseNotes', () => {
 
   it('returns none when release notes are disabled', async () => {
     await expect(readReleaseNotes('/repo', '0.1.0', 'none')).resolves.toEqual({
+      entries: [],
       issueKeys: [],
       source: 'none',
       text: null,
@@ -85,6 +89,10 @@ describe('readReleaseNotes', () => {
 
     await expect(readReleaseNotes('/repo', '0.1.0', 'github')).resolves.toEqual(
       {
+        entries: [
+          { issueKeys: ['CCM-100'], pullRequestNumber: null },
+          { issueKeys: ['CCM-101'], pullRequestNumber: null },
+        ],
         issueKeys: ['CCM-100', 'CCM-101'],
         source: 'github-release',
         text: 'CCM-100 first\nCCM-101 second',
@@ -119,6 +127,7 @@ describe('readReleaseNotes', () => {
     mockedReadTagAnnotation.mockReturnValue('CCM-200 annotated release');
 
     await expect(readReleaseNotes('/repo', '0.1.0', 'auto')).resolves.toEqual({
+      entries: [{ issueKeys: ['CCM-200'], pullRequestNumber: null }],
       issueKeys: ['CCM-200'],
       source: 'tag-annotation',
       text: 'CCM-200 annotated release',
@@ -141,6 +150,7 @@ describe('readReleaseNotes', () => {
     mockedReadTagAnnotation.mockReturnValue(null);
 
     await expect(readReleaseNotes('/repo', '0.1.0', 'auto')).resolves.toEqual({
+      entries: [],
       issueKeys: [],
       source: 'none',
       text: null,
@@ -159,6 +169,7 @@ describe('readReleaseNotes', () => {
     mockedReadTagAnnotation.mockReturnValue(null);
 
     await expect(readReleaseNotes('/repo', '0.1.0', 'auto')).resolves.toEqual({
+      entries: [],
       issueKeys: [],
       source: 'none',
       text: null,
@@ -204,6 +215,7 @@ describe('readReleaseNotes', () => {
       });
 
     await expect(readReleaseNotes('/repo', '0.3.0', 'auto')).resolves.toEqual({
+      entries: [{ issueKeys: ['CCM-400'], pullRequestNumber: null }],
       issueKeys: ['CCM-400'],
       source: 'github-release',
       text: 'CCM-400 prefixed release',
@@ -234,6 +246,7 @@ describe('readReleaseNotes', () => {
       });
 
     await expect(readReleaseNotes('/repo', 'v0.3.0', 'auto')).resolves.toEqual({
+      entries: [{ issueKeys: ['CCM-401'], pullRequestNumber: null }],
       issueKeys: ['CCM-401'],
       source: 'github-release',
       text: 'CCM-401 unprefixed release',
@@ -254,6 +267,7 @@ describe('readReleaseNotes', () => {
     mockedReadTagAnnotation.mockReturnValue(null);
 
     await expect(readReleaseNotes('/repo', '0.1.0', 'auto')).resolves.toEqual({
+      entries: [],
       issueKeys: [],
       source: 'none',
       text: null,
@@ -277,6 +291,7 @@ describe('readReleaseNotes', () => {
     mockedReadTagAnnotation.mockReturnValue('CCM-300 tag notes');
 
     await expect(readReleaseNotes('/repo', '0.1.0', 'auto')).resolves.toEqual({
+      entries: [{ issueKeys: ['CCM-300'], pullRequestNumber: null }],
       issueKeys: ['CCM-300'],
       source: 'tag-annotation',
       text: 'CCM-300 tag notes',
@@ -296,6 +311,7 @@ describe('readReleaseNotes', () => {
     await expect(
       readReleaseNotesForTags('/repo', ['0.1.0'], 'none'),
     ).resolves.toEqual({
+      entries: [],
       issueKeys: [],
       source: 'none',
       text: null,
@@ -324,6 +340,10 @@ describe('readReleaseNotes', () => {
     await expect(
       readReleaseNotesForTags('/repo', ['0.1.0', '0.2.0'], 'github'),
     ).resolves.toEqual({
+      entries: [
+        { issueKeys: ['CCM-100'], pullRequestNumber: null },
+        { issueKeys: ['CCM-101'], pullRequestNumber: null },
+      ],
       issueKeys: ['CCM-100', 'CCM-101'],
       source: 'github-release',
       text: null,
@@ -353,6 +373,10 @@ describe('readReleaseNotes', () => {
     await expect(
       readReleaseNotesForTags('/repo', ['0.1.0', '0.2.0'], 'auto'),
     ).resolves.toEqual({
+      entries: [
+        { issueKeys: ['CCM-100'], pullRequestNumber: null },
+        { issueKeys: ['CCM-200'], pullRequestNumber: null },
+      ],
       issueKeys: ['CCM-100', 'CCM-200'],
       source: 'mixed',
       text: null,
@@ -360,5 +384,84 @@ describe('readReleaseNotes', () => {
         '[0.2.0] No GitHub release body found for tag 0.2.0. Falling back.',
       ],
     });
+  });
+});
+
+const commit = (subject: string, mappedKey?: string): GitCommit => ({
+  body: '',
+  explicitIssueKeys: [],
+  hash: 'c'.repeat(40),
+  issueKeyOverride: mappedKey
+    ? { commitHash: 'ccccccc', issueKey: mappedKey }
+    : undefined,
+  shortHash: 'ccccccc',
+  subject,
+});
+
+describe('applyCommitMappingsToReleaseNotes', () => {
+  const notes = {
+    entries: [
+      { issueKeys: ['CCM-17346'], pullRequestNumber: 146 },
+      { issueKeys: [], pullRequestNumber: 147 },
+      { issueKeys: ['CCM-100'], pullRequestNumber: 148 },
+      { issueKeys: ['CCM-200'], pullRequestNumber: null },
+    ],
+    issueKeys: ['CCM-17346', 'CCM-100', 'CCM-200'],
+    source: 'github-release' as const,
+    text: null,
+    warnings: [],
+  };
+
+  it('replaces release note keys for pull requests whose commits were remapped', () => {
+    const result = applyCommitMappingsToReleaseNotes(notes, [
+      commit('CCM-17346: moved to shared modules (#146)', 'CCM-17436'),
+      commit('Combined Dependabot PRs (#147)', 'CCM-13485'),
+      commit('Merge pull request #148 from org/branch', 'CCM-300'),
+      commit('CCM-999: unmapped (#150)'),
+    ]);
+
+    expect(result.entries).toEqual([
+      { issueKeys: ['CCM-17436'], pullRequestNumber: 146 },
+      { issueKeys: ['CCM-13485'], pullRequestNumber: 147 },
+      { issueKeys: ['CCM-300'], pullRequestNumber: 148 },
+      { issueKeys: ['CCM-200'], pullRequestNumber: null },
+    ]);
+    expect(result.issueKeys).toEqual([
+      'CCM-17436',
+      'CCM-13485',
+      'CCM-300',
+      'CCM-200',
+    ]);
+  });
+
+  it('returns the notes unchanged when no mapped commit carries a pull request number', () => {
+    expect(
+      applyCommitMappingsToReleaseNotes(notes, [
+        commit('CCM-17346: no pr number', 'CCM-17436'),
+        commit('CCM-1: unmapped (#146)'),
+      ]),
+    ).toBe(notes);
+  });
+
+  it('parses pull request numbers from GitHub release note lines', async () => {
+    mockedGetOriginRemoteUrl.mockReturnValue(
+      'https://github.com/NHSDigital/nhs-notify-client-config.git',
+    );
+    mockFetch.mockResolvedValue({
+      status: 200,
+      ok: true,
+      statusText: 'OK',
+      json: async () => ({
+        body: 'Intro\n* CCM-17346: moved by @a in https://github.com/NHSDigital/x/pull/146\n* Combined Dependabot PRs by @bot in https://github.com/NHSDigital/x/pull/16',
+      }),
+    });
+
+    const releaseNotes = await readReleaseNotes('/repo', '0.1.0', 'github');
+
+    expect(releaseNotes.entries).toEqual([
+      { issueKeys: ['CCM-17346'], pullRequestNumber: 146 },
+      { issueKeys: [], pullRequestNumber: 16 },
+    ]);
+    expect(releaseNotes.issueKeys).toEqual(['CCM-17346']);
   });
 });
