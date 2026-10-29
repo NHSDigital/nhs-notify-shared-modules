@@ -47,8 +47,8 @@ catalogs:
       specifier: ^29.0.1
       version: 29.16.0
     eslint-plugin-json:
-      specifier: ^4.0.1
-      version: 4.0.1
+      specifier: ^5.0.0
+      version: 5.0.0
     eslint-plugin-jsx-a11y:
       specifier: ^6.10.2
       version: 6.10.2
@@ -182,7 +182,7 @@ importers:
         version: 29.16.0(@typescript-eslint/eslint-plugin@8.65.0(@typescript-eslint/parser@8.65.0(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@9.39.5(supports-color@8.1.1))(jest@29.7.0(@types/node@25.9.5)(supports-color@8.1.1)(ts-node@10.9.2(@types/node@24.13.3)(typescript@5.9.3)))(supports-color@8.1.1)(typescript@5.9.3)
       eslint-plugin-json:
         specifier: catalog:lint
-        version: 4.0.1
+        version: 5.0.0
       eslint-plugin-jsx-a11y:
         specifier: catalog:lint
         version: 6.10.2(eslint@9.39.5(supports-color@8.1.1))
@@ -2338,8 +2338,8 @@ packages:
       typescript:
         optional: true
 
-  eslint-plugin-json@4.0.1:
-    resolution: {integrity: sha512-3An5ISV5dq/kHfXdNyY5TUe2ONC3yXFSkLX2gu+W8xAhKhfvrRvkSAeKXCxZqZ0KJLX15ojBuLPyj+UikQMkOA==}
+  eslint-plugin-json@5.0.0:
+    resolution: {integrity: sha512-x7YyFjvOninRJR9rsaAGFxoGNgMMLoxpxsuoPWubg3fkbWWsjdAGRzTEUZsAVz+7Ghl7n4q83UyFmCLW/v/mzg==}
     engines: {node: '>=18.0'}
 
   eslint-plugin-jsx-a11y@6.10.2:
@@ -6467,7 +6467,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-json@4.0.1:
+  eslint-plugin-json@5.0.0:
     dependencies:
       lodash: 4.18.1
       vscode-json-languageservice: 4.2.1
@@ -8877,7 +8877,7 @@ time:
   eslint-plugin-html@8.1.4: '2026-01-23T14:05:26.428Z'
   eslint-plugin-import-x@4.17.1: '2026-06-28T07:00:54.891Z'
   eslint-plugin-jest@29.16.0: '2026-07-24T05:07:19.397Z'
-  eslint-plugin-json@4.0.1: '2024-08-07T22:51:29.877Z'
+  eslint-plugin-json@5.0.0: '2026-07-21T00:19:19.140Z'
   eslint-plugin-jsx-a11y@6.10.2: '2024-10-26T04:45:18.067Z'
   eslint-plugin-no-relative-import-paths@1.6.1: '2025-01-07T15:01:05.204Z'
   eslint-plugin-prettier@5.5.6: '2026-05-28T10:52:57.100Z'
