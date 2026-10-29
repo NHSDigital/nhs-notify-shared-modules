@@ -3,6 +3,7 @@ packages:
   - "src/lambdas/apim-key-generator"
   - "src/utils"
   - "tools/check-overrides"
+  - "tools/release-check"
   - "infrastructure/terraform/modules/eventpub/lambda/eventpub"
 
 allowBuilds:
