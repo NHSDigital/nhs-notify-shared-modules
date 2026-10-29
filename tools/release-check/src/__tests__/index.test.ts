@@ -1,5 +1,7 @@
 import { run } from '..';
 
+import type { JiraIssue } from '../types';
+
 jest.mock('node:readline/promises', () => ({
   createInterface: jest.fn(),
 }));
@@ -25,9 +27,11 @@ jest.mock('../git', () => ({
 jest.mock('../jira', () => ({
   fetchJiraIssues: jest.fn(),
   fetchJiraIssuesByKeys: jest.fn(),
+  linkJiraEpicToNwr: jest.fn(),
   listJiraVersions: jest.fn(),
   resolveJiraVersions: jest.fn(),
   updateJiraIssueClinicalReviewStatus: jest.fn(),
+  updateJiraIssueEpicLink: jest.fn(),
   updateJiraIssueFixVersions: jest.fn(),
 }));
 
@@ -109,6 +113,13 @@ const mockedUpdateJiraIssueClinicalReviewStatus =
   jira.updateJiraIssueClinicalReviewStatus as jest.MockedFunction<
     typeof jira.updateJiraIssueClinicalReviewStatus
   >;
+const mockedUpdateJiraIssueEpicLink =
+  jira.updateJiraIssueEpicLink as jest.MockedFunction<
+    typeof jira.updateJiraIssueEpicLink
+  >;
+const mockedLinkJiraEpicToNwr = jira.linkJiraEpicToNwr as jest.MockedFunction<
+  typeof jira.linkJiraEpicToNwr
+>;
 const mockedUpdateJiraIssueFixVersions =
   jira.updateJiraIssueFixVersions as jest.MockedFunction<
     typeof jira.updateJiraIssueFixVersions
@@ -162,6 +173,52 @@ const setStreamTty = (
   });
 };
 
+const buildEpic = (
+  key: string,
+  components: string[],
+  nwrLinks: string[],
+): JiraIssue => ({
+  clinicalLead: '',
+  clinicalReviewStatus: '',
+  components,
+  epicKey: '',
+  issueType: 'Epic',
+  key,
+  medicalClinicalSafetyCategory: '',
+  nwrLinks,
+  status: 'In Progress',
+  summary: `epic ${key}`,
+});
+
+const story = (key: string, epicKey = ''): JiraIssue => ({
+  clinicalLead: '',
+  clinicalReviewStatus: '',
+  components: ['Platform'],
+  epicKey,
+  issueType: 'Story',
+  key,
+  medicalClinicalSafetyCategory: '',
+  nwrLinks: [],
+  status: 'Done',
+  summary: `story ${key}`,
+});
+const runAssign = (tickets: string, epic = 'CCM-10') =>
+  run([
+    '--repo',
+    '../repo',
+    '--git-tag',
+    '0.1.0',
+    '--jira-version',
+    '71260',
+    '--fix',
+    'assign-epic',
+    '--tickets',
+    tickets,
+    '--epic',
+    epic,
+    '--yes',
+  ]);
+
 describe('run', () => {
   const originalStdoutWrite = process.stdout.write;
   const stdoutWrite = jest.fn().mockReturnValue(true);
@@ -202,6 +259,8 @@ describe('run', () => {
     mockedFetchJiraIssuesByKeys.mockResolvedValue([]);
     mockedUpdateJiraIssueClinicalReviewStatus.mockResolvedValue(undefined);
     mockedUpdateJiraIssueFixVersions.mockResolvedValue(undefined);
+    mockedLinkJiraEpicToNwr.mockResolvedValue(undefined);
+    mockedUpdateJiraIssueEpicLink.mockResolvedValue(undefined);
     mockedApplyCommitMappingsToReleaseNotes.mockImplementation(
       (releaseNotes) => releaseNotes,
     );
@@ -295,6 +354,12 @@ describe('run', () => {
         fixComponent: undefined,
         fixProposals: undefined,
         jiraBaseUrl: 'https://nhsd-jira.digital.nhs.uk',
+        epicCheck: {
+          epicsInUse: [],
+          epicsWithNwrProblems: [],
+          issuesWithoutEpic: [],
+          nwrKey: 'NWR-2198',
+        },
       }),
     );
     expect(stdoutWrite).toHaveBeenCalledWith(
@@ -1102,6 +1167,124 @@ describe('run', () => {
         'Applied clinical review status updates to 1 issue(s).\n',
       ),
     );
+  });
+
+  it('links component-filtered epics that have no NWR link', async () => {
+    mockedFetchJiraIssues.mockResolvedValue([
+      buildEpic('CCM-1', ['Platform'], []),
+      buildEpic('CCM-2', ['Architecture'], []),
+      buildEpic('CCM-3', ['Platform'], ['NWR-1']),
+      buildEpic('CCM-4', ['Platform'], ['NWR-2198']),
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'link-nwr',
+      '--fix-component',
+      'Platform',
+      '--yes',
+    ]);
+
+    expect(mockedLinkJiraEpicToNwr).toHaveBeenCalledTimes(1);
+    expect(mockedLinkJiraEpicToNwr).toHaveBeenCalledWith(
+      'https://nhsd-jira.digital.nhs.uk',
+      'CCM-1',
+      'NWR-2198',
+    );
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining('Applied NWR link updates to 1 issue(s).\n'),
+    );
+  });
+
+  it('links every epic with no NWR link when no component is given', async () => {
+    mockedFetchJiraIssues.mockResolvedValue([
+      buildEpic('CCM-1', ['Platform'], []),
+      buildEpic('CCM-2', ['Architecture'], []),
+      buildEpic('CCM-3', ['Platform'], ['NWR-1']),
+    ]);
+
+    await run([
+      '--repo',
+      '../repo',
+      '--git-tags',
+      '0.1.0,0.2.0',
+      '--jira-versions',
+      '71260',
+      '--fix',
+      'link-nwr',
+      '--yes',
+    ]);
+
+    expect(mockedLinkJiraEpicToNwr.mock.calls.map(([, key]) => key)).toEqual([
+      'CCM-1',
+      'CCM-2',
+    ]);
+    expect(stdoutWrite).toHaveBeenCalledWith(
+      expect.stringContaining('Applied NWR link updates to 2 issue(s).\n'),
+    );
+  });
+
+  describe('assign-epic fix', () => {
+    it('assigns release and outside-release tickets to the epic, skipping those already in it', async () => {
+      mockedFetchJiraIssues.mockResolvedValue([
+        story('CCM-1'),
+        story('CCM-2', 'CCM-10'),
+        story('CCM-3', 'CCM-11'),
+        buildEpic('CCM-10', ['Platform'], ['NWR-2198']),
+      ]);
+      mockedFetchJiraIssuesByKeys.mockImplementation(async (_url, _p, keys) =>
+        keys.includes('CCM-4') ? [{ ...story('CCM-4'), fixVersions: [] }] : [],
+      );
+
+      await runAssign('CCM-1,CCM-2,CCM-3,CCM-4');
+
+      expect(mockedUpdateJiraIssueEpicLink.mock.calls).toEqual([
+        ['https://nhsd-jira.digital.nhs.uk', 'CCM-1', 'CCM-10'],
+        ['https://nhsd-jira.digital.nhs.uk', 'CCM-3', 'CCM-10'],
+        ['https://nhsd-jira.digital.nhs.uk', 'CCM-4', 'CCM-10'],
+      ]);
+      expect(stdoutWrite).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Applied epic assignment updates to 3 issue(s).\n',
+        ),
+      );
+    });
+
+    it('rejects an epic that is not an Epic or cannot be found', async () => {
+      mockedFetchJiraIssues.mockResolvedValue([
+        story('CCM-1'),
+        story('CCM-10'),
+      ]);
+
+      await expect(runAssign('CCM-1')).rejects.toThrow(
+        'CCM-10 is a Story, not an Epic.',
+      );
+      await expect(runAssign('CCM-1', 'CCM-77')).rejects.toThrow(
+        'Epic CCM-77 was not found in Jira project CCM.',
+      );
+      expect(mockedUpdateJiraIssueEpicLink).not.toHaveBeenCalled();
+    });
+
+    it('rejects unknown tickets and tickets that cannot have an epic', async () => {
+      mockedFetchJiraIssues.mockResolvedValue([
+        buildEpic('CCM-10', ['Platform'], []),
+        buildEpic('CCM-11', ['Platform'], []),
+      ]);
+
+      await expect(runAssign('CCM-404')).rejects.toThrow(
+        'Tickets not found in Jira project CCM: CCM-404',
+      );
+      await expect(runAssign('CCM-11')).rejects.toThrow(
+        'CCM-11 is a Epic and cannot be assigned to an epic.',
+      );
+      expect(mockedUpdateJiraIssueEpicLink).not.toHaveBeenCalled();
+    });
   });
 
   it('requires an interactive terminal for fix mode without --yes', async () => {

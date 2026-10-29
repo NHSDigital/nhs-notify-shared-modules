@@ -9,6 +9,7 @@ notes for a repository so that release managers can spot:
 - git-referenced tickets that are outside the selected Jira release scope
 - tickets that are referenced but not done
 - clinical review metadata gaps
+- tickets with no epic, and epics not linked to the expected NWR
 
 It also supports carefully scoped Jira fix-up actions for a single release pair.
 
@@ -20,6 +21,7 @@ The package is split into a small set of focused modules:
 - [`src/git.ts`](./src/git.ts) resolves tags and collects commit history
 - [`src/jira.ts`](./src/jira.ts) resolves Jira versions, fetches issues, and applies Jira updates
 - [`src/github-release.ts`](./src/github-release.ts) reads GitHub or annotated-tag release notes
+- [`src/epics.ts`](./src/epics.ts) checks epic assignment and epic-to-NWR links
 - [`src/compare.ts`](./src/compare.ts) computes the comparison model from commits, issues, and notes
 - [`src/report.ts`](./src/report.ts) renders Markdown reports and fix proposal summaries
 - [`src/index.ts`](./src/index.ts) orchestrates the end-to-end flow
@@ -51,15 +53,17 @@ evidence and labels the issue as `not found in Jira`.
 
 ## Fix workflows
 
-Two fix actions are currently supported:
+Four fix actions are currently supported:
 
 - `fix-version`
 - `clinical-review-not-needed`
+- `link-nwr` (all epics missing the NWR link, optionally component-scoped)
+- `assign-epic` (explicit `--tickets` and `--epic`, no component scope)
 
-Both actions are intentionally constrained:
+The actions are intentionally constrained:
 
-- component-scoped via `--fix-component`
-- single release pair only
+- `fix-version` and `clinical-review-not-needed` are component-scoped via `--fix-component` and need a single release pair
+- `link-nwr` and `assign-epic` do not use the release version, so they accept multiple releases
 - confirmation shown before changes are applied
 - `--yes` required for non-interactive automation
 
