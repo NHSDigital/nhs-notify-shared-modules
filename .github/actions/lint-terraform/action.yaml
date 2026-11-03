@@ -11,7 +11,7 @@ runs:
       shell: bash
       run: |
         if command -v mise >/dev/null 2>&1 && [[ -f mise.toml ]]; then
-          MISE_LOCKED=1 mise install terraform
+          mise --locked install terraform
         # TODO: CCM-25293 Remove asdf compatibility.
         elif command -v asdf >/dev/null 2>&1; then
           if ! asdf plugin list | grep -qx terraform; then
