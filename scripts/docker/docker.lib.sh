@@ -13,7 +13,7 @@ set -euo pipefail
 # Arguments (provided as environment variables):
 #   DOCKER_IMAGE=ghcr.io/org/repo             # Docker image name
 #   DOCKER_TITLE="My Docker image"            # Docker image title
-#   TOOL_VERSIONS=$project_dir/.tool-versions # Path to the tool versions file
+#   TOOL_VERSIONS=$project_dir/.docker-versions # Optional override for image versions
 
 # ==============================================================================
 # Functions to be used with custom images.
@@ -144,8 +144,8 @@ function version-create-effective-file() {
 # ==============================================================================
 # Functions to be used with external images.
 
-# Retrieve the Docker image version from the '.tool-versions' file and pull the
-# image if required. This function is to be used in conjunction with the
+# Retrieve the Docker image version from '.docker-versions', falling back to
+# '.tool-versions' during migration, then pull the image if required. Use with the
 # external images and it prevents Docker from downloading an image each time it
 # is used, since the digest is not stored locally for compressed images. To
 # optimise, the solution is to pull the image using its digest and then tag it,
@@ -157,20 +157,34 @@ function version-create-effective-file() {
 function docker-get-image-version-and-pull() {
 
   # E.g. for the given entry "# docker/ghcr.io/org/image 1.2.3@sha256:hash" in
-  # the '.tool-versions' file, the following variables will be set to:
+  # the '.docker-versions' file, the following variables will be set to:
   #   name="ghcr.io/org/image"
   #   version="1.2.3@sha256:hash"
   #   tag="1.2.3"
   #   digest="sha256:hash"
 
-  # Get the image full version from the '.tool-versions' file,
-  # match it by name and version regex, if given.
-  local versions_file="${TOOL_VERSIONS:=$(git rev-parse --show-toplevel)/.tool-versions}"
   local version="latest"
-  if [ -f "$versions_file" ]; then
-    line=$(grep "docker/${name} " "$versions_file" | sed "s/^#\s*//; s/\s*#.*$//" | grep "${match_version:-".*"}")
-    [ -n "$line" ] && version=$(echo "$line" | awk '{print $2}')
+  local repository_root
+  local versions_file
+  local resolved_version
+  local -a versions_files
+  repository_root=$(git rev-parse --show-toplevel)
+  if [ -n "${TOOL_VERSIONS:-}" ]; then
+    case "$TOOL_VERSIONS" in
+      *.docker-versions*) versions_files=("$TOOL_VERSIONS" "${TOOL_VERSIONS/.docker-versions/.tool-versions}") ;;
+      *.tool-versions*) versions_files=("${TOOL_VERSIONS/.tool-versions/.docker-versions}" "$TOOL_VERSIONS") ;;
+      *) versions_files=("$TOOL_VERSIONS") ;;
+    esac
+  else
+    versions_files=("$repository_root/.docker-versions" "$repository_root/.tool-versions")
   fi
+  for versions_file in "${versions_files[@]}"; do
+    resolved_version=$(_docker-image-version-from-file "$versions_file" "$name" "${match_version:-.*}") || true
+    if [ -n "$resolved_version" ]; then
+      version="$resolved_version"
+      break
+    fi
+  done
 
   # Split the image version into two, tag name and digest sha256.
   local tag="$(echo "$version" | sed 's/@.*$//')"
@@ -218,13 +232,33 @@ function _create-effective-dockerfile() {
 function _replace-image-latest-by-specific-version() {
 
   local dir=${dir:-$PWD}
-  local versions_file="${TOOL_VERSIONS:=$(git rev-parse --show-toplevel)/.tool-versions}"
+  local repository_root
+  local versions_file
+  local -a versions_files
   local dockerfile="${dir}/Dockerfile.effective"
   local build_datetime=${BUILD_DATETIME:-$(date -u +'%Y-%m-%dT%H:%M:%S%z')}
 
-  if [ -f "$versions_file" ]; then
+  repository_root=$(git rev-parse --show-toplevel)
+  if [ -n "${TOOL_VERSIONS:-}" ]; then
+    case "$TOOL_VERSIONS" in
+      *.docker-versions*) versions_files=("$TOOL_VERSIONS" "${TOOL_VERSIONS/.docker-versions/.tool-versions}") ;;
+      *.tool-versions*) versions_files=("${TOOL_VERSIONS/.tool-versions/.docker-versions}" "$TOOL_VERSIONS") ;;
+      *) versions_files=("$TOOL_VERSIONS") ;;
+    esac
+  else
+    versions_files=("$repository_root/.docker-versions" "$repository_root/.tool-versions")
+  fi
+  if [ "${#versions_files[@]}" -gt 0 ]; then
     # First, list the entries specific for Docker to take precedence, then the rest but exclude comments
-    content=$(grep " docker/" "$versions_file"; grep -v " docker/" "$versions_file" ||: | grep -v "^#")
+    content=""
+    for versions_file in "${versions_files[@]}"; do
+      if [ -f "$versions_file" ]; then
+        content+=$(grep " docker/" "$versions_file" || true)
+        content+=$'\n'
+        content+=$(grep -v " docker/" "$versions_file" | grep -v "^#" || true)
+        content+=$'\n'
+      fi
+    done
     echo "$content" | while IFS= read -r line; do
       [ -z "$line" ] && continue
       line=$(echo "$line" | sed "s/^#\s*//; s/\s*#.*$//" | sed "s;docker/;;")
@@ -250,6 +284,19 @@ function _replace-image-latest-by-specific-version() {
 
   # Do not ignore the issue if 'latest' is used in the effective image
   sed -Ei "/# hadolint ignore=DL3007$/d" "${dir}/Dockerfile.effective"
+}
+
+function _docker-image-version-from-file() {
+
+  local versions_file="$1"
+  local image_name="$2"
+  local match_version="$3"
+  local line
+
+  [ -f "$versions_file" ] || return 1
+  line=$(grep "docker/${image_name} " "$versions_file" | sed "s/^#\\s*//; s/\\s*#.*$//" | grep "$match_version" || true)
+  [ -n "$line" ] || return 1
+  echo "$line" | awk '{print $2}'
 }
 
 # Append metadata to the end of Dockerfile.
