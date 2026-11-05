@@ -1,3 +1,4 @@
+asdf
 [Bb]undler
 Bitwarden
 bot
@@ -22,12 +23,14 @@ idempotence
 Jira
 lockfile
 markdownlint
+mise
 npm
 OAuth
 Octokit
 onboarding
 Podman
 [Pp]npm
+prek
 Python
 rawContent
 relative_url
@@ -37,6 +40,5 @@ simplifiable
 sublicense
 Syft
 toolchain
-Trivy
 Trufflehog
 [Tt]erraform

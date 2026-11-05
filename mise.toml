@@ -1,0 +1,17 @@
+[settings]
+lockfile = true
+lockfile_platforms = ["linux-x64", "macos-arm64"]
+disable_backends = ["asdf", "vfox"]
+minimum_release_age = "7d"
+
+[tools]
+act = "0.2.64"
+gitleaks = "8.24.0"
+jq = "1.6"
+node = "22.15.1"
+pnpm = "11.28.5"
+prek = "0.5.7"
+ruby = "3.4.9"
+terraform = "1.15.8"
+terraform-docs = "0.24.0"
+vale = "3.6.0"

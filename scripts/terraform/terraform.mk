@@ -44,10 +44,6 @@ terraform-validate-all: # Validate all Terraform modules @Quality
 		fi; \
 	done
 
-terraform-sec: # Run Trivy IaC security scanning on Terraform modules @Quality
-	# Example: make terraform-sec
-	./scripts/terraform/trivy-scan.sh --mode iac infrastructure/terraform/modules
-
 terraform-docs: # Generate Terraform module documentation - optional: module=[specific module, or all if omitted] @Quality
 	# Example: make terraform-docs module=mymodule
 	# Example: make terraform-docs (generates for all modules)
@@ -72,7 +68,7 @@ clean:: # Remove Terraform build artifacts and cache @Operations
 # ==============================================================================
 # Installation
 
-terraform-install: # Install Terraform using asdf @Installation
+terraform-install: # Install Terraform using mise @Installation
 	# Example: make terraform-install
 	make _install-dependency name="terraform"
 
@@ -84,6 +80,5 @@ ${VERBOSE}.SILENT: \
 	terraform-fmt \
 	terraform-fmt-check \
 	terraform-install \
-	terraform-sec \
 	terraform-validate \
 	terraform-validate-all

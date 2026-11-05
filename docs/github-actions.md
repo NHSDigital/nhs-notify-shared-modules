@@ -26,9 +26,6 @@ This repository provides reusable composite actions for NHS Notify projects.
 - [Scan Secrets](github-actions/scan-secrets.html) - Scans Git history for secrets
 - [Setup](github-actions/setup.html) - Installs dependencies and runs make config
 - [Sync Template Repo](github-actions/sync-template-repo.html) - Syncs repository template changes
-- [Trivy](github-actions/trivy.html) - General Trivy security scanner
-- [Trivy IaC](github-actions/trivy-iac.html) - Scans Terraform IaC with Trivy
-- [Trivy Package](github-actions/trivy-package.html) - Scans packages with Trivy
 
 ## Usage
 

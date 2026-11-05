@@ -1,14 +1,41 @@
 #!/bin/bash
 
-rm -Rf ~/.asdf
-git clone https://github.com/asdf-vm/asdf.git ~/.asdf;
-chmod +x ~/.asdf/asdf.sh;
-echo '. $HOME/.asdf/asdf.sh' >> ~/.zshrc
-echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.zshrc
+set -euo pipefail
 
-source ~/.zshrc
+# Install a pinned mise release after verifying the archive checksum.
+mise_version="v2026.10.17"
+case "$(uname -m)" in
+  x86_64)
+    arch="x64"
+    sha256="17565e268c5542d8ce944321e17af81e0b741b65af4aa7e8e010ee77376a4aa3"
+    ;;
+  aarch64 | arm64)
+    arch="arm64"
+    sha256="cac510e51793ad45e65fe92305bdbe4309c9c60b5907badbc7eba111738ab08f"
+    ;;
+  *)
+    echo "Unsupported architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
 
-echo 'asdf setup complete'
+archive="mise-${mise_version}-linux-${arch}.tar.gz"
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "${tmp_dir}"' EXIT
+curl -fsSL --proto '=https' --tlsv1.2 \
+  --output "${tmp_dir}/${archive}" \
+  "https://github.com/jdx/mise/releases/download/${mise_version}/${archive}"
+echo "${sha256}  ${tmp_dir}/${archive}" | sha256sum --check --status
+mkdir -p "${HOME}/.local/bin"
+tar -xzf "${tmp_dir}/${archive}" -C "${tmp_dir}"
+install -m 0755 "${tmp_dir}/mise/bin/mise" "${HOME}/.local/bin/mise"
+touch "${HOME}/.zshrc"
+grep -Fqx 'export PATH="$HOME/.local/bin:$PATH"' "${HOME}/.zshrc" || echo 'export PATH="$HOME/.local/bin:$PATH"' >> "${HOME}/.zshrc"
+grep -Fqx 'eval "$(mise activate zsh)"' "${HOME}/.zshrc" || echo 'eval "$(mise activate zsh)"' >> "${HOME}/.zshrc"
+
+export PATH="${HOME}/.local/bin:${HOME}/.local/share/mise/shims:${PATH}"
+
+echo 'mise setup complete'
 
 make config
 
