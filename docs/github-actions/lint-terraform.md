@@ -33,7 +33,7 @@ jobs:
 ### Details
 
 - The caller must set up a version manager before this action. For migrated repositories, set up mise as shown above. Legacy repositories should retain their existing version-manager setup.
-- Installs Terraform from `mise.lock` when the checkout has `mise.toml` or `.mise.toml`; otherwise installs it using the legacy version manager and `.tool-versions`. If neither manager is available, Terraform must already be on `PATH`.
+- Installs Terraform from `mise.lock` when the checkout has `mise.toml`; otherwise installs it using the legacy version manager and `.tool-versions`. If neither manager is available, Terraform must already be on `PATH`.
 - Tool: `terraform fmt`
 - Checks: Terraform code formatting
 - Validates: HCL syntax and style
