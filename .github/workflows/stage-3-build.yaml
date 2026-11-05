@@ -28,11 +28,23 @@ jobs:
     steps:
       - name: "Checkout code"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: "Setup mise"
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install: false
+          cache: true
+      - name: "Resolve Node.js and pnpm versions"
+        id: tool-versions
+        shell: bash
+        run: |
+          echo "node=$(mise config get tools.node --file mise.toml)" >> "$GITHUB_OUTPUT"
+          echo "pnpm=$(mise config get tools.pnpm --file mise.toml)" >> "$GITHUB_OUTPUT"
       - name: "Build docs"
         uses: ./.github/actions/build-docs
         with:
           version: "${{ inputs.version }}"
-          pnpm_version: "11.28.5"
+          node_version: "${{ steps.tool-versions.outputs.node }}"
+          pnpm_version: "${{ steps.tool-versions.outputs.pnpm }}"
 
   artefact-1:
     name: "Artefact 1"
