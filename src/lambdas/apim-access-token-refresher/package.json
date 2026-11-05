@@ -4,7 +4,7 @@
     "axios": "^1.20.0",
     "esbuild": "^0.25.9",
     "jsonwebtoken": "^9.0.2",
-    "qs": "^6.14.1",
+    "qs": "^6.17.1",
     "utils": "workspace:*"
   },
   "devDependencies": {
