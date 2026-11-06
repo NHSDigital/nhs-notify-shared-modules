@@ -1,6 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -36,6 +35,5 @@
 | <a name="output_server_crt"></a> [server\_crt](#output\_server\_crt) | Server Certificate |
 | <a name="output_server_key"></a> [server\_key](#output\_server\_key) | Server Key |
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

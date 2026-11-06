@@ -1,6 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -48,6 +47,5 @@
 | <a name="output_policy"></a> [policy](#output\_policy) | The policy of the S3 bucket |
 | <a name="output_region"></a> [region](#output\_region) | The AWS region where the S3 bucket is located |
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

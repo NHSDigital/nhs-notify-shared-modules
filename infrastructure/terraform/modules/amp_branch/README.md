@@ -1,6 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -37,6 +36,5 @@
 | ---- | ----------- |
 | <a name="output_name"></a> [name](#output\_name) | Name of the Amplify branch |
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

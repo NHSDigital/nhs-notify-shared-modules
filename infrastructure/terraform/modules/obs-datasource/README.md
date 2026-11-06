@@ -1,6 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -15,6 +14,5 @@ No inputs.
 
 No outputs.
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

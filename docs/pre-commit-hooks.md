@@ -11,19 +11,6 @@ This repository provides reusable hooks for NHS Notify projects using either pre
 
 ### Available Hooks
 
-#### sort-dictionary
-
-Sorts dictionary files alphabetically to maintain consistency.
-
-**Usage:**
-
-```yaml
-- repo: https://github.com/NHSDigital/nhs-notify-shared-modules
-  rev: vX.Y.Z
-  hooks:
-    - id: sort-dictionary
-```
-
 #### scan-secrets
 
 Scans the entire Git history for secrets and sensitive information.
@@ -61,19 +48,6 @@ Checks Markdown files for formatting issues using markdownlint.
   rev: vX.Y.Z
   hooks:
     - id: check-markdown-format
-```
-
-#### check-english-usage
-
-Validates English usage and style using Vale.
-
-**Usage:**
-
-```yaml
-- repo: https://github.com/NHSDigital/nhs-notify-shared-modules
-  rev: vX.Y.Z
-  hooks:
-    - id: check-english-usage
 ```
 
 #### lint-terraform

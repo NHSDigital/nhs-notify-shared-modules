@@ -1,6 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -37,6 +36,5 @@
 | <a name="output_replica_key_id"></a> [replica\_key\_id](#output\_replica\_key\_id) | ID of the Replica KMS key |
 | <a name="output_user_policy_arn"></a> [user\_policy\_arn](#output\_user\_policy\_arn) | ARN of the user IAM policy |
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

@@ -2,13 +2,10 @@
 
 The AWS Backup Module helps automates the setup of AWS Backup resources in a source account. It streamlines the process of creating, managing, and standardising backup configurations.
 
-<!-- vale off -->
 See [terraform-aws-backup](https://github.com/NHSDigital/terraform-aws-backup.git) for more details.
-<!-- vale on -->
 
 ## Inputs
 <!-- markdownlint-disable MD051 -->
-<!-- vale off -->
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_backup_copy_vault_account_id"></a> [backup\_copy\_vault\_account\_id](#input\_backup\_copy\_vault\_account\_id) | The account id of the destination backup vault for allowing restores back into the source account. | `string` | `""` | no |
@@ -26,7 +23,6 @@ See [terraform-aws-backup](https://github.com/NHSDigital/terraform-aws-backup.gi
 | <a name="input_restore_testing_plan_selection_window_days"></a> [restore\_testing\_plan\_selection\_window\_days](#input\_restore\_testing\_plan\_selection\_window\_days) | Selection window days | `number` | `7` | no |
 | <a name="input_restore_testing_plan_start_window"></a> [restore\_testing\_plan\_start\_window](#input\_restore\_testing\_plan\_start\_window) | Start window from the scheduled time during which the test should start | `number` | `1` | no |
 | <a name="input_management_ci_role_arn"></a> [terraform\_role\_arn](#input\_terraform\_role\_arn) | ARN of Terraform role used to deploy to account | `string` | n/a | yes |
-<!-- vale on -->
 <!-- markdownlint-enable MD051 -->
 
 ## Example
@@ -45,7 +41,6 @@ module "test_aws_backup" {
 
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -82,6 +77,5 @@ No requirements.
 
 No outputs.
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

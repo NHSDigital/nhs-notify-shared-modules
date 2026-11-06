@@ -17,7 +17,6 @@ output "processor_lambda_error_rate_alarm_arn" {
 
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -111,6 +110,5 @@ output "processor_lambda_error_rate_alarm_arn" {
 | <a name="output_lambda_throttles_alarm_arn"></a> [lambda\_throttles\_alarm\_arn](#output\_lambda\_throttles\_alarm\_arn) | The ARN of the CloudWatch alarm for Lambda throttles |
 | <a name="output_lambda_throttles_alarm_name"></a> [lambda\_throttles\_alarm\_name](#output\_lambda\_throttles\_alarm\_name) | The name of the CloudWatch alarm for Lambda throttles |
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

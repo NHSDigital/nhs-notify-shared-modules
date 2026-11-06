@@ -29,7 +29,7 @@ module "lambda_function" {
 
 ### [Pre-commit Hooks](pre-commit-hooks.html)
 
-Code quality and security hooks for secret scanning, file format checking, Markdown linting, Vale writing checks, Terraform validation, and more.
+Code quality and security hooks for secret scanning, file format checking, Markdown linting, Terraform validation, and more.
 
 **Quick Start:**
 

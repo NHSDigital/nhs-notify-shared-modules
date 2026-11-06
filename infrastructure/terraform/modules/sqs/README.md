@@ -1,6 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -54,6 +53,5 @@
 | <a name="output_sqs_queue_oldest_message_alarm_name"></a> [sqs\_queue\_oldest\_message\_alarm\_name](#output\_sqs\_queue\_oldest\_message\_alarm\_name) | The name of the CloudWatch alarm for oldest visible message age in the SQS queue |
 | <a name="output_sqs_queue_url"></a> [sqs\_queue\_url](#output\_sqs\_queue\_url) | The URL of the SQS queue |
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->

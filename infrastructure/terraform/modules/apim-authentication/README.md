@@ -1,6 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
 <!-- markdownlint-disable -->
-<!-- vale off -->
 
 
 ## Requirements
@@ -44,6 +43,5 @@
 | ---- | ----------- |
 | <a name="output_apim_access_token_ssm_parameter"></a> [apim\_access\_token\_ssm\_parameter](#output\_apim\_access\_token\_ssm\_parameter) | APIM Access Token SSM parameter details |
 
-<!-- vale on -->
 <!-- markdownlint-enable -->
 <!-- END_TF_DOCS -->
