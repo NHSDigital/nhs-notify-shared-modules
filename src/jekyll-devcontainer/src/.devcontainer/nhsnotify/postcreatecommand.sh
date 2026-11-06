@@ -5,8 +5,8 @@ cp -r /zsh/* ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
 ls -la ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
 
 cat ~/.zshrc
-source ~/.zshrc
-echo 'asdf setup complete'
+eval "$(mise activate bash)"
+echo 'mise setup complete'
 
 make config
 echo 'make config complete'

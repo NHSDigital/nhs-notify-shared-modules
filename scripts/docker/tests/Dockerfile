@@ -1,3 +1,3 @@
-# `*:latest` will be replaced with a corresponding version stored in the '.tool-versions' file
+# `*:latest` is replaced from .docker-versions, falling back to legacy .tool-versions.
 # hadolint ignore=DL3007
 FROM python:latest
