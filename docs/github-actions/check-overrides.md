@@ -6,8 +6,6 @@ grand_parent: Home
 nav_order: 17
 ---
 
-<!-- vale off -->
-
 ## Check pnpm overrides
 
 Discovers and optionally removes stale `pnpm.overrides` entries from `pnpm-workspace.yaml`.

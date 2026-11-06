@@ -13,7 +13,6 @@ This repository provides reusable composite actions for NHS Notify projects.
 ## Available Actions
 
 - [Build Docs](github-actions/build-docs.html) - Builds Jekyll documentation site
-- [Check English Usage](github-actions/check-english-usage.html) - Validates writing style using Vale
 - [Check File Format](github-actions/check-file-format.html) - Validates file formatting standards
 - [Check Markdown Format](github-actions/check-markdown-format.html) - Checks Markdown files with markdownlint
 - [Check pnpm Overrides](github-actions/check-overrides.html) - Discovers and removes stale pnpm overrides
