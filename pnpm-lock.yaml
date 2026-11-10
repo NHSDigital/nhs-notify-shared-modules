@@ -68,8 +68,8 @@ catalogs:
       specifier: ^3.0.5
       version: 3.0.7
     eslint-plugin-sort-destructure-keys:
-      specifier: ^2.0.0
-      version: 2.0.0
+      specifier: ^3.0.0
+      version: 3.0.0
     eslint-plugin-unicorn:
       specifier: ^61.0.2
       version: 61.0.2
@@ -206,7 +206,7 @@ importers:
         version: 3.0.7(eslint@9.39.5(supports-color@8.1.1))
       eslint-plugin-sort-destructure-keys:
         specifier: catalog:lint
-        version: 2.0.0(eslint@9.39.5(supports-color@8.1.1))
+        version: 3.0.0(eslint@9.39.5(supports-color@8.1.1))
       eslint-plugin-unicorn:
         specifier: catalog:lint
         version: 61.0.2(eslint@9.39.5(supports-color@8.1.1))
@@ -2387,11 +2387,11 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0
 
-  eslint-plugin-sort-destructure-keys@2.0.0:
-    resolution: {integrity: sha512-4w1UQCa3o/YdfWaLr9jY8LfGowwjwjmwClyFLxIsToiyIdZMq3x9Ti44nDn34DtTPP7PWg96tUONKVmATKhYGQ==}
-    engines: {node: '>=12'}
+  eslint-plugin-sort-destructure-keys@3.0.0:
+    resolution: {integrity: sha512-ian2KEdGi8xZW50SVz9HIP9PDQN4XWeo3Hax3LsDk0ojL+wrwk40az8bKCnt3q2J7I3q5xF2ncZ0arj2q8Ou+A==}
+    engines: {node: '>=18'}
     peerDependencies:
-      eslint: 5 - 9
+      eslint: 5 - 10
 
   eslint-plugin-unicorn@61.0.2:
     resolution: {integrity: sha512-zLihukvneYT7f74GNbVJXfWIiNQmkc/a9vYBTE4qPkQZswolWNdu+Wsp9sIXno1JOzdn6OUwLPd19ekXVkahRA==}
@@ -6554,7 +6554,7 @@ snapshots:
       semver: 7.7.4
       typescript: 5.9.3
 
-  eslint-plugin-sort-destructure-keys@2.0.0(eslint@9.39.5(supports-color@8.1.1)):
+  eslint-plugin-sort-destructure-keys@3.0.0(eslint@9.39.5(supports-color@8.1.1)):
     dependencies:
       eslint: 9.39.5(supports-color@8.1.1)
       natural-compare-lite: 1.4.0
@@ -8886,7 +8886,7 @@ time:
   eslint-plugin-react@7.37.5: '2025-04-03T20:01:15.958Z'
   eslint-plugin-security@3.0.1: '2024-06-14T11:35:49.853Z'
   eslint-plugin-sonarjs@3.0.7: '2026-02-11T10:59:09.363Z'
-  eslint-plugin-sort-destructure-keys@2.0.0: '2024-04-24T05:18:05.644Z'
+  eslint-plugin-sort-destructure-keys@3.0.0: '2026-02-16T22:09:16.869Z'
   eslint-plugin-unicorn@61.0.2: '2025-09-08T09:24:37.952Z'
   eslint@9.39.5: '2026-07-10T20:41:47.507Z'
   globals@17.9.0: '2026-08-02T15:24:47.623Z'
