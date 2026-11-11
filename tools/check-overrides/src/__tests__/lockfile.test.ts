@@ -1,6 +1,6 @@
 import {
-  findGlobalResolvedVersion,
-  findScopedResolvedVersion,
+  findGlobalResolvedVersions,
+  findScopedResolvedVersions,
   lockfilePath,
   readLockfile,
 } from 'src/lockfile';
@@ -36,51 +36,82 @@ const lockfile = {
   },
 };
 
-describe('findGlobalResolvedVersion', () => {
-  it('returns the highest version of a package across snapshots', () => {
-    expect(findGlobalResolvedVersion(lockfile, 'mid-pkg')).toBe('5.7.3');
+describe('findGlobalResolvedVersions', () => {
+  it('returns every resolved version of a package across snapshots', () => {
+    expect(findGlobalResolvedVersions(lockfile, 'mid-pkg')).toEqual([
+      '5.7.3',
+      '4.5.1',
+    ]);
   });
 
   it('strips peer-dep suffixes from versions', () => {
-    expect(findGlobalResolvedVersion(lockfile, 'peer-dep-pkg')).toBe('19.0.0');
+    expect(findGlobalResolvedVersions(lockfile, 'peer-dep-pkg')).toEqual([
+      '19.0.0',
+    ]);
   });
 
   it('handles scoped package names', () => {
-    expect(findGlobalResolvedVersion(lockfile, '@scope/root-pkg')).toBe(
+    expect(findGlobalResolvedVersions(lockfile, '@scope/root-pkg')).toEqual([
       '3.1039.0',
-    );
+    ]);
   });
 
-  it('returns undefined when the package is absent', () => {
+  it('returns an empty list when the package is absent', () => {
+    expect(findGlobalResolvedVersions(lockfile, 'not-installed')).toEqual([]);
+  });
+
+  it('returns an empty list when the lockfile has no snapshots', () => {
     expect(
-      findGlobalResolvedVersion(lockfile, 'not-installed'),
-    ).toBeUndefined();
+      findGlobalResolvedVersions({ lockfileVersion: '9.0' }, 'mid-pkg'),
+    ).toEqual([]);
   });
 });
 
-describe('findScopedResolvedVersion', () => {
-  it('returns the lowest resolved child version under a parent (worst-case floor)', () => {
-    expect(findScopedResolvedVersion(lockfile, 'mid-pkg', 'leaf-pkg')).toBe(
-      '1.0.5',
+describe('findScopedResolvedVersions', () => {
+  it('returns the child version from every parent snapshot', () => {
+    expect(findScopedResolvedVersions(lockfile, 'mid-pkg', 'leaf-pkg')).toEqual(
+      ['1.2.0', '1.0.5'],
     );
   });
 
-  it('returns the resolved version when only one parent snapshot exists', () => {
+  it('only includes parents that satisfy the parent version selector', () => {
     expect(
-      findScopedResolvedVersion(lockfile, '@scope/root-pkg', 'mid-pkg'),
-    ).toBe('5.7.3');
+      findScopedResolvedVersions(lockfile, 'mid-pkg', 'leaf-pkg', '>=5.0.0'),
+    ).toEqual(['1.2.0']);
   });
 
-  it('returns undefined when the parent has no such dependency', () => {
-    expect(
-      findScopedResolvedVersion(lockfile, 'mid-pkg', 'nonexistent'),
-    ).toBeUndefined();
+  it('strips peer-dep suffixes from child versions', () => {
+    const withPeers = {
+      lockfileVersion: '9.0',
+      snapshots: {
+        'mid-pkg@1.0.0': { dependencies: { foo: '2.0.0(peer@1.0.0)' } },
+      },
+    };
+    expect(findScopedResolvedVersions(withPeers, 'mid-pkg', 'foo')).toEqual([
+      '2.0.0',
+    ]);
   });
 
-  it('returns undefined when the parent is not in the lockfile', () => {
+  it('returns an empty list when the parent has no such dependency', () => {
     expect(
-      findScopedResolvedVersion(lockfile, 'nonexistent', 'leaf-pkg'),
-    ).toBeUndefined();
+      findScopedResolvedVersions(lockfile, 'mid-pkg', 'nonexistent'),
+    ).toEqual([]);
+  });
+
+  it('returns an empty list when the parent is not in the lockfile', () => {
+    expect(
+      findScopedResolvedVersions(lockfile, 'nonexistent', 'leaf-pkg'),
+    ).toEqual([]);
+  });
+
+  it('returns an empty list when the lockfile has no snapshots', () => {
+    expect(
+      findScopedResolvedVersions(
+        { lockfileVersion: '9.0' },
+        'mid-pkg',
+        'leaf-pkg',
+      ),
+    ).toEqual([]);
   });
 
   it('skips snapshot keys that have no version separator', () => {
@@ -91,8 +122,10 @@ describe('findScopedResolvedVersion', () => {
         'mid-pkg@1.0.0': { dependencies: { foo: '2.0.0' } },
       },
     };
-    expect(findScopedResolvedVersion(weird, 'mid-pkg', 'foo')).toBe('2.0.0');
-    expect(findGlobalResolvedVersion(weird, 'no-at-sign-here')).toBeUndefined();
+    expect(findScopedResolvedVersions(weird, 'mid-pkg', 'foo')).toEqual([
+      '2.0.0',
+    ]);
+    expect(findGlobalResolvedVersions(weird, 'no-at-sign-here')).toEqual([]);
   });
 });
 

@@ -82,6 +82,34 @@ describe('checkChain', () => {
     }
   });
 
+  it('returns removable when no version is in the version selector range', async () => {
+    const chain = buildSingleChain('some-pkg@>=0.27.3 <0.28.1', '>=0.28.1');
+    (resolve.readResolvedVersion as jest.Mock).mockResolvedValue(undefined);
+
+    const result = await checkChain('/proj', chain);
+
+    expect(result.status).toBe('removable');
+    if (result.status === 'removable') {
+      expect(result.resolved['some-pkg@>=0.27.3 <0.28.1']).toBe(
+        'no version in range ">=0.27.3 <0.28.1"',
+      );
+    }
+  });
+
+  it('returns needed when a version in the selector range is below minimum', async () => {
+    const chain = buildSingleChain('some-pkg@>=0.27.3 <0.28.1', '>=0.28.1');
+    (resolve.readResolvedVersion as jest.Mock).mockResolvedValue('0.27.5');
+
+    const result = await checkChain('/proj', chain);
+
+    expect(result.status).toBe('needed');
+    if (result.status === 'needed') {
+      expect(result.failures[0].reason).toBe(
+        'resolved 0.27.5 < required 0.28.1',
+      );
+    }
+  });
+
   it('returns removable for a chain where full removal satisfies all overrides', async () => {
     const chain = buildTwoLinkChain();
     (resolve.readResolvedVersion as jest.Mock)

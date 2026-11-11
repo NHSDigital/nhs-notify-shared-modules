@@ -59,6 +59,9 @@ const runScenario = async (
             reason: `resolved ${version} < required ${override.minVersion}`,
           });
         }
+      } else if (override.versionSelector) {
+        resolved[override.key] =
+          `no version in range "${override.versionSelector}"`;
       } else {
         failures.push({
           override,

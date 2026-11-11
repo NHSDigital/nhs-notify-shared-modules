@@ -1,4 +1,4 @@
-import { parseOverrides } from 'src/parse-overrides';
+import { buildChains, parseOverrides } from 'src/parse-overrides';
 
 describe('parseOverrides', () => {
   it('parses unscoped overrides', () => {
@@ -119,7 +119,7 @@ describe('parseOverrides', () => {
     });
   });
 
-  it('strips version selectors from the parent', () => {
+  it('keeps the version selector on the parent', () => {
     const [result] = parseOverrides({
       'qar@1>zoo': '^2.0.0',
     });
@@ -127,12 +127,13 @@ describe('parseOverrides', () => {
     expect(result).toMatchObject({
       key: 'qar@1>zoo',
       parent: 'qar',
+      parentVersionSelector: '1',
       package: 'zoo',
       minVersion: '2.0.0',
     });
   });
 
-  it('strips version selectors from a scoped parent', () => {
+  it('keeps the version selector on a scoped parent', () => {
     const [result] = parseOverrides({
       '@scope/qar@^1.0.0>zoo': '^2.0.0',
     });
@@ -140,9 +141,63 @@ describe('parseOverrides', () => {
     expect(result).toMatchObject({
       key: '@scope/qar@^1.0.0>zoo',
       parent: '@scope/qar',
+      parentVersionSelector: '^1.0.0',
       package: 'zoo',
       minVersion: '2.0.0',
     });
+  });
+
+  it('does not treat a ">" comparator in a range selector as a parent delimiter', () => {
+    const [result] = parseOverrides({
+      'some-pkg@>=0.27.3 <0.28.1': '>=0.28.1',
+    });
+
+    expect(result).toEqual({
+      key: 'some-pkg@>=0.27.3 <0.28.1',
+      parent: undefined,
+      parentVersionSelector: undefined,
+      package: 'some-pkg',
+      versionSelector: '>=0.27.3 <0.28.1',
+      versionSpec: '>=0.28.1',
+      minVersion: '0.28.1',
+    });
+  });
+
+  it('parses range selectors with ">" comparators on both parent and child', () => {
+    const [result] = parseOverrides({
+      '@scope/qar@>=1.0.0 <2.0.0>zoo@>2.0.0 <=2.5.0': '^2.5.1',
+    });
+
+    expect(result).toMatchObject({
+      parent: '@scope/qar',
+      parentVersionSelector: '>=1.0.0 <2.0.0',
+      package: 'zoo',
+      versionSelector: '>2.0.0 <=2.5.0',
+      minVersion: '2.5.1',
+    });
+  });
+
+  it('parses "||" range selectors that contain ">" comparators', () => {
+    const [result] = parseOverrides({
+      'foo@<1.0.5 || >=2.0.0 <2.0.3': '^2.0.3',
+    });
+
+    expect(result).toMatchObject({
+      package: 'foo',
+      versionSelector: '<1.0.5 || >=2.0.0 <2.0.3',
+    });
+  });
+
+  it('throws if a version selector is not a valid range', () => {
+    expect(() => parseOverrides({ 'foo@not a range': '^1.0.0' })).toThrow(
+      /Cannot parse version selector/,
+    );
+  });
+
+  it('throws if a parent version selector is not a valid range', () => {
+    expect(() => parseOverrides({ 'foo@latest>bar': '^1.0.0' })).toThrow(
+      /Cannot parse version selector/,
+    );
   });
 
   it('skips removal overrides (dash value)', () => {
@@ -195,5 +250,51 @@ describe('parseOverrides', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].package).toBe('real-pkg');
+  });
+});
+
+describe('buildChains', () => {
+  it('links parent>child overrides into one chain, ordered root to leaf', () => {
+    const chains = buildChains(
+      parseOverrides({
+        'mid-pkg>leaf-pkg': '^1.1.7',
+        '@scope/root-pkg>mid-pkg': '^5.7.0',
+      }),
+    );
+
+    expect(chains.map((chain) => chain.id)).toEqual([
+      '@scope/root-pkg>mid-pkg → mid-pkg>leaf-pkg',
+    ]);
+  });
+
+  it('does not create empty chains for overrides already in an earlier chain', () => {
+    const chains = buildChains(
+      parseOverrides({
+        'mid-pkg>leaf-pkg': '^1.1.7',
+        '@scope/root-pkg>mid-pkg': '^5.7.0',
+        'solo-pkg': '^3.4.0',
+      }),
+    );
+
+    expect(chains.map((chain) => chain.id)).toEqual([
+      '@scope/root-pkg>mid-pkg → mid-pkg>leaf-pkg',
+      'solo-pkg',
+    ]);
+  });
+
+  it('keeps range-selector overrides for the same package as separate chains', () => {
+    const chains = buildChains(
+      parseOverrides({
+        'brace-expansion@<1.1.20': '^1.1.20',
+        'brace-expansion@>=2.0.0 <2.1.6': '^2.1.6',
+        'brace-expansion@>=4.0.0 <5.0.11': '^5.0.11',
+      }),
+    );
+
+    expect(chains.map((chain) => chain.id)).toEqual([
+      'brace-expansion@<1.1.20',
+      'brace-expansion@>=2.0.0 <2.1.6',
+      'brace-expansion@>=4.0.0 <5.0.11',
+    ]);
   });
 });
