@@ -23,8 +23,8 @@ jest.mock('node:fs/promises', () => ({
 jest.mock('src/lockfile', () => ({
   lockfilePath: jest.fn((dir: string) => `${dir}/pnpm-lock.yaml`),
   readLockfile: jest.fn(),
-  findGlobalResolvedVersion: jest.fn(),
-  findScopedResolvedVersion: jest.fn(),
+  findGlobalResolvedVersions: jest.fn(),
+  findScopedResolvedVersions: jest.fn(),
 }));
 
 jest.mock('src/workspace-file', () => ({
@@ -92,7 +92,7 @@ describe('regenerateLockfile', () => {
 
     expect(spawn).toHaveBeenCalledWith(
       'pnpm',
-      ['update', '--lockfile-only', '-r', 'foo', 'bar'],
+      ['update', '--lockfile-only', '--no-save', '-r', 'foo', 'bar'],
       expect.objectContaining({ cwd: '/proj' }),
     );
   });
@@ -121,7 +121,9 @@ describe('readResolvedVersion', () => {
   });
 
   it('reads a global resolution when the override has no parent', async () => {
-    (lockfile.findGlobalResolvedVersion as jest.Mock).mockReturnValue('3.5.0');
+    (lockfile.findGlobalResolvedVersions as jest.Mock).mockReturnValue([
+      '3.5.0',
+    ]);
     const override: Override = {
       key: 'solo-pkg',
       package: 'solo-pkg',
@@ -132,15 +134,94 @@ describe('readResolvedVersion', () => {
     const result = await readResolvedVersion('/proj', override);
 
     expect(result).toBe('3.5.0');
-    expect(lockfile.findGlobalResolvedVersion).toHaveBeenCalled();
-    expect(lockfile.findScopedResolvedVersion).not.toHaveBeenCalled();
+    expect(lockfile.findGlobalResolvedVersions).toHaveBeenCalled();
+    expect(lockfile.findScopedResolvedVersions).not.toHaveBeenCalled();
+  });
+
+  it('returns the lowest version using semver ordering', async () => {
+    (lockfile.findGlobalResolvedVersions as jest.Mock).mockReturnValue([
+      '0.10.0',
+      '0.9.0',
+      '0.28.1',
+    ]);
+    const override: Override = {
+      key: 'solo-pkg',
+      package: 'solo-pkg',
+      versionSpec: '^0.10.0',
+      minVersion: '0.10.0',
+    };
+
+    expect(await readResolvedVersion('/proj', override)).toBe('0.9.0');
+  });
+
+  it('ignores resolved versions that are not valid semver', async () => {
+    (lockfile.findGlobalResolvedVersions as jest.Mock).mockReturnValue([
+      'link:../local',
+      '2.0.0',
+    ]);
+    const override: Override = {
+      key: 'solo-pkg',
+      package: 'solo-pkg',
+      versionSpec: '^2.0.0',
+      minVersion: '2.0.0',
+    };
+
+    expect(await readResolvedVersion('/proj', override)).toBe('2.0.0');
+  });
+
+  it('returns undefined when the package is not resolved', async () => {
+    (lockfile.findGlobalResolvedVersions as jest.Mock).mockReturnValue([]);
+    const override: Override = {
+      key: 'solo-pkg',
+      package: 'solo-pkg',
+      versionSpec: '^2.0.0',
+      minVersion: '2.0.0',
+    };
+
+    expect(await readResolvedVersion('/proj', override)).toBeUndefined();
+  });
+
+  it('only considers versions in the version selector range', async () => {
+    (lockfile.findGlobalResolvedVersions as jest.Mock).mockReturnValue([
+      '0.25.12',
+      '0.28.0',
+      '0.27.5',
+    ]);
+    const override: Override = {
+      key: 'some-pkg@>=0.27.3 <0.28.1',
+      package: 'some-pkg',
+      versionSelector: '>=0.27.3 <0.28.1',
+      versionSpec: '>=0.28.1',
+      minVersion: '0.28.1',
+    };
+
+    expect(await readResolvedVersion('/proj', override)).toBe('0.27.5');
+  });
+
+  it('returns undefined when no version is in the version selector range', async () => {
+    (lockfile.findGlobalResolvedVersions as jest.Mock).mockReturnValue([
+      '0.25.12',
+      '0.28.1',
+    ]);
+    const override: Override = {
+      key: 'some-pkg@>=0.27.3 <0.28.1',
+      package: 'some-pkg',
+      versionSelector: '>=0.27.3 <0.28.1',
+      versionSpec: '>=0.28.1',
+      minVersion: '0.28.1',
+    };
+
+    expect(await readResolvedVersion('/proj', override)).toBeUndefined();
   });
 
   it('reads a scoped resolution when the override has a parent', async () => {
-    (lockfile.findScopedResolvedVersion as jest.Mock).mockReturnValue('5.8.0');
+    (lockfile.findScopedResolvedVersions as jest.Mock).mockReturnValue([
+      '5.8.0',
+    ]);
     const override: Override = {
-      key: '@scope/root-pkg>mid-pkg',
+      key: '@scope/root-pkg@^3.0.0>mid-pkg',
       parent: '@scope/root-pkg',
+      parentVersionSelector: '^3.0.0',
       package: 'mid-pkg',
       versionSpec: '^5.7.0',
       minVersion: '5.7.0',
@@ -149,10 +230,11 @@ describe('readResolvedVersion', () => {
     const result = await readResolvedVersion('/proj', override);
 
     expect(result).toBe('5.8.0');
-    expect(lockfile.findScopedResolvedVersion).toHaveBeenCalledWith(
+    expect(lockfile.findScopedResolvedVersions).toHaveBeenCalledWith(
       {},
       '@scope/root-pkg',
       'mid-pkg',
+      '^3.0.0',
     );
   });
 });
@@ -242,6 +324,7 @@ describe('applyRemovals', () => {
       [
         'update',
         '--lockfile-only',
+        '--no-save',
         '-r',
         'solo-pkg',
         'mid-pkg',

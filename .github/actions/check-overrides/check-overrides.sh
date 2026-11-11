@@ -18,7 +18,7 @@ function main() {
   local apply="${APPLY:-false}"
 
   echo "Installing check-overrides dependencies..."
-  (cd "${TOOL_DIR}" && npm ci)
+  (cd "${TOOL_DIR}" && pnpm install --frozen-lockfile --filter check-overrides)
 
   local args=("--project-dir" "${project_dir}")
 
@@ -27,7 +27,7 @@ function main() {
   fi
 
   echo "Running check-overrides..."
-  (cd "${TOOL_DIR}" && npm run check -- "${args[@]}")
+  (cd "${TOOL_DIR}" && pnpm run check "${args[@]}")
 }
 
 main "$@"

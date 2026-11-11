@@ -1,9 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 
+import { minSatisfying, sort, valid } from 'semver';
+
 import {
-  findGlobalResolvedVersion,
-  findScopedResolvedVersion,
+  findGlobalResolvedVersions,
+  findScopedResolvedVersions,
   lockfilePath,
   readLockfile,
 } from 'src/lockfile';
@@ -22,7 +24,13 @@ export const regenerateLockfile = async (
   if (packagesToUpdate.length === 0) {
     return;
   }
-  const args = ['update', '--lockfile-only', '-r', ...packagesToUpdate];
+  const args = [
+    'update',
+    '--lockfile-only',
+    '--no-save',
+    '-r',
+    ...packagesToUpdate,
+  ];
   await new Promise<void>((resolve, reject) => {
     // eslint-disable-next-line sonarjs/no-os-command-from-path
     const child = spawn('pnpm', args, {
@@ -51,14 +59,34 @@ export const regenerateLockfile = async (
   });
 };
 
+const lowestVersion = (
+  versions: string[],
+  selector?: string,
+): string | undefined => {
+  const semverVersions = versions.filter((version) => valid(version) !== null);
+  return selector === undefined
+    ? sort(semverVersions)[0]
+    : (minSatisfying(semverVersions, selector) ?? undefined);
+};
+
+/**
+ * Returns the lowest resolved version that the override applies to, or
+ * undefined if no resolved version is in the selector range.
+ */
 export const readResolvedVersion = async (
   projectDir: string,
   override: Override,
 ): Promise<string | undefined> => {
   const lockfile = await readLockfile(projectDir);
-  return override.parent
-    ? findScopedResolvedVersion(lockfile, override.parent, override.package)
-    : findGlobalResolvedVersion(lockfile, override.package);
+  const versions = override.parent
+    ? findScopedResolvedVersions(
+        lockfile,
+        override.parent,
+        override.package,
+        override.parentVersionSelector,
+      )
+    : findGlobalResolvedVersions(lockfile, override.package);
+  return lowestVersion(versions, override.versionSelector);
 };
 
 export const withOriginalFiles = async <T>(
