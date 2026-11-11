@@ -10,6 +10,10 @@ inputs:
     description: "Whether to apply removals and raise a PR (true/false)"
     required: false
     default: "false"
+  github-token:
+    description: "Token for access to the GitHub package registry when regenerating the lockfile"
+    required: false
+    default: ${{ github.token }}
 
 runs:
   using: "composite"
@@ -19,6 +23,7 @@ runs:
       env:
         PROJECT_DIR: ${{ inputs.project-dir }}
         APPLY: ${{ inputs.apply }}
+        NODE_AUTH_TOKEN: ${{ inputs.github-token }}
         TOOL_DIR: ${{ github.action_path }}/../../../tools/check-overrides
       run: ${{ github.action_path }}/check-overrides.sh
 

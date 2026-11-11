@@ -23,15 +23,17 @@ When run in apply mode, it also modifies `pnpm-workspace.yaml` and raises a pull
 
 ### Prerequisites
 
-The consuming repository must have a `pnpm-workspace.yaml` with an `overrides` section. The action requires `contents: write` and `pull-requests: write` permissions to create pull requests.
+The consuming repository must have a `pnpm-workspace.yaml` with an `overrides` section. The action requires `contents: write` and `pull-requests: write` permissions to create pull requests. If the project uses private packages from the GitHub package registry, the workflow also requires `packages: read`.
+
+The calling workflow must install Node.js and pnpm before it runs this action.
 
 ### Inputs
 
-| Input          | Required | Default | Description                                               |
-| -------------- | -------- | ------- | --------------------------------------------------------- |
-| `project-dir`  | No       | `.`     | Path to the project root containing `pnpm-workspace.yaml` |
-| `apply`        | No       | `false` | Whether to apply removals and raise a pull request        |
-| `node-version` | No       | `22`    | Node.js version to use                                    |
+| Input          | Required | Default        | Description                                                                 |
+| -------------- | -------- | -------------- | --------------------------------------------------------------------------- |
+| `project-dir`  | No       | `.`            | Path to the project root containing `pnpm-workspace.yaml`                   |
+| `apply`        | No       | `false`        | Whether to apply removals and raise a pull request                          |
+| `github-token` | No       | `github.token` | Token for access to the GitHub package registry when regenerating lockfiles |
 
 ### Usage
 
@@ -45,6 +47,7 @@ on:
 
 permissions:
   contents: write
+  packages: read
   pull-requests: write
 
 jobs:
@@ -52,6 +55,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@<sha> # v4
+
+      - uses: pnpm/action-setup@<sha>
+
+      - uses: actions/setup-node@<sha>
+        with:
+          node-version-file: ".tool-versions"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@nhsdigital"
+
+      - name: Install project dependencies
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: pnpm install --frozen-lockfile
 
       - name: Check and remove stale overrides
         uses: NHSDigital/nhs-notify-shared-modules/.github/actions/check-overrides@main
