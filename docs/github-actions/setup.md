@@ -39,8 +39,7 @@ jobs:
 
 ### What Gets Installed
 
-- asdf/mise tools from `.tool-versions`
+- locked tools from `mise.toml` and `mise.lock`; legacy repositories can continue to use asdf with `.tool-versions`
 - Ruby gems via Bundler
 - Node packages via npm/pnpm
-- Python packages via pip
-- Pre-commit hooks
+- Pre-commit/prek-compatible Git hooks
