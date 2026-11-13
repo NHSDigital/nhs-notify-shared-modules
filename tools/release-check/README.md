@@ -22,6 +22,8 @@ pnpm --filter @nhsdigital/nhs-notify-release-check run check -- --repo ../nhs-no
 
 ## Multi-release usage
 
+Multi-release mode is mainly intended for cases like an initial production release, where we want to validate the full set of tickets that make up the build being released to prod for the first time.
+
 Explicit list selection:
 
 ```bash
@@ -47,6 +49,36 @@ Notes for multi-release mode:
 - Multiple selected git tags are expanded in repository tag order.
 - Commit history is aggregated by collecting each selected release range and de-duplicating overlapping commits.
 - Multiple selected Jira versions are aggregated into one issue set before comparison.
+
+## Commit ticket mappings
+
+If a commit carries the wrong Jira issue number, you can provide a mapping file to substitute the release-check ticket detection for specific commits.
+
+When present, the tool automatically looks for a file called `.jira-commits` in the root of the target repository. Use `--commit-mapping-file` if you want to point at a different file instead.
+
+```bash
+pnpm release-check -- \
+  --repo ../nhs-notify-client-config \
+  --git-tag v0.2.0 \
+  --jira-version client-config-0.2.0 \
+  --commit-mapping-file .release-check/commit-mappings.txt
+```
+
+Example mapping file format:
+
+```text
+# <commit-hash> <replacement-jira-key>
+2f6c9d1 CCM-12081
+4ab12cd CCM-22822
+```
+
+Notes for commit mappings:
+
+- `.jira-commits` is auto-detected from the target repository root.
+- Relative paths passed to `--commit-mapping-file` are resolved from the target repository root.
+- Hashes can be 7-40 hexadecimal characters, as long as they uniquely identify one selected commit.
+- The mapped Jira key replaces the detected key for reporting and fix workflows.
+- Reports mark mapped commits explicitly so reviewers can see where a substitution was applied.
 
 ## Required environment
 

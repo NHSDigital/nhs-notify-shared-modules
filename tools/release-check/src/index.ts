@@ -5,15 +5,21 @@ import { createInterface } from 'node:readline/promises';
 import { parseCliArgs } from './args';
 import { compareRelease } from './compare';
 import {
+  applyCommitIssueKeyMappings,
   collectCommitsForTags,
+  findDefaultCommitIssueMappingFile,
   getPreviousTag,
   getRepoName,
   getRepoRoot,
   listTags,
+  readCommitIssueKeyMappings,
   resolveGitTags,
   resolveRepoPath,
 } from './git';
-import { readReleaseNotesForTags } from './github-release';
+import {
+  applyCommitMappingsToReleaseNotes,
+  readReleaseNotesForTags,
+} from './github-release';
 import {
   fetchJiraIssues,
   fetchJiraIssuesByKeys,
@@ -479,6 +485,7 @@ const maybeWriteComparisonReport = async ({
   releaseNotes,
   repoName,
   repoRoot,
+  selectedReleaseIssuesByKey,
   totalJiraIssues,
 }: {
   comparison: ReturnType<typeof compareRelease>;
@@ -494,6 +501,7 @@ const maybeWriteComparisonReport = async ({
   releaseNotes: Awaited<ReturnType<typeof readReleaseNotesForTags>>;
   repoName: string;
   repoRoot: string;
+  selectedReleaseIssuesByKey: Map<string, JiraIssue>;
   totalJiraIssues: number;
 }): Promise<string | undefined> => {
   if (fixAction) {
@@ -516,10 +524,11 @@ const maybeWriteComparisonReport = async ({
     jiraBaseUrl,
     jiraProject,
     jiraVersions,
+    outsideReleaseIssuesByKey,
     releaseNotes,
     repoName,
     repoRoot,
-    outsideReleaseIssuesByKey,
+    selectedReleaseIssuesByKey,
     totalJiraIssues,
   });
 
@@ -582,6 +591,11 @@ export const run = async (argv: string[]): Promise<void> => {
   const repoPath = resolveRepoPath(options.repo);
   const repoRoot = getRepoRoot(repoPath);
   const repoName = getRepoName(repoRoot);
+  const commitMappingFile =
+    options.commitMappingFile ?? findDefaultCommitIssueMappingFile(repoRoot);
+  const commitIssueKeyMappings = commitMappingFile
+    ? await readCommitIssueKeyMappings(repoRoot, commitMappingFile)
+    : new Map<string, string>();
   const selectedGitTags = await resolveSelectedGitTags(
     repoRoot,
     options.gitTagSelectors,
@@ -589,7 +603,10 @@ export const run = async (argv: string[]): Promise<void> => {
     options.jiraProject,
     options.previousTag,
   );
-  const commits = collectCommitsForTags(repoRoot, selectedGitTags);
+  const commits = applyCommitIssueKeyMappings(
+    collectCommitsForTags(repoRoot, selectedGitTags),
+    commitIssueKeyMappings,
+  );
 
   const jiraVersions = await resolveJiraVersions(
     options.jiraBaseUrl,
@@ -605,10 +622,13 @@ export const run = async (argv: string[]): Promise<void> => {
     jiraIssuesByVersion.flat(),
     (issue: JiraIssue) => issue.key,
   );
-  const releaseNotes = await readReleaseNotesForTags(
-    repoRoot,
-    selectedGitTags.map(({ gitTag }) => gitTag),
-    options.releaseNotesSource,
+  const releaseNotes = applyCommitMappingsToReleaseNotes(
+    await readReleaseNotesForTags(
+      repoRoot,
+      selectedGitTags.map(({ gitTag }) => gitTag),
+      options.releaseNotesSource,
+    ),
+    commits,
   );
   const comparison = compareRelease(
     commits,
@@ -659,6 +679,9 @@ export const run = async (argv: string[]): Promise<void> => {
     jiraVersions,
     output: options.output,
     outsideReleaseIssuesByKey,
+    selectedReleaseIssuesByKey: new Map(
+      jiraIssues.map((issue) => [issue.key, issue]),
+    ),
     releaseNotes,
     repoName,
     repoRoot,
@@ -687,6 +710,7 @@ export const run = async (argv: string[]): Promise<void> => {
     jiraVersions.length === 1
       ? `Jira version: ${jiraVersions[0].name} (${jiraVersions[0].id})`
       : `Jira versions selected (${jiraVersions.length}): ${formatJiraVersionSummary(jiraVersions)}`,
+    `Commit ticket mappings applied: ${commits.filter((commit) => commit.issueKeyOverride != null).length}`,
     `Jira issues in ${jiraVersions.length === 1 ? 'release' : 'selected releases'}: ${jiraIssues.length}`,
     `Jira issues missing from git: ${comparison.jiraIssuesMissingFromGit.length}`,
     `Referenced Jira issues not done: ${comparison.releaseReferencedIssuesNotDone.length}`,

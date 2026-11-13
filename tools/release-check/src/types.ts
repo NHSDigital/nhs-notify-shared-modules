@@ -23,6 +23,10 @@ export type GitCommit = {
   body: string;
   explicitIssueKeys: string[];
   hash: string;
+  issueKeyOverride?: {
+    commitHash: string;
+    issueKey: string;
+  };
   releaseRange?: string;
   releaseTag?: string;
   shortHash: string;
@@ -34,7 +38,13 @@ export type ReleaseNotesSource = 'auto' | 'github' | 'tag' | 'none';
 export type ReleaseNotesLookupSource =
   'github-release' | 'mixed' | 'none' | 'tag-annotation';
 
+export type ReleaseNoteEntry = {
+  issueKeys: string[];
+  pullRequestNumber: number | null;
+};
+
 export type ReleaseNotes = {
+  entries: ReleaseNoteEntry[];
   issueKeys: string[];
   source: ReleaseNotesLookupSource;
   text: string | null;
@@ -49,6 +59,8 @@ export type JiraVersion = {
 };
 
 export type MatchedCommit = GitCommit & {
+  detectedIssueKeys?: string[];
+  issueKeySource?: 'explicit' | 'mapped' | 'none' | 'summary';
   matchedIssueKeys: string[];
 };
 
@@ -70,6 +82,7 @@ export type ComparisonResult = {
 };
 
 export type CliOptions = {
+  commitMappingFile?: string;
   fixAction?: FixAction;
   fixComponent?: string;
   gitTagSelectors: string[];
