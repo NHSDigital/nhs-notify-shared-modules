@@ -9,6 +9,8 @@ import type {
 const CLINICAL_LEAD_FIELD_ID = 'customfield_10523';
 const MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID = 'customfield_15200';
 const CLINICAL_REVIEW_STATUS_FIELD_ID = 'customfield_16657';
+const EPIC_LINK_FIELD_ID = 'customfield_10005';
+const NWR_LINK_TYPE_NAME = 'NWR';
 
 const getJiraFieldString = (value: unknown): string => {
   if (typeof value === 'string') {
@@ -61,6 +63,8 @@ const JIRA_SEARCH_FIELDS = [
   'issuetype',
   'components',
   'fixVersions',
+  'issuelinks',
+  EPIC_LINK_FIELD_ID,
   CLINICAL_LEAD_FIELD_ID,
   MEDICAL_CLINICAL_SAFETY_CATEGORY_FIELD_ID,
   CLINICAL_REVIEW_STATUS_FIELD_ID,
@@ -76,11 +80,17 @@ type JiraVersionResponse = {
 type JiraSearchIssueResponse = {
   key: string;
   fields: {
+    customfield_10005?: unknown;
     customfield_10523?: unknown;
     customfield_15200?: unknown;
     customfield_16657?: unknown;
     components: { name: string }[];
     fixVersions?: { id: string | number; name: string }[];
+    issuelinks?: {
+      inwardIssue?: { key: string };
+      outwardIssue?: { key: string };
+      type?: { name?: string };
+    }[];
     issuetype: { name: string };
     status: { name: string };
     summary: string;
@@ -151,10 +161,12 @@ function toJiraIssueFixDetails(
 ): JiraIssueFixDetails {
   const {
     components,
+    customfield_10005: epicLinkField,
     customfield_10523: clinicalLeadField,
     customfield_15200: medicalClinicalSafetyCategoryField,
     customfield_16657: clinicalReviewStatusField,
     fixVersions,
+    issuelinks,
     issuetype,
     status,
     summary,
@@ -164,6 +176,7 @@ function toJiraIssueFixDetails(
     clinicalLead: getJiraFieldString(clinicalLeadField),
     clinicalReviewStatus: getJiraFieldString(clinicalReviewStatusField),
     components: components.map((component) => component.name),
+    epicKey: getJiraFieldString(epicLinkField),
     fixVersions: (fixVersions ?? []).map((fixVersion) => ({
       id: String(fixVersion.id),
       name: fixVersion.name,
@@ -173,6 +186,9 @@ function toJiraIssueFixDetails(
     medicalClinicalSafetyCategory: getJiraFieldString(
       medicalClinicalSafetyCategoryField,
     ),
+    nwrLinks: (issuelinks ?? [])
+      .filter((link) => link.type?.name === NWR_LINK_TYPE_NAME)
+      .flatMap((link) => (link.inwardIssue ?? link.outwardIssue)?.key ?? []),
     status: status.name,
     summary,
   };
@@ -411,6 +427,60 @@ export const updateJiraIssueFixVersions = async (
     const detail = await response.text();
     throw new Error(
       `Jira request failed (${response.status} ${response.statusText}) for ${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}: ${detail}`,
+    );
+  }
+};
+
+export const updateJiraIssueEpicLink = async (
+  jiraBaseUrl: string,
+  issueKey: string,
+  epicKey: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}`,
+    {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${getJiraToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields: { [EPIC_LINK_FIELD_ID]: epicKey } }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Jira request failed (${response.status} ${response.statusText}) for ${jiraBaseUrl}/rest/api/2/issue/${encodeURIComponent(issueKey)}: ${detail}`,
+    );
+  }
+};
+
+export const linkJiraEpicToNwr = async (
+  jiraBaseUrl: string,
+  epicKey: string,
+  nwrKey: string,
+): Promise<void> => {
+  // Matches `jira issue link <NWR> <EPIC> "NWR"`: the NWR is the inward issue
+  const response = await fetch(`${jiraBaseUrl}/rest/api/2/issueLink`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${getJiraToken()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inwardIssue: { key: nwrKey },
+      outwardIssue: { key: epicKey },
+      type: { name: NWR_LINK_TYPE_NAME },
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Jira request failed (${response.status} ${response.statusText}) for ${jiraBaseUrl}/rest/api/2/issueLink: ${detail}`,
     );
   }
 };

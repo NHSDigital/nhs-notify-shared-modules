@@ -4,6 +4,7 @@ import { createInterface } from 'node:readline/promises';
 
 import { parseCliArgs } from './args';
 import { compareRelease } from './compare';
+import { checkEpics, getEpicKeysToResolve } from './epics';
 import {
   applyCommitIssueKeyMappings,
   collectCommitsForTags,
@@ -23,9 +24,11 @@ import {
 import {
   fetchJiraIssues,
   fetchJiraIssuesByKeys,
+  linkJiraEpicToNwr,
   listJiraVersions,
   resolveJiraVersions,
   updateJiraIssueClinicalReviewStatus,
+  updateJiraIssueEpicLink,
   updateJiraIssueFixVersions,
 } from './jira';
 import {
@@ -34,6 +37,7 @@ import {
   renderReport,
 } from './report';
 import type {
+  EpicCheckResult,
   FixProposal,
   JiraIssue,
   JiraIssueFixDetails,
@@ -86,10 +90,14 @@ const formatComparisonBaseSummary = (gitTags: SelectedGitTag[]): string =>
 const formatJiraVersionSummary = (jiraVersions: JiraVersion[]): string =>
   jiraVersions.map((version) => `${version.name} (${version.id})`).join(', ');
 
+const FIX_ACTION_LABELS: Record<string, string> = {
+  'assign-epic': 'epic assignment',
+  'clinical-review-not-needed': 'clinical review status',
+  'link-nwr': 'NWR link',
+};
+
 const getFixActionLabel = (fixAction: string): string =>
-  fixAction === 'clinical-review-not-needed'
-    ? 'clinical review status'
-    : 'fixVersion';
+  FIX_ACTION_LABELS[fixAction] ?? 'fixVersion';
 
 const formatFixVersions = (
   fixVersions: JiraIssueFixDetails['fixVersions'],
@@ -356,12 +364,21 @@ const getOutsideReleaseIssueKeys = (
 const buildFixProposals = (
   fixAction: NonNullable<ReturnType<typeof parseCliArgs>['fixAction']>,
   issues: JiraIssueFixDetails[],
-  component: string,
+  component: string | undefined,
   targetVersion: JiraVersion,
+  nwrKey: string,
 ): FixProposal[] => {
   const componentIssues = issues
-    .filter((issue) => issue.components.includes(component))
+    .filter((issue) => !component || issue.components.includes(component))
     .toSorted((left, right) => left.key.localeCompare(right.key));
+
+  if (fixAction === 'link-nwr') {
+    return componentIssues.map((issue) => ({
+      currentValueSummary: 'no NWR link',
+      issue,
+      targetValueSummary: `linked to ${nwrKey}`,
+    }));
+  }
 
   if (fixAction === 'clinical-review-not-needed') {
     return componentIssues
@@ -428,9 +445,18 @@ const confirmFixApplication = async (
 const buildFixCandidateIssues = async (
   fixAction: NonNullable<ReturnType<typeof parseCliArgs>['fixAction']>,
   comparison: ReturnType<typeof compareRelease>,
+  epicCheck: EpicCheckResult,
   jiraBaseUrl: string,
   jiraProject: string,
 ): Promise<JiraIssueFixDetails[]> => {
+  if (fixAction === 'link-nwr') {
+    return epicCheck.epicsWithNwrProblems.flatMap(({ epic, problem }) =>
+      epic && problem === 'no-nwr-link'
+        ? [{ ...epic, fixVersions: epic.fixVersions ?? [] }]
+        : [],
+    );
+  }
+
   if (fixAction === 'clinical-review-not-needed') {
     return dedupeIssuesByKey([
       ...comparison.jiraIssuesMissingClinicalSafetyCategory,
@@ -453,12 +479,98 @@ const buildFixCandidateIssues = async (
   );
 };
 
+type FixApplyContext = {
+  epicKey?: string;
+  jiraVersion: JiraVersion;
+  nwrKey: string;
+};
+
+const buildAssignEpicProposals = async ({
+  epicCheck,
+  epicKey,
+  jiraBaseUrl,
+  jiraIssues,
+  jiraProject,
+  ticketKeys,
+}: {
+  epicCheck: EpicCheckResult;
+  epicKey: string;
+  jiraBaseUrl: string;
+  jiraIssues: JiraIssue[];
+  jiraProject: string;
+  ticketKeys: string[];
+}): Promise<FixProposal[]> => {
+  const knownIssues = new Map<string, JiraIssue>([
+    ...jiraIssues.map((issue): [string, JiraIssue] => [issue.key, issue]),
+    ...epicCheck.epicsInUse.flatMap(({ epic }): [string, JiraIssue][] =>
+      epic ? [[epic.key, epic]] : [],
+    ),
+  ]);
+  const unknownKeys = [epicKey, ...ticketKeys].filter(
+    (key) => !knownIssues.has(key),
+  );
+
+  for (const issue of await fetchJiraIssuesByKeys(
+    jiraBaseUrl,
+    jiraProject,
+    unknownKeys,
+  )) {
+    knownIssues.set(issue.key, issue);
+  }
+
+  const epic = knownIssues.get(epicKey);
+  if (epic?.issueType !== 'Epic') {
+    throw new Error(
+      epic
+        ? `${epicKey} is a ${epic.issueType}, not an Epic.`
+        : `Epic ${epicKey} was not found in Jira project ${jiraProject}.`,
+    );
+  }
+
+  const missingKeys = ticketKeys.filter((key) => !knownIssues.has(key));
+  if (missingKeys.length > 0) {
+    throw new Error(
+      `Tickets not found in Jira project ${jiraProject}: ${missingKeys.join(', ')}`,
+    );
+  }
+
+  return ticketKeys.flatMap((key) => {
+    const issue = knownIssues.get(key)!;
+
+    if (issue.issueType === 'Epic' || issue.issueType === 'Sub-task') {
+      throw new Error(
+        `${key} is a ${issue.issueType} and cannot be assigned to an epic.`,
+      );
+    }
+
+    return issue.epicKey === epicKey
+      ? []
+      : [
+          {
+            currentValueSummary: issue.epicKey || 'no epic',
+            issue: { ...issue, fixVersions: issue.fixVersions ?? [] },
+            targetValueSummary: epicKey,
+          },
+        ];
+  });
+};
+
 const applyFixProposal = async (
   jiraBaseUrl: string,
   fixAction: NonNullable<ReturnType<typeof parseCliArgs>['fixAction']>,
   proposal: FixProposal,
-  jiraVersion: JiraVersion,
+  { epicKey, jiraVersion, nwrKey }: FixApplyContext,
 ): Promise<void> => {
+  if (fixAction === 'assign-epic') {
+    await updateJiraIssueEpicLink(jiraBaseUrl, proposal.issue.key, epicKey!);
+    return;
+  }
+
+  if (fixAction === 'link-nwr') {
+    await linkJiraEpicToNwr(jiraBaseUrl, proposal.issue.key, nwrKey);
+    return;
+  }
+
   if (fixAction === 'clinical-review-not-needed') {
     await updateJiraIssueClinicalReviewStatus(jiraBaseUrl, proposal.issue.key);
     return;
@@ -473,6 +585,7 @@ const applyFixProposal = async (
 
 const maybeWriteComparisonReport = async ({
   comparison,
+  epicCheck,
   fixAction,
   fixComponent,
   fixProposals,
@@ -489,6 +602,7 @@ const maybeWriteComparisonReport = async ({
   totalJiraIssues,
 }: {
   comparison: ReturnType<typeof compareRelease>;
+  epicCheck: EpicCheckResult;
   fixAction?: NonNullable<ReturnType<typeof parseCliArgs>['fixAction']>;
   fixComponent?: string;
   fixProposals?: FixProposal[];
@@ -517,6 +631,7 @@ const maybeWriteComparisonReport = async ({
   );
   const report = renderReport({
     comparison,
+    epicCheck,
     fixAction,
     fixComponent,
     fixProposals,
@@ -542,17 +657,16 @@ const maybeApplyFixProposals = async ({
   fixComponent,
   fixProposals,
   jiraBaseUrl,
-  jiraVersion,
   yes,
+  ...applyContext
 }: {
   commitsByIssueKey: ReturnType<typeof compareRelease>['commitsByIssueKey'];
   fixAction?: NonNullable<ReturnType<typeof parseCliArgs>['fixAction']>;
   fixComponent?: string;
   fixProposals?: FixProposal[];
   jiraBaseUrl: string;
-  jiraVersion: JiraVersion;
   yes: boolean;
-}): Promise<void> => {
+} & FixApplyContext): Promise<void> => {
   if (!fixAction || !fixProposals) {
     return;
   }
@@ -560,7 +674,7 @@ const maybeApplyFixProposals = async ({
   const fixActionLabel = getFixActionLabel(fixAction);
   const proposalSection = renderFixProposalTerminalSection(
     fixActionLabel,
-    fixComponent!,
+    fixComponent,
     fixProposals,
     commitsByIssueKey,
   );
@@ -578,7 +692,7 @@ const maybeApplyFixProposals = async ({
   }
 
   for (const proposal of fixProposals) {
-    await applyFixProposal(jiraBaseUrl, fixAction, proposal, jiraVersion);
+    await applyFixProposal(jiraBaseUrl, fixAction, proposal, applyContext);
   }
 
   process.stdout.write(
@@ -622,6 +736,16 @@ export const run = async (argv: string[]): Promise<void> => {
     jiraIssuesByVersion.flat(),
     (issue: JiraIssue) => issue.key,
   );
+  const resolvedEpics = await fetchJiraIssuesByKeys(
+    options.jiraBaseUrl,
+    options.jiraProject,
+    getEpicKeysToResolve(jiraIssues),
+  );
+  const epicCheck = checkEpics({
+    issues: jiraIssues,
+    nwrKey: options.nwrKey,
+    resolvedEpics,
+  });
   const releaseNotes = applyCommitMappingsToReleaseNotes(
     await readReleaseNotesForTags(
       repoRoot,
@@ -646,8 +770,20 @@ export const run = async (argv: string[]): Promise<void> => {
   );
   let fixProposals: FixProposal[] | undefined;
 
-  if (options.fixAction) {
-    if (selectedGitTags.length !== 1 || jiraVersions.length !== 1) {
+  if (options.fixAction === 'assign-epic') {
+    fixProposals = await buildAssignEpicProposals({
+      epicCheck,
+      epicKey: options.epicKey!,
+      jiraBaseUrl: options.jiraBaseUrl,
+      jiraIssues,
+      jiraProject: options.jiraProject,
+      ticketKeys: options.ticketKeys,
+    });
+  } else if (options.fixAction) {
+    if (
+      options.fixAction !== 'link-nwr' &&
+      (selectedGitTags.length !== 1 || jiraVersions.length !== 1)
+    ) {
       throw new Error(
         'Option --fix currently requires exactly one resolved git tag and one resolved Jira version.',
       );
@@ -656,6 +792,7 @@ export const run = async (argv: string[]): Promise<void> => {
     const fixCandidateIssues = await buildFixCandidateIssues(
       options.fixAction,
       comparison,
+      epicCheck,
       options.jiraBaseUrl,
       options.jiraProject,
     );
@@ -663,13 +800,15 @@ export const run = async (argv: string[]): Promise<void> => {
     fixProposals = buildFixProposals(
       options.fixAction,
       fixCandidateIssues,
-      options.fixComponent!,
+      options.fixComponent,
       jiraVersions[0],
+      options.nwrKey,
     );
   }
 
   const outputPath = await maybeWriteComparisonReport({
     comparison,
+    epicCheck,
     fixAction: options.fixAction,
     fixComponent: options.fixComponent,
     fixProposals,
@@ -695,6 +834,8 @@ export const run = async (argv: string[]): Promise<void> => {
     fixProposals,
     jiraBaseUrl: options.jiraBaseUrl,
     jiraVersion: jiraVersions[0],
+    nwrKey: options.nwrKey,
+    epicKey: options.epicKey,
     yes: options.yes,
   });
 
@@ -716,6 +857,8 @@ export const run = async (argv: string[]): Promise<void> => {
     `Referenced Jira issues not done: ${comparison.releaseReferencedIssuesNotDone.length}`,
     `Jira issues missing clinical safety category: ${comparison.jiraIssuesMissingClinicalSafetyCategory.length}`,
     `Jira issues missing clinical lead: ${comparison.jiraIssuesMissingClinicalLead.length}`,
+    `Jira issues not assigned to an epic: ${epicCheck.issuesWithoutEpic.length}`,
+    `Epics not linked to ${epicCheck.nwrKey}: ${epicCheck.epicsWithNwrProblems.length}`,
     `Commits without Jira matches: ${comparison.commitsWithoutMatches.length}`,
     ...(releaseNotes.source === 'none'
       ? []

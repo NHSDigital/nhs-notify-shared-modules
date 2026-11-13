@@ -39,6 +39,8 @@ describe('parseCliArgs', () => {
       previousTag: '0.0.9',
       output: 'out.txt',
       releaseNotesSource: 'tag',
+      nwrKey: 'NWR-2198',
+      ticketKeys: [],
       yes: false,
     });
   });
@@ -65,6 +67,8 @@ describe('parseCliArgs', () => {
       previousTag: undefined,
       output: undefined,
       releaseNotesSource: 'auto',
+      nwrKey: 'NWR-2198',
+      ticketKeys: [],
       yes: false,
     });
   });
@@ -91,6 +95,8 @@ describe('parseCliArgs', () => {
       previousTag: undefined,
       output: undefined,
       releaseNotesSource: 'auto',
+      nwrKey: 'NWR-2198',
+      ticketKeys: [],
       yes: false,
     });
   });
@@ -122,6 +128,8 @@ describe('parseCliArgs', () => {
       previousTag: undefined,
       output: undefined,
       releaseNotesSource: 'auto',
+      nwrKey: 'NWR-2198',
+      ticketKeys: [],
       yes: true,
     });
   });
@@ -150,6 +158,8 @@ describe('parseCliArgs', () => {
       previousTag: undefined,
       output: undefined,
       releaseNotesSource: 'github',
+      nwrKey: 'NWR-2198',
+      ticketKeys: [],
       yes: false,
     });
   });
@@ -277,5 +287,112 @@ describe('parseCliArgs', () => {
         'Platform',
       ]),
     ).toThrow('Option --fix-component requires --fix');
+  });
+
+  it('accepts a custom NWR key', () => {
+    expect(
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--nwr-key',
+        ' NWR-1 ',
+      ]).nwrKey,
+    ).toBe('NWR-1');
+  });
+
+  it('accepts the link-nwr fix action', () => {
+    expect(
+      parseCliArgs([
+        '--repo',
+        '../repo',
+        '--git-tag',
+        '0.1.0',
+        '--jira-version',
+        '71260',
+        '--fix',
+        'link-nwr',
+        '--fix-component',
+        'Platform',
+      ]).fixAction,
+    ).toBe('link-nwr');
+  });
+
+  it('does not require --fix-component for link-nwr', () => {
+    const options = parseCliArgs([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'link-nwr',
+    ]);
+
+    expect(options.fixAction).toBe('link-nwr');
+    expect(options.fixComponent).toBeUndefined();
+  });
+
+  it('parses assign-epic tickets and epic', () => {
+    const options = parseCliArgs([
+      '--repo',
+      '../repo',
+      '--git-tag',
+      '0.1.0',
+      '--jira-version',
+      '71260',
+      '--fix',
+      'assign-epic',
+      '--tickets',
+      'CCM-1, CCM-2,CCM-1',
+      '--epic',
+      'CCM-10',
+    ]);
+
+    expect(options.fixAction).toBe('assign-epic');
+    expect(options.ticketKeys).toEqual(['CCM-1', 'CCM-2']);
+    expect(options.epicKey).toBe('CCM-10');
+  });
+
+  const assignEpicBase = [
+    '--repo',
+    '../repo',
+    '--git-tag',
+    '0.1.0',
+    '--jira-version',
+    '71260',
+  ];
+
+  it.each([
+    [['--fix', 'assign-epic', '--tickets', 'CCM-1'], '--epic'],
+    [['--fix', 'assign-epic', '--epic', 'CCM-10'], '--tickets'],
+    [
+      [
+        '--fix',
+        'assign-epic',
+        '--tickets',
+        'CCM-1',
+        '--epic',
+        'CCM-10',
+        '--fix-component',
+        'Platform',
+      ],
+      'cannot be used',
+    ],
+    [['--epic', 'CCM-10', '--tickets', 'CCM-1'], 'require --fix assign-epic'],
+    [
+      ['--fix', 'assign-epic', '--tickets', 'CCM-1', '--epic', 'CCM-XXXXX'],
+      'Invalid --epic value "CCM-XXXXX"',
+    ],
+    [
+      ['--fix', 'assign-epic', '--tickets', 'nope', '--epic', 'CCM-10'],
+      'Invalid --tickets value "nope"',
+    ],
+  ])('rejects invalid assign-epic options %j', (extra, message) => {
+    expect(() => parseCliArgs([...assignEpicBase, ...extra])).toThrow(message);
   });
 });

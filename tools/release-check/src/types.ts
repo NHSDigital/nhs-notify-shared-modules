@@ -2,10 +2,12 @@ export type JiraIssue = {
   clinicalLead: string;
   clinicalReviewStatus: string;
   components: string[];
+  epicKey?: string;
   fixVersions?: JiraFixVersion[];
   issueType: string;
   key: string;
   medicalClinicalSafetyCategory: string;
+  nwrLinks?: string[];
   status: string;
   summary: string;
 };
@@ -81,22 +83,50 @@ export type ComparisonResult = {
   releaseNotesIssueKeysOutsideRelease: string[];
 };
 
+export type EpicNwrProblem =
+  'epic-not-found' | 'not-an-epic' | 'no-nwr-link' | 'wrong-nwr-link';
+
+export type EpicNwrFinding = {
+  epic?: JiraIssue;
+  epicKey: string;
+  linkedNwrKeys: string[];
+  problem: EpicNwrProblem;
+  referencedBy: string[];
+};
+
+export type EpicUsage = {
+  epic?: JiraIssue;
+  epicKey: string;
+  issueKeys: string[];
+};
+
+export type EpicCheckResult = {
+  epicsInUse: EpicUsage[];
+  epicsWithNwrProblems: EpicNwrFinding[];
+  issuesWithoutEpic: JiraIssue[];
+  nwrKey: string;
+};
+
 export type CliOptions = {
   commitMappingFile?: string;
+  epicKey?: string;
   fixAction?: FixAction;
   fixComponent?: string;
   gitTagSelectors: string[];
   jiraBaseUrl: string;
   jiraProject: string;
   jiraVersionSelectors: string[];
+  nwrKey: string;
   output?: string;
   previousTag?: string;
   releaseNotesSource: ReleaseNotesSource;
   repo: string;
+  ticketKeys: string[];
   yes: boolean;
 };
 
-export type FixAction = 'fix-version' | 'clinical-review-not-needed';
+export type FixAction =
+  'fix-version' | 'clinical-review-not-needed' | 'link-nwr' | 'assign-epic';
 
 export type FixProposal = {
   currentValueSummary: string;

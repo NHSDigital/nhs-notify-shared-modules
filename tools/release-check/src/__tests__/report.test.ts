@@ -137,6 +137,154 @@ describe('renderReport', () => {
     );
   });
 
+  it('renders epic and NWR check sections when an epic check is provided', () => {
+    const story = {
+      clinicalLead: '',
+      clinicalReviewStatus: '',
+      components: ['Platform'],
+      issueType: 'Story',
+      key: 'CCM-1',
+      medicalClinicalSafetyCategory: '',
+      status: 'Done',
+      summary: 'Orphan story',
+    };
+    const report = renderReport({
+      comparison,
+      epicCheck: {
+        epicsInUse: [],
+        epicsWithNwrProblems: [
+          {
+            epicKey: 'CCM-2',
+            linkedNwrKeys: [],
+            problem: 'no-nwr-link',
+            referencedBy: ['CCM-3'],
+          },
+          {
+            epicKey: 'CCM-4',
+            linkedNwrKeys: ['NWR-1'],
+            problem: 'wrong-nwr-link',
+            referencedBy: [],
+          },
+        ],
+        issuesWithoutEpic: [story],
+        nwrKey: 'NWR-2198',
+      },
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
+      jiraProject: 'CCM',
+      jiraVersions: [jiraVersion],
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes,
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 16,
+    });
+
+    expect(report).toContain('- Jira issues not assigned to an epic: 1');
+    expect(report).toContain('- Epics not linked to NWR-2198: 2');
+    expect(report).toContain('## Jira issues not assigned to an epic');
+    expect(report).toContain('Orphan story');
+    expect(report).toContain('## Epics not linked to NWR-2198');
+    expect(report).toContain('No NWR link');
+    expect(report).toContain('Linked to a different NWR (NWR-1)');
+    expect(report).toContain('epic is in the release');
+  });
+
+  it('renders a single link-nwr example, the epics in use and an assign-epic example', () => {
+    const epic = {
+      clinicalLead: '',
+      clinicalReviewStatus: '',
+      components: ['Platform'],
+      issueType: 'Epic',
+      key: 'CCM-2',
+      medicalClinicalSafetyCategory: '',
+      status: 'In Progress',
+      summary: 'Epic without NWR',
+    };
+    const orphan = {
+      ...epic,
+      issueType: 'Story',
+      key: 'CCM-5',
+      summary: 'Orphan story',
+    };
+    const epicCheck = {
+      epicsInUse: [{ epic, epicKey: 'CCM-2', issueKeys: ['CCM-3', 'CCM-4'] }],
+      epicsWithNwrProblems: [
+        {
+          epic,
+          epicKey: 'CCM-2',
+          linkedNwrKeys: [],
+          problem: 'no-nwr-link' as const,
+          referencedBy: ['CCM-3', 'CCM-4'],
+        },
+      ],
+      issuesWithoutEpic: [orphan],
+      nwrKey: 'NWR-2198',
+    };
+    const baseOptions = {
+      comparison,
+      epicCheck,
+      jiraProject: 'CCM',
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes,
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 16,
+    };
+
+    const singleRelease = renderReport({
+      ...baseOptions,
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
+      jiraVersions: [jiraVersion],
+    });
+    expect(singleRelease).toContain('## Epics used by Jira tickets');
+    expect(singleRelease).toContain('Epic without NWR');
+    expect(singleRelease).toContain('### Example link-nwr command');
+    expect(singleRelease).toContain(
+      "--git-tag '0.1.0' --jira-version 'client-config-0.1.0' --fix link-nwr --nwr-key 'NWR-2198'",
+    );
+    expect(singleRelease).toContain('### Example assign-epic command');
+    expect(singleRelease).toContain(
+      "--fix assign-epic --tickets 'CCM-5' --epic 'CCM-XXXXX'",
+    );
+
+    const multiRelease = renderReport({
+      ...baseOptions,
+      gitTags: [
+        { gitTag: '0.1.0', previousTag: null },
+        { gitTag: '0.2.0', previousTag: '0.1.0' },
+      ],
+      jiraVersions: [jiraVersion, { ...jiraVersion, id: '2', name: 'other' }],
+    });
+    expect(multiRelease).toContain(
+      "--git-tags '0.1.0,0.2.0' --jira-versions 'client-config-0.1.0,other'",
+    );
+  });
+
+  it('reports none when every ticket has an epic linked to the NWR', () => {
+    const report = renderReport({
+      comparison,
+      epicCheck: {
+        epicsInUse: [],
+        epicsWithNwrProblems: [],
+        issuesWithoutEpic: [],
+        nwrKey: 'NWR-2198',
+      },
+      gitTags: [{ gitTag: '0.1.0', previousTag: null }],
+      jiraProject: 'CCM',
+      jiraVersions: [jiraVersion],
+      outsideReleaseIssuesByKey: new Map(),
+      releaseNotes,
+      repoName: 'nhs-notify-client-config',
+      repoRoot: '/repos/nhs-notify-client-config',
+      totalJiraIssues: 16,
+    });
+
+    expect(report).toContain(
+      '## Jira issues not assigned to an epic\n\n- none',
+    );
+    expect(report).toContain('## Epics not linked to NWR-2198\n\n- none');
+  });
+
   it('omits release-note comparison sections when no release notes were available', () => {
     const report = renderReport({
       comparison: {
