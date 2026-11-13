@@ -6,6 +6,7 @@ import type {
   JiraVersion,
   MatchedCommit,
   ReleaseNotes,
+  SelectedGitTag,
 } from './types';
 
 const formatIssue = (
@@ -38,54 +39,100 @@ const renderSection = (title: string, lines: string[]): string => {
 const sanitizeFileSegment = (value: string): string =>
   value.replaceAll(/[^A-Za-z0-9._-]+/g, '-');
 
+const summarizeGitTagsForPath = (gitTags: string[]): string =>
+  gitTags.length === 1
+    ? sanitizeFileSegment(gitTags[0])
+    : `${sanitizeFileSegment(gitTags[0])}-to-${sanitizeFileSegment(gitTags.at(-1) ?? gitTags[0])}-${gitTags.length}-tags`;
+
+const formatGitTagSummary = (gitTags: SelectedGitTag[]): string =>
+  gitTags.map(({ gitTag }) => gitTag).join(', ');
+
+const formatComparisonBaseSummary = (gitTags: SelectedGitTag[]): string =>
+  gitTags
+    .map(
+      ({ gitTag, previousTag }) =>
+        `${gitTag} <- ${previousTag ?? 'repository start'}`,
+    )
+    .join('; ');
+
+const formatJiraVersion = (jiraVersion: JiraVersion): string =>
+  `${jiraVersion.name} (${jiraVersion.id})`;
+
+const formatJiraReleaseDates = (jiraVersions: JiraVersion[]): string =>
+  jiraVersions
+    .map((version) => {
+      const releaseDate = version.releaseDate ?? 'unknown';
+      return `${version.name}: ${releaseDate}`;
+    })
+    .join('; ');
+
 export const defaultReportPath = (
   repoName: string,
-  gitTag: string,
+  gitTags: string[],
   cwd: string = process.cwd(),
 ): string =>
   path.join(
     cwd,
     '.tmp',
     'release-check',
-    `${sanitizeFileSegment(repoName)}-${sanitizeFileSegment(gitTag)}.txt`,
+    `${sanitizeFileSegment(repoName)}-${summarizeGitTagsForPath(gitTags)}.txt`,
   );
 
 export const renderReport = ({
   comparison,
-  gitTag,
+  gitTags,
   jiraProject,
-  jiraVersion,
-  previousTag,
+  jiraVersions,
   releaseNotes,
   repoName,
   repoRoot,
   totalJiraIssues,
 }: {
   comparison: ComparisonResult;
-  gitTag: string;
+  gitTags: SelectedGitTag[];
   jiraProject: string;
-  jiraVersion: JiraVersion;
-  previousTag: string | null;
+  jiraVersions: JiraVersion[];
   releaseNotes: ReleaseNotes;
   repoName: string;
   repoRoot: string;
   totalJiraIssues: number;
 }): string => {
   const { warnings } = releaseNotes;
+  const singleGitTag = gitTags.length === 1;
+  const singleJiraVersion = jiraVersions.length === 1;
+  const jiraScopeLabel = singleJiraVersion
+    ? 'the release'
+    : 'the selected releases';
+  const jiraVersionScopeLabel = singleJiraVersion
+    ? 'the Jira release'
+    : 'the selected Jira versions';
   const sections = [
     'Release check report',
     `Repository: ${repoName}`,
     `Repository root: ${repoRoot}`,
-    `Git tag: ${gitTag}`,
-    `Comparison base: ${previousTag ?? 'repository start'}`,
+    singleGitTag
+      ? `Git tag: ${gitTags[0].gitTag}`
+      : `Git tags selected (${gitTags.length}): ${formatGitTagSummary(gitTags)}`,
+    singleGitTag
+      ? `Comparison base: ${gitTags[0].previousTag ?? 'repository start'}`
+      : `Comparison bases: ${formatComparisonBaseSummary(gitTags)}`,
     `Jira project: ${jiraProject}`,
-    `Jira version: ${jiraVersion.name} (${jiraVersion.id})`,
-    `Jira release date: ${jiraVersion.releaseDate ?? 'unknown'}`,
-    `Jira version released: ${jiraVersion.released ? 'yes' : 'no'}`,
+    singleJiraVersion
+      ? `Jira version: ${formatJiraVersion(jiraVersions[0])}`
+      : `Jira versions selected (${jiraVersions.length}): ${jiraVersions.map((jiraVersion) => formatJiraVersion(jiraVersion)).join(', ')}`,
+    ...(singleJiraVersion
+      ? [
+          `Jira release date: ${jiraVersions[0].releaseDate ?? 'unknown'}`,
+          `Jira version released: ${jiraVersions[0].released ? 'yes' : 'no'}`,
+        ]
+      : [
+          `Jira release dates: ${formatJiraReleaseDates(jiraVersions)}`,
+          `Jira versions released: ${jiraVersions.filter((version) => version.released).length}/${jiraVersions.length}`,
+        ]),
     `Release notes source: ${releaseNotes.source}`,
     '',
     'Summary',
-    `- Jira issues in release: ${totalJiraIssues}`,
+    `- Jira issues in ${singleJiraVersion ? 'release' : 'selected releases'}: ${totalJiraIssues}`,
     `- Jira issues referenced in git: ${comparison.gitReferencedIssueKeys.length}`,
     `- Jira issues referenced in release notes: ${comparison.notesReferencedIssueKeys.length}`,
     `- Jira issues missing from git: ${comparison.jiraIssuesMissingFromGit.length}`,
@@ -105,13 +152,13 @@ export const renderReport = ({
 
   sections.push(
     renderSection(
-      'Jira issues in the release with no matching git reference',
+      `Jira issues in ${jiraScopeLabel} with no matching git reference`,
       comparison.jiraIssuesMissingFromGit.map((issue) =>
         formatIssue(issue, comparison.commitsByIssueKey),
       ),
     ),
     renderSection(
-      'Jira issues in the release with no matching release-note reference',
+      `Jira issues in ${jiraScopeLabel} with no matching release-note reference`,
       comparison.jiraIssuesMissingFromReleaseNotes.map((issue) =>
         formatIssue(issue, comparison.commitsByIssueKey),
       ),
@@ -135,14 +182,14 @@ export const renderReport = ({
       ),
     ),
     renderSection(
-      'Git-referenced Jira issue keys missing from the Jira release',
+      `Git-referenced Jira issue keys missing from ${jiraVersionScopeLabel}`,
       comparison.commitsWithIssueKeysOutsideRelease.map(
         ({ commit, missingKeys }) =>
           `${formatCommit(commit)} | missing keys: ${missingKeys.join(', ')}`,
       ),
     ),
     renderSection(
-      'Release-note Jira issue keys missing from the Jira release',
+      `Release-note Jira issue keys missing from ${jiraVersionScopeLabel}`,
       comparison.releaseNotesIssueKeysOutsideRelease,
     ),
     renderSection(
