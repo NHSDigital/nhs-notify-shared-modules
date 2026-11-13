@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "ignoreDeprecations": "6.0",
+    "isolatedModules": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "paths": {
+      "src/*": [
+        "./src/*"
+      ]
+    },
+    "rootDir": "src",
+    "types": [
+      "node"
+    ],
+    "verbatimModuleSyntax": false
+  },
+  "exclude": [
+    "src/**/__tests__/**"
+  ],
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "include": [
+    "src/**/*.ts"
+  ]
+}

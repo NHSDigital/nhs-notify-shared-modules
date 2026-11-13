@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "declaration": true,
+    "isolatedModules": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "paths": {
+      "src/*": [
+        "./src/*"
+      ]
+    },
+    "rootDir": ".",
+    "types": [
+      "jest",
+      "node"
+    ],
+    "verbatimModuleSyntax": false
+  },
+  "exclude": [
+    "dist"
+  ],
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "include": [
+    "src/**/*",
+    "./jest.config.ts"
+  ]
+}
