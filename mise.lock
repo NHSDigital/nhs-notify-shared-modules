@@ -140,18 +140,3 @@ url_api = "https://api.github.com/repos/terraform-docs/terraform-docs/releases/a
 checksum = "sha256:f6b114f4b032f3f9202ab6c23bfd28c3c8e68aeeb8a8f12fc118bf2073081d71"
 url = "https://github.com/terraform-docs/terraform-docs/releases/download/v0.24.0/terraform-docs-v0.24.0-darwin-arm64.tar.gz"
 url_api = "https://api.github.com/repos/terraform-docs/terraform-docs/releases/assets/416956237"
-
-[[tools.vale]]
-version = "3.6.0"
-backend = "aqua:vale-cli/vale"
-specifiers = ["3.6.0"]
-
-[tools.vale."platforms.linux-x64"]
-checksum = "sha256:d27cd03f920202a7be5bba3fd9e784a22fe8b33f838911853588ce3ce594a25d"
-url = "https://github.com/vale-cli/vale/releases/download/v3.6.0/vale_3.6.0_Linux_64-bit.tar.gz"
-url_api = "https://api.github.com/repos/vale-cli/vale/releases/assets/174588941"
-
-[tools.vale."platforms.macos-arm64"]
-checksum = "sha256:df71e5fcbefca9413479737fa946e105249ec73e2a328ef1784e5558d92414b0"
-url = "https://github.com/vale-cli/vale/releases/download/v3.6.0/vale_3.6.0_macOS_arm64.tar.gz"
-url_api = "https://api.github.com/repos/vale-cli/vale/releases/assets/174588939"
