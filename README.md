@@ -9,7 +9,44 @@ This repository provides shared resources to maintain consistency, security, and
 
 ## Local setup
 
-Install mise using the instructions for your operating system, activate it in your shell, and run `make config`. This installs the versions locked in `mise.toml` and `mise.lock` and configures the repository Git hooks with prek.
+### Prerequisites
+
+Local development requires Git, mise, GNU make 3.82 or later, GNU sed, GNU grep, coreutils, and binutils. Docker is needed for container-based tests.
+
+### macOS
+
+Install the host tools with [Homebrew](https://brew.sh/):
+
+```shell
+brew install mise make gnu-sed grep coreutils binutils
+```
+
+Follow Homebrew's instructions to add GNU make and the GNU utilities to your `PATH`.
+
+### Ubuntu or Debian on WSL
+
+Run these commands inside your Linux distribution, not in PowerShell. Install mise using the [official Linux instructions](https://mise.jdx.dev/installing-mise.html):
+
+```shell
+sudo apt update
+sudo apt install -y build-essential make gawk sed grep coreutils binutils curl
+```
+
+For container-based tests, use Docker Desktop with WSL integration or install a compatible runtime in the distribution.
+
+### Configuration
+
+Activate mise in your shell. For zsh, add this to `~/.zshrc`; for Bash, add it to `~/.bashrc`:
+
+```zsh
+eval "$(mise activate zsh)"
+```
+
+```bash
+eval "$(mise activate bash)"
+```
+
+Restart the terminal or reload your shell configuration, then run `make config`. This installs the versions locked in `mise.toml` and `mise.lock` and configures the repository Git hooks with prek.
 
 Keep `asdf` installed while working in repositories that have not migrated. Personal shell configuration is user-managed; this repository does not edit host shell configuration. Z shell users who work across both types of repository can add this optional function to `~/.zshrc`:
 
