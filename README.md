@@ -46,13 +46,17 @@ eval "$(mise activate zsh)"
 eval "$(mise activate bash)"
 ```
 
-Restart the terminal or reload your shell configuration. From the repository root, review and trust this repository's mise configuration once:
+Restart the terminal or reload your shell configuration. From the repository root, review `mise.toml` and run `mise trust` once if mise reports that the configuration is untrusted. Trust is stored locally and does not change repository files:
 
 ```shell
 mise trust
 ```
 
-After changing `mise.toml`, run `mise lock` and review and commit the updated `mise.lock`. Then run `make config` to install the locked tools and configure the repository Git hooks with prek. `make config` does not update the lockfile.
+Run `make config` to install the locked tools and configure the repository Git hooks with prek.
+
+### Updating pinned tool versions
+
+After changing `mise.toml`, run `mise lock`, review the updated `mise.lock`, and commit both files. `make config` uses locked installs and does not update the lockfile.
 
 Keep `asdf` installed while working in repositories that have not migrated. Personal shell configuration is user-managed; this repository does not edit host shell configuration. Z shell users who work across both types of repository can add this optional function to `~/.zshrc`:
 
