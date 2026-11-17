@@ -87,7 +87,7 @@ function test-docker-image-from-signature() {
   TOOL_VERSIONS="$test_root/.docker-versions.test" _replace-image-latest-by-specific-version || result=$?
   # Assert
   if [ "$result" -eq 0 ]; then
-    grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective || result=$?
+    grep -q "FROM python@sha256:.*" Dockerfile.effective || result=$?
   fi
   rm -rf "$test_root"
   return "$result"
@@ -101,7 +101,7 @@ function test-docker-image-from-docker-versions() {
   # Act
   _replace-image-latest-by-specific-version
   # Assert
-  grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective && return 0 || return 1
+  grep -q "FROM python@sha256:.*" Dockerfile.effective && return 0 || return 1
 }
 
 function test-docker-versions-file-precedence() {
@@ -143,18 +143,19 @@ function test-docker-legacy-tool-versions() {
     cd "$legacy_root" || exit 1
     unset TOOL_VERSIONS
     _replace-image-latest-by-specific-version
-    grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective || exit 1
+    grep -q "FROM python@sha256:.*" Dockerfile.effective || exit 1
     cp Dockerfile Dockerfile.effective
     DOCKER_VERSIONS="$legacy_root/.docker-versions" _replace-image-latest-by-specific-version
-    grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective || exit 1
+    grep -q "FROM python@sha256:.*" Dockerfile.effective || exit 1
     printf '%s\n' '# docker/python 9.9-alpine@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' > .docker-versions
     cp Dockerfile Dockerfile.effective
     _replace-image-latest-by-specific-version
-    grep -q "FROM python:9.9-alpine@sha256:aaaaaaaa" Dockerfile.effective || exit 1
+    grep -q "FROM python@sha256:aaaaaaaa" Dockerfile.effective || exit 1
     docker() {
       case "$1" in
         images) return 0 ;;
         pull | tag) return 0 ;;
+        *) return 1 ;;
       esac
     }
     name="python" docker-get-image-version-and-pull | grep -q "python:9\\.9-alpine@sha256:"
