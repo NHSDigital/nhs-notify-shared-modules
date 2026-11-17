@@ -229,7 +229,7 @@ function _replace-image-latest-by-specific-version() {
   local build_datetime=${BUILD_DATETIME:-$(date -u +'%Y-%m-%dT%H:%M:%S%z')}
 
   while IFS= read -r versions_file; do
-    [ -f "$versions_file" ] || continue
+    [[ -f "$versions_file" ]] || continue
     docker_pins+=$(grep -F 'docker/' "$versions_file" || true)
     docker_pins+=$'\n'
     if [[ "$versions_file" == *.tool-versions ]]; then
@@ -239,11 +239,11 @@ function _replace-image-latest-by-specific-version() {
   done < <(_get-docker-versions-files)
   content="${docker_pins}${legacy_tool_pins}"
   while IFS= read -r line; do
-    [ -z "$line" ] && continue
+    [[ -z "$line" ]] && continue
     line=$(echo "$line" | sed -E "s/^[[:space:]]*#[[:space:]]*//; s/[[:space:]]+#.*$//" | sed "s;docker/;;")
     name=$(echo "$line" | awk '{print $1}')
     version=$(echo "$line" | awk '{print $2}')
-    [ -n "$name" ] && [ -n "$version" ] || continue
+    [[ -n "$name" && -n "$version" ]] || continue
     sed -i "s;\(FROM .*\)${name}:latest;\1${name}:${version};g" "$dockerfile"
   done <<< "$content"
 
@@ -271,7 +271,7 @@ function _get-docker-versions-files() {
   local versions_override="${DOCKER_VERSIONS:-${TOOL_VERSIONS:-}}"
   repository_root=$(git rev-parse --show-toplevel)
 
-  if [ -n "$versions_override" ]; then
+  if [[ -n "$versions_override" ]]; then
     case "$versions_override" in
       *.docker-versions*)
         printf '%s\n' "$versions_override" "${versions_override/.docker-versions/.tool-versions}"
