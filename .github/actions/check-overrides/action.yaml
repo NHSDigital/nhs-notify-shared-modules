@@ -32,10 +32,10 @@ runs:
       uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
       with:
         token: ${{ github.token }}
-        commit-message: "remove stale pnpm overrides"
+        commit-message: "CCM-9336: Remove stale pnpm overrides"
         branch: feature/remove-stale-pnpm-overrides
         delete-branch: true
-        title: "remove stale pnpm overrides"
+        title: "CCM-9336: Remove stale pnpm overrides"
         body-path: ${{ inputs.project-dir }}/.tmp/pr-body.md
         add-paths: |
           pnpm-workspace.yaml
