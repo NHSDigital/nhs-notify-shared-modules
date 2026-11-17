@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { gte } from 'semver';
 
 import {
+  hasMatchingParentResolution,
   readResolvedVersion,
   regenerateLockfile,
   withOriginalFiles,
@@ -62,7 +63,10 @@ const runScenario = async (
       } else if (override.versionSelector) {
         resolved[override.key] =
           `no version in range "${override.versionSelector}"`;
-      } else {
+      } else if (
+        !override.parent ||
+        (await hasMatchingParentResolution(projectDir, override))
+      ) {
         failures.push({
           override,
           reason: 'package not resolved in lockfile',

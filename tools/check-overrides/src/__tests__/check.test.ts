@@ -11,6 +11,7 @@ jest.mock('src/resolve', () => {
     ...actual,
     regenerateLockfile: jest.fn().mockResolvedValue(undefined),
     readResolvedVersion: jest.fn(),
+    hasMatchingParentResolution: jest.fn().mockResolvedValue(true),
     withOriginalFiles: jest.fn(
       async (_dir: string, fn: () => Promise<unknown>) => fn(),
     ),
@@ -80,6 +81,20 @@ describe('checkChain', () => {
     if (result.status === 'needed') {
       expect(result.failures[0].reason).toContain('not resolved');
     }
+  });
+
+  it('returns removable when no parent version matches a parent-only selector', async () => {
+    const chain = buildSingleChain('qar@1>zoo', '^2.0.0');
+    (resolve.readResolvedVersion as jest.Mock).mockResolvedValue(undefined);
+    (resolve.hasMatchingParentResolution as jest.Mock).mockResolvedValue(false);
+
+    const result = await checkChain('/proj', chain);
+
+    expect(result.status).toBe('removable');
+    expect(resolve.hasMatchingParentResolution).toHaveBeenCalledWith(
+      '/proj',
+      chain.overrides[0],
+    );
   });
 
   it('returns removable when no version is in the version selector range', async () => {

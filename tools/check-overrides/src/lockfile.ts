@@ -8,6 +8,7 @@ const LOCKFILE = 'pnpm-lock.yaml';
 
 type Snapshot = {
   dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
 };
 
 type Lockfile = {
@@ -42,6 +43,27 @@ const parseSnapshotKey = (
   };
 };
 
+const matchesParentSnapshot = (
+  key: string,
+  parentName: string,
+  parentVersionSelector?: string,
+): boolean => {
+  const parent = parseSnapshotKey(key);
+  return (
+    parent?.name === parentName &&
+    (parentVersionSelector === undefined ||
+      satisfies(parent.version, parentVersionSelector))
+  );
+};
+
+const findDependencyVersion = (
+  dependencies: Record<string, string> | undefined,
+  packageName: string,
+): string | undefined =>
+  Object.entries(dependencies ?? {}).find(
+    ([name]) => name === packageName,
+  )?.[1];
+
 export const findGlobalResolvedVersions = (
   lockfile: Lockfile,
   packageName: string,
@@ -54,6 +76,15 @@ export const findGlobalResolvedVersions = (
     )
     .map((parsed) => parsed.version);
 
+export const hasScopedParent = (
+  lockfile: Lockfile,
+  parentName: string,
+  parentVersionSelector?: string,
+): boolean =>
+  Object.keys(lockfile.snapshots ?? {}).some((key) =>
+    matchesParentSnapshot(key, parentName, parentVersionSelector),
+  );
+
 export const findScopedResolvedVersions = (
   lockfile: Lockfile,
   parentName: string,
@@ -61,16 +92,13 @@ export const findScopedResolvedVersions = (
   parentVersionSelector?: string,
 ): string[] =>
   Object.entries(lockfile.snapshots ?? {})
-    .map(([key, snapshot]) => ({
-      parent: parseSnapshotKey(key),
-      dependency: snapshot.dependencies?.[packageName],
-    }))
-    .filter(
-      ({ parent }) =>
-        parent?.name === parentName &&
-        (parentVersionSelector === undefined ||
-          satisfies(parent.version, parentVersionSelector)),
+    .filter(([key]) =>
+      matchesParentSnapshot(key, parentName, parentVersionSelector),
     )
-    .map(({ dependency }) => dependency)
+    .map(
+      ([, snapshot]) =>
+        findDependencyVersion(snapshot.dependencies, packageName) ??
+        findDependencyVersion(snapshot.optionalDependencies, packageName),
+    )
     .filter((dependency): dependency is string => dependency !== undefined)
     .map((dependency) => baseVersion(dependency));

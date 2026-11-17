@@ -6,6 +6,7 @@ import { minSatisfying, sort, valid } from 'semver';
 import {
   findGlobalResolvedVersions,
   findScopedResolvedVersions,
+  hasScopedParent,
   lockfilePath,
   readLockfile,
 } from 'src/lockfile';
@@ -87,6 +88,21 @@ export const readResolvedVersion = async (
       )
     : findGlobalResolvedVersions(lockfile, override.package);
   return lowestVersion(versions, override.versionSelector);
+};
+
+export const hasMatchingParentResolution = async (
+  projectDir: string,
+  override: Override,
+): Promise<boolean> => {
+  if (!override.parent) {
+    return true;
+  }
+  const lockfile = await readLockfile(projectDir);
+  return hasScopedParent(
+    lockfile,
+    override.parent,
+    override.parentVersionSelector,
+  );
 };
 
 export const withOriginalFiles = async <T>(

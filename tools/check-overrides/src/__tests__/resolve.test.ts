@@ -4,6 +4,7 @@ import { EventEmitter } from 'node:events';
 
 import {
   applyRemovals,
+  hasMatchingParentResolution,
   readResolvedVersion,
   regenerateLockfile,
   withOriginalFiles,
@@ -25,6 +26,7 @@ jest.mock('src/lockfile', () => ({
   readLockfile: jest.fn(),
   findGlobalResolvedVersions: jest.fn(),
   findScopedResolvedVersions: jest.fn(),
+  hasScopedParent: jest.fn(),
 }));
 
 jest.mock('src/workspace-file', () => ({
@@ -236,6 +238,44 @@ describe('readResolvedVersion', () => {
       'mid-pkg',
       '^3.0.0',
     );
+  });
+});
+
+describe('hasMatchingParentResolution', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (lockfile.readLockfile as jest.Mock).mockResolvedValue({});
+  });
+
+  it('returns true for an override without a parent', async () => {
+    const override: Override = {
+      key: 'solo-pkg',
+      package: 'solo-pkg',
+      versionSpec: '^3.4.0',
+      minVersion: '3.4.0',
+    };
+
+    await expect(hasMatchingParentResolution('/proj', override)).resolves.toBe(
+      true,
+    );
+    expect(lockfile.readLockfile).not.toHaveBeenCalled();
+  });
+
+  it('checks for a parent matching the selector', async () => {
+    (lockfile.hasScopedParent as jest.Mock).mockReturnValue(false);
+    const override: Override = {
+      key: 'qar@1>zoo',
+      parent: 'qar',
+      parentVersionSelector: '1',
+      package: 'zoo',
+      versionSpec: '^2.0.0',
+      minVersion: '2.0.0',
+    };
+
+    await expect(hasMatchingParentResolution('/proj', override)).resolves.toBe(
+      false,
+    );
+    expect(lockfile.hasScopedParent).toHaveBeenCalledWith({}, 'qar', '1');
   });
 });
 

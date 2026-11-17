@@ -1,6 +1,7 @@
 import {
   findGlobalResolvedVersions,
   findScopedResolvedVersions,
+  hasScopedParent,
   lockfilePath,
   readLockfile,
 } from 'src/lockfile';
@@ -98,6 +99,23 @@ describe('findScopedResolvedVersions', () => {
     ).toEqual([]);
   });
 
+  it('includes optional dependency resolutions', () => {
+    const withOptionalDependency = {
+      lockfileVersion: '9.0',
+      snapshots: {
+        'parent@1.0.0': {
+          optionalDependencies: {
+            child: '1.0.0',
+          },
+        },
+      },
+    };
+
+    expect(
+      findScopedResolvedVersions(withOptionalDependency, 'parent', 'child'),
+    ).toEqual(['1.0.0']);
+  });
+
   it('returns an empty list when the parent is not in the lockfile', () => {
     expect(
       findScopedResolvedVersions(lockfile, 'nonexistent', 'leaf-pkg'),
@@ -126,6 +144,14 @@ describe('findScopedResolvedVersions', () => {
       '2.0.0',
     ]);
     expect(findGlobalResolvedVersions(weird, 'no-at-sign-here')).toEqual([]);
+  });
+});
+
+describe('hasScopedParent', () => {
+  it('checks whether a parent snapshot matches the version selector', () => {
+    expect(hasScopedParent(lockfile, 'mid-pkg')).toBe(true);
+    expect(hasScopedParent(lockfile, 'mid-pkg', '>=5.0.0')).toBe(true);
+    expect(hasScopedParent(lockfile, 'mid-pkg', '<4.0.0')).toBe(false);
   });
 });
 
