@@ -48,7 +48,7 @@ catalogs:
     jest-environment-jsdom: "^29.0.0"
     jest-html-reporter: "^4.3.0"
     jest-mock-extended: "^4.0.0"
-    lcov-result-merger: "^5.0.1"
+    lcov-result-merger: "^6.0.0"
     mock-fs: "^5.5.0"
     ts-jest: "^29.4.11"
   tools:
