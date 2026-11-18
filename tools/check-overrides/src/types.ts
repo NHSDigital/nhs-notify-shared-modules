@@ -3,9 +3,11 @@ export type Override = {
   key: string;
   /** The parent package selector if scoped, e.g. "fast-xml-parser" */
   parent?: string;
+  /** The version selector on the parent, e.g. "^1.0.0" for "qar@^1.0.0>zoo" */
+  parentVersionSelector?: string;
   /** The package being overridden, e.g. "fast-xml-builder" */
   package: string;
-  /** The version selector from the key, e.g. "<11.1.1" for "uuid@<11.1.1" */
+  /** The version selector from the key, e.g. ">=11.0.0 <11.1.1" for "some-pkg@>=11.0.0 <11.1.1" */
   versionSelector?: string;
   /** The full semver spec, e.g. "^1.1.7" */
   versionSpec: string;
