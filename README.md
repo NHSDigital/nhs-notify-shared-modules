@@ -25,11 +25,18 @@ Follow Homebrew's instructions to add GNU make and the GNU utilities to your `PA
 
 ### Ubuntu or Debian on WSL
 
-Run these commands inside your Linux distribution, not in PowerShell. Install mise using the [official Linux instructions](https://mise.jdx.dev/installing-mise.html):
+Run these commands inside your Linux distribution, not in PowerShell. The mise installer is documented in the [official Linux instructions](https://mise.jdx.dev/installing-mise.html):
 
 ```shell
 sudo apt update
 sudo apt install -y build-essential make gawk sed grep coreutils binutils curl
+curl -fsSL https://mise.run | sh
+```
+
+The installer places mise at `~/.local/bin/mise`. If `~/.local/bin` is not already on your `PATH`, add it to your shell startup file before the mise activation command:
+
+```shell
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 For container-based tests, use Docker Desktop with WSL integration or install a compatible runtime in the distribution.
@@ -45,18 +52,6 @@ eval "$(mise activate zsh)"
 ```bash
 eval "$(mise activate bash)"
 ```
-
-Restart the terminal or reload your shell configuration. From the repository root, review `mise.toml` and run `mise trust` once if mise reports that the configuration is untrusted. Trust is stored locally and does not change repository files:
-
-```shell
-mise trust
-```
-
-Run `make config` to install the locked tools and configure the repository Git hooks with prek.
-
-### Updating pinned tool versions
-
-After changing `mise.toml`, run `mise lock`, review the updated `mise.lock`, and commit both files. `make config` uses locked installs and does not update the lockfile.
 
 Keep `asdf` installed while working in repositories that have not migrated. Personal shell configuration is user-managed; this repository does not edit host shell configuration. Z shell users who work across both types of repository can add this optional function to `~/.zshrc`:
 
@@ -80,6 +75,24 @@ function activate() {
   rehash
 }
 ```
+
+Restart the terminal or reload your shell configuration. From the repository root, review `mise.toml` and run `mise trust` once if mise reports that the configuration is untrusted. Trust is stored locally and does not change repository files:
+
+```shell
+mise trust
+```
+
+Run `make config` to install the pinned tools and configure the repository's Git hooks with prek:
+
+```shell
+make config
+```
+
+Run `make githooks-run` to run the repository hooks manually.
+
+### Updating pinned tool versions
+
+After changing `mise.toml`, run `mise lock`, review the updated `mise.lock`, and commit both files. `make config` uses locked installs and does not update the lockfile.
 
 ## Documentation
 
