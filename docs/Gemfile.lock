@@ -138,7 +138,7 @@ GEM
     webrick (1.9.2)
 
 PLATFORMS
-  arm64-darwin-25
+  arm64-darwin
   x86_64-linux
 
 DEPENDENCIES
