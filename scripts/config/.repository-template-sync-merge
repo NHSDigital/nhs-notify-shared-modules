@@ -2,5 +2,7 @@
 .github/workflows/cicd-*.yaml
 scripts/config/.repository-template-sync-ignore
 scripts/config/.repository-template-sync-merge
-.tool-versions
+mise.toml
+mise.lock
+.docker-versions
 .gitignore

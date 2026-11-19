@@ -7,8 +7,7 @@
 docker-build: # Build Docker image - optional: docker_dir|dir=[path to the Dockerfile to use, default is '.'] @Development
 	make _docker cmd="build" \
 		dir=$(or ${docker_dir}, ${dir})
-	file=$(or ${docker_dir}, ${dir})/Dockerfile.effective
-	scripts/docker/dockerfile-linter.sh
+	file="$$(realpath $(or ${docker_dir}, $(or ${dir}, .))/Dockerfile.effective)" scripts/docker/dockerfile-linter.sh
 
 docker-push: # Push Docker image - optional: docker_dir|dir=[path to the image directory where the Dockerfile is located, default is '.'] @Development
 	make _docker cmd="push" \
@@ -45,7 +44,7 @@ docker-example-build: # Build Docker example @ExamplesAndTests
 	cd scripts/docker/examples/python
 	DOCKER_IMAGE=repository-template/docker-example-python
 	DOCKER_TITLE="Repository Template Docker Python Example"
-	TOOL_VERSIONS="$(shell git rev-parse --show-toplevel)/scripts/docker/examples/python/.tool-versions.example"
+	DOCKER_VERSIONS="$(shell git rev-parse --show-toplevel)/scripts/docker/examples/python/.docker-versions.example"
 	docker-build
 
 docker-example-lint: # Lint Docker example @ExamplesAndTests

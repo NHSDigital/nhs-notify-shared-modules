@@ -15,22 +15,6 @@ on:
         description: "Build epoch, set by the CI/CD pipeline workflow"
         required: true
         type: string
-      nodejs_version:
-        description: "Node.js version, set by the CI/CD pipeline workflow"
-        required: true
-        type: string
-      pnpm_version:
-        description: "pnpm version, set by the CI/CD pipeline workflow"
-        required: true
-        type: string
-      python_version:
-        description: "Python version, set by the CI/CD pipeline workflow"
-        required: true
-        type: string
-      terraform_version:
-        description: "Terraform version, set by the CI/CD pipeline workflow"
-        required: true
-        type: string
       version:
         description: "Version of the software, set by the CI/CD pipeline workflow"
         required: true
@@ -50,8 +34,6 @@ jobs:
       - name: Node install and setup
         uses: ./.github/actions/node-install
         with:
-          node-version: ${{ inputs.nodejs_version }}
-          pnpm-version: ${{ inputs.pnpm_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Install dependencies"
         run: pnpm install --frozen-lockfile
@@ -86,8 +68,6 @@ jobs:
       - name: Node install and setup
         uses: ./.github/actions/node-install
         with:
-          pnpm-version: ${{ inputs.pnpm_version }}
-          node-version: ${{ inputs.nodejs_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Run linting"
         run: |
@@ -107,8 +87,6 @@ jobs:
       - name: Node install and setup
         uses: ./.github/actions/node-install
         with:
-          pnpm-version: ${{ inputs.pnpm_version }}
-          node-version: ${{ inputs.nodejs_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Run typecheck"
         run: |

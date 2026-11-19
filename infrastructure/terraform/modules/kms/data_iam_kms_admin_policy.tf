@@ -1,4 +1,3 @@
-#trivy:ignore:aws-iam-no-policy-wildcards
 data "aws_iam_policy_document" "admin" {
   policy_id = "${local.csi}-admin"
 

@@ -28,6 +28,9 @@ function main() {
   tests=( \
     test-docker-build \
     test-docker-image-from-signature \
+    test-docker-image-from-docker-versions \
+    test-docker-versions-file-precedence \
+    test-docker-empty-version-file \
     test-docker-legacy-tool-versions \
     test-docker-version-file \
     test-docker-test \
@@ -84,15 +87,51 @@ function test-docker-image-from-signature() {
   TOOL_VERSIONS="$test_root/.docker-versions.test" _replace-image-latest-by-specific-version || result=$?
   # Assert
   if [ "$result" -eq 0 ]; then
-    grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective || result=$?
+    grep -q "FROM python@sha256:.*" Dockerfile.effective || result=$?
   fi
   rm -rf "$test_root"
   return "$result"
 }
 
+function test-docker-image-from-docker-versions() {
+
+  # Arrange
+  DOCKER_VERSIONS="$(git rev-parse --show-toplevel)/scripts/docker/tests/.docker-versions.test"
+  cp Dockerfile Dockerfile.effective
+  # Act
+  _replace-image-latest-by-specific-version
+  # Assert
+  grep -q "FROM python@sha256:.*" Dockerfile.effective && return 0 || return 1
+}
+
+function test-docker-versions-file-precedence() {
+
+  unset DOCKER_VERSIONS TOOL_VERSIONS
+  local test_root
+  local versions_files
+  test_root=$(mktemp -d)
+  git -C "$test_root" init -q
+  touch "$test_root/.docker-versions" "$test_root/.tool-versions"
+  versions_files=$(cd "$test_root" && _get-docker-versions-files)
+  rm -rf "$test_root"
+  [[ "${versions_files%%$'\n'*}" == */.docker-versions ]]
+}
+
+function test-docker-empty-version-file() {
+
+  # Arrange
+  DOCKER_VERSIONS="$(git rev-parse --show-toplevel)/scripts/docker/tests/.docker-versions.empty.test"
+  cp Dockerfile Dockerfile.effective
+  # Act
+  _replace-image-latest-by-specific-version
+  # Assert
+  grep -q '^FROM python:latest$' Dockerfile.effective && return 0 || return 1
+}
+
 function test-docker-legacy-tool-versions() {
 
   local legacy_root
+  unset DOCKER_VERSIONS TOOL_VERSIONS
   legacy_root=$(mktemp -d)
   git -C "$legacy_root" init -q || return 1
   git -C "$legacy_root" -c user.name=test -c user.email=test@example.com commit --allow-empty -qm test || return 1
@@ -104,18 +143,19 @@ function test-docker-legacy-tool-versions() {
     cd "$legacy_root" || exit 1
     unset TOOL_VERSIONS
     _replace-image-latest-by-specific-version
-    grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective || exit 1
+    grep -q "FROM python@sha256:.*" Dockerfile.effective || exit 1
     cp Dockerfile Dockerfile.effective
-    TOOL_VERSIONS="$legacy_root/.docker-versions" _replace-image-latest-by-specific-version
-    grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective || exit 1
+    DOCKER_VERSIONS="$legacy_root/.docker-versions" _replace-image-latest-by-specific-version
+    grep -q "FROM python@sha256:.*" Dockerfile.effective || exit 1
     printf '%s\n' '# docker/python 9.9-alpine@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' > .docker-versions
     cp Dockerfile Dockerfile.effective
     _replace-image-latest-by-specific-version
-    grep -q "FROM python:9.9-alpine@sha256:aaaaaaaa" Dockerfile.effective || exit 1
+    grep -q "FROM python@sha256:aaaaaaaa" Dockerfile.effective || exit 1
     docker() {
       case "$1" in
         images) return 0 ;;
         pull | tag) return 0 ;;
+        *) return 1 ;;
       esac
     }
     name="python" docker-get-image-version-and-pull | grep -q "python:9\\.9-alpine@sha256:"

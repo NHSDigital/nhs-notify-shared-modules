@@ -5,9 +5,9 @@ parent: Home
 nav_order: 3
 ---
 
-## Pre-commit Hooks
+## Pre-commit and prek Hooks
 
-This repository provides reusable pre-commit hooks for NHS Notify projects.
+This repository provides reusable hooks for NHS Notify projects using either pre-commit or prek.
 
 ### Available Hooks
 
@@ -105,7 +105,7 @@ Runs the same SBOM and Grype dependency scan used in CI and prints the markdown 
 Run it manually when needed:
 
 ```bash
-pre-commit run --config scripts/config/pre-commit.yaml --hook-stage manual scan-dependencies
+prek run --config scripts/config/pre-commit.yaml --hook-stage manual scan-dependencies
 ```
 
 ## Setup in Your Repository
@@ -125,11 +125,13 @@ repos:
       # Add other hooks as needed
 ```
 
-Then install:
+Then install the Git hook with prek:
 
 ```bash
-pre-commit install
+prek install --force
 ```
+
+Existing repositories that have not migrated can continue using `pre-commit` with this hook manifest.
 
 ## Notes
 
