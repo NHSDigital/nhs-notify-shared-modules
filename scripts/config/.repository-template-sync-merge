@@ -2,8 +2,5 @@
 .github/workflows/cicd-*.yaml
 scripts/config/.repository-template-sync-ignore
 scripts/config/.repository-template-sync-merge
-scripts/config/vale/vale.ini
 .tool-versions
 .gitignore
-scripts/config/vale/styles/config/vocabularies/words/accept.txt
-scripts/config/vale/styles/config/vocabularies/words/reject.txt

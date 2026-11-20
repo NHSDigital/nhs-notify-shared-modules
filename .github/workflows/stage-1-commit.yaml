@@ -103,17 +103,6 @@ jobs:
             echo "Markdown files have changed. Please run 'make terraform-docs' and commit the changes."
             exit 1
           fi
-  check-english-usage:
-    name: "Check English usage"
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0 # Full history is needed to compare branches
-      - name: "Check English usage"
-        uses: ./.github/actions/check-english-usage
   check-todo-usage:
     name: "Check TODO usage"
     runs-on: ubuntu-latest

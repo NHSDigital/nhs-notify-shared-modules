@@ -17,13 +17,6 @@ repos:
         exclude: '(^|/)package(-lock)?\.json$'
   - repo: local
     hooks:
-      - id: sort-dictionary
-        name: Sort dictionary
-        entry: ./scripts/githooks/sort-dictionary.sh
-        language: script
-        pass_filenames: false
-  - repo: local
-    hooks:
       - id: scan-secrets
         name: Scan secrets
         entry: /usr/bin/env check=staged-changes ./.github/actions/scan-secrets/scan-secrets.sh
@@ -41,13 +34,6 @@ repos:
       - id: check-markdown-format
         name: Check Markdown format
         entry: /usr/bin/env check=branch ./.github/actions/check-markdown-format/check-markdown-format.sh
-        language: script
-        pass_filenames: false
-  - repo: local
-    hooks:
-      - id: check-english-usage
-        name: Check English usage
-        entry: /usr/bin/env check=branch ./.github/actions/check-english-usage/check-english-usage.sh
         language: script
         pass_filenames: false
   - repo: local
