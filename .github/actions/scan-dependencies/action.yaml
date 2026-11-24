@@ -72,7 +72,7 @@ runs:
       run: zip sbom-repository-report.json.zip sbom-repository-report.json
     - name: "Upload SBOM report as an artefact"
       if: ${{ !env.ACT }}
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: sbom-repository-report.json.zip
         path: ./sbom-repository-report.json.zip
@@ -98,14 +98,14 @@ runs:
       run: zip vulnerabilities-repository-report.json.zip vulnerabilities-repository-report.json
     - name: "Upload vulnerabilities report as an artefact"
       if: ${{ !env.ACT }}
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: vulnerabilities-repository-report.json.zip
         path: ./vulnerabilities-repository-report.json.zip
         retention-days: 21
     - name: "Upload vulnerabilities summary as an artefact"
       if: ${{ !env.ACT }}
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: vulnerabilities-summary.md
         path: ./vulnerabilities-summary.md
@@ -137,7 +137,7 @@ runs:
       run: echo "secrets_exist=${{ inputs.idp_aws_report_upload_role_name != '' && inputs.idp_aws_report_upload_bucket_endpoint != '' }}" >> $GITHUB_OUTPUT
     - name: "Authenticate to send the reports"
       if: steps.check.outputs.secrets_exist == 'true'
-      uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5 # v6.1.2
+      uses: aws-actions/configure-aws-credentials@v6.1.2
       with:
         role-to-assume: arn:aws:iam::${{ inputs.idp_aws_report_upload_account_id }}:role/${{ inputs.idp_aws_report_upload_role_name }}
         aws-region: ${{ inputs.idp_aws_report_upload_region }}
