@@ -30,7 +30,7 @@ jobs:
       pnpm_version: ${{ steps.variables.outputs.pnpm_version }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
       - name: "Set CI/CD variables"
         id: variables
         run: |
@@ -46,9 +46,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
       - name: Node install and setup
-        uses: ./.github/actions/node-install
+        uses: $/.github/actions/node-install
         with:
           node-version: ${{ inputs.nodejs_version }}
           pnpm-version: ${{ inputs.pnpm_version }}

@@ -16,15 +16,15 @@ jobs:
 
     steps:
     - name: Check out the repository
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      uses: actions/checkout@v7.0.1
     - name: Sync repository template
-      uses: ./.github/actions/sync-template-repo
+      uses: $/.github/actions/sync-template-repo
       with:
         github_token: ${{ github.token }}
 
     - name: Create Pull Request
       if: ${{ !env.ACT }}
-      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+      uses: peter-evans/create-pull-request@v8.1.1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: Drift from template

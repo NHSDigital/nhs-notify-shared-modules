@@ -38,7 +38,7 @@ jobs:
       # tag: ${{ steps.variables.outputs.tag }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
       - name: "Set CI/CD variables"
         id: variables
         run: |
@@ -72,7 +72,7 @@ jobs:
     needs: metadata
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
       - name: "Get version"
         id: get-asset-version
         shell: bash
@@ -122,13 +122,13 @@ jobs:
         run: |
           gh release download ${{steps.get-asset-version.outputs.release_version}} -p jekyll-docs-*.tar --output artifact.tar
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: jekyll-docs-${{steps.get-asset-version.outputs.release_version}}
           path: artifact.tar
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+        uses: actions/deploy-pages@v5.0.0
         with:
           artifact_name: jekyll-docs-${{steps.get-asset-version.outputs.release_version}}
