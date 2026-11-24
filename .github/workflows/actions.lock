@@ -23,7 +23,7 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.1'
         - 'github/codeql-action@v4.37.7'
-        - 'ossf/scorecard-action@v2.4.4'
+        - 'ossf/scorecard-action@v2.6.0'
     '.github/workflows/stage-1-commit.yaml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.1'
@@ -123,9 +123,9 @@ dependencies:
         commit: 'sha1-ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd'
         owner_id: 9919
         repo_id: 259445878
-    'ossf/scorecard-action@v2.4.4':
-        ref: 'v2.4.4'
-        commit: 'sha1-2d1146689b8cda280b9bc96326124645441f03bc'
+    'ossf/scorecard-action@v2.6.0':
+        ref: 'v2.6.0'
+        commit: 'sha1-23f22cd43608bae7a1f1fa2603d7314dee9538a5'
         owner_id: 67707773
         repo_id: 421101922
     'peter-evans/create-pull-request@v8.1.1':
