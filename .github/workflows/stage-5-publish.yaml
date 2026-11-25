@@ -52,7 +52,7 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v7.0.1
       - name: "Get artifacts: jekyll docs"
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           path: ./artifacts/jekyll-docs-${{ inputs.version }}
           name: jekyll-docs-${{ inputs.version }}
